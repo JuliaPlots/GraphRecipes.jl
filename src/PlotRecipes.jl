@@ -1,5 +1,7 @@
 module PlotRecipes
 
-# package code goes here
+using Plots
+
+include("graphs.jl")
 
 end # module
