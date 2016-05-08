@@ -5,6 +5,8 @@ type MyGraph{N <: AbstractVector, E <: AbstractMatrix}
     adjmat::E
 end
 
+# TODO: add this to RecipesBase?  Should probably just name it something else, even though
+#       it shares the same goal (construction of a Vector{Any})
 # create an uninitialized cell then add the args
 function Base.cell(arg1::AbstractVector, args...)
     c = cell(length(args) + 1)
@@ -17,8 +19,13 @@ end
 
 # see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
 # also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
+
+# this recipe uses the technique of Spectral Graph Drawing, which is an
+# under-appreciated method of graph layouts; easier, simpler, and faster
+# than the more common spring-based methods.
 @recipe function f(g::MyGraph, dim::Integer = 2)
     @assert dim in (2, 3)
+    is3d = dim == 3
 
     A = g.adjmat
     n, m = size(A)
@@ -39,6 +46,11 @@ end
     x, y, z = vec(v[2,:]), vec(v[3,:]), vec(v[4,:])
 
     :linewidth --> 1
+    :markershape --> [:circle :none]
+
+    # TODO: adjust marker size to nodewgt
+    # :markersize --> cell(10 * g.nodewgt, 0)
+
     if d[:linewidth] > 0
         # skipped when user overrides linewidth to 0
         # we want to build new lx/ly/lz for the lines
@@ -51,16 +63,13 @@ end
                 # TODO: when supported, add line color/width for this line segment
             end
         end
-    end
 
-    :markershape --> :circle
-    :markersize --> 10 * g.nodewgt
-
-    if dim == 2
-        :linetype --> [:scatter :path]
-        cell(x, lx), cell(y, ly)
+        d[:linewidth] = [0 d[:linewidth]]
+        :linetype --> (is3d ? [:scatter3d :path3d] : [:scatter :path])
+        is3d ? (cell(x, lx), cell(y, ly), cell(z, lz)) : (cell(x, lx), cell(y, ly))
     else
-        :linetype --> [:scatter3d :path]
-        cell(x lx), cell(y ly), cell(z, lz)
+        # no need for line segments
+        :linetype --> (is3d ? :scatter3d : :scatter)
+        is3d ? (x, y, z) : (x, y)
     end
 end
