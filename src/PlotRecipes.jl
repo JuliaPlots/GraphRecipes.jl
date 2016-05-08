@@ -1,6 +1,6 @@
 module PlotRecipes
 
-using Plots
+using Plots, RecipesBase
 
 include("graphs.jl")
 
