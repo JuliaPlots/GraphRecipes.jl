@@ -1,9 +1,9 @@
 module PlotRecipes
 
 using Reexport
-@reexport using RecipesBase
 @reexport using Plots
 
 include("graphs.jl")
+include("hists.jl")
 
 end # module
