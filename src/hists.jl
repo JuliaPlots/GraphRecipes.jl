@@ -1,14 +1,12 @@
-@userplot type MarginalHist
-    args
-end
+@userplot MarginalHist
 
 @recipe function f(h::MarginalHist)
     if length(h.args) != 2 || !(typeof(h.args[1]) <: AbstractVector) || !(typeof(h.args[2]) <: AbstractVector)
         error("Marginal Histograms should be given two vectors.  Got: $(typeof(h.args))")
     end
+    x, y = h.args
     
     # set up the subplots
-    x, y = h.args
     legend := false
     link := :both
     ticks := [nothing :auto nothing]
@@ -28,17 +26,16 @@ end
     fillcolor := getColor(colorscheme(get(d, :fillcolor, Plots.default_gradient())))
     fillalpha := 0.3
     linealpha := 0.3
+    seriestype := :histogram
     
     # upper histogram
     @series begin
-        seriestype := :histogram
         subplot := 1
         x
     end
     
     # right histogram
     @series begin
-        seriestype := :histogram
         orientation := :h
         subplot := 3
         y
