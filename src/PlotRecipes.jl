@@ -5,5 +5,6 @@ using Reexport
 
 include("graphs.jl")
 include("hists.jl")
+include("stats.jl")
 
 end # module
