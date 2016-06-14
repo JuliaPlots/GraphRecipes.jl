@@ -1,5 +1,7 @@
 # PlotRecipes
 
+[![Build Status](https://travis-ci.org/JuliaPlots/PlotRecipes.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/PlotRecipes.jl)
+
 ### Primary author: Thomas Breloff (@tbreloff)
 
 This repo maintains a collection of recipes for statistics, machine learning, graph analysis, finance, and more.  It uses the powerful machinery of [Plots](https://github.com/tbreloff/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations.
