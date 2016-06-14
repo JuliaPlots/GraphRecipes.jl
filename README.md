@@ -10,11 +10,20 @@ This repo maintains a collection of recipes for statistics, machine learning, gr
 
 ---
 
-#### Graphs
+#### Stats
 
+```julia
+using PlotRecipes
+M = randn(1000,4)
+M[:,2] += 0.8sqrt(abs(M[:,1])) - 0.5M[:,3] + 5
+M[:,3] -= 0.7M[:,1].^2 + 2
 
+corrplot(M, label = ["x$i" for i=1:4])
+```
 
----
+![](https://cloud.githubusercontent.com/assets/933338/16030833/3c84e6bc-31c3-11e6-9a04-4cee531440a4.png)
+
+--
 
 #### Marginal Histograms
 
