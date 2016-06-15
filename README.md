@@ -42,6 +42,25 @@ marginalhist(x, y, fc=:plasma, bins=40)
 
 ---
 
+#### Graphs
+
+```julia
+using PlotRecipes
+pyplot()
+
+n = 20
+A = Float64[(rand()<0.5 ? 0 : rand()) for i=1:n,j=1:n]
+for i=1:n,j=i+1:n
+    A[i,j] = A[j,i]
+end
+
+graphplot(A, markersize=20rand(n)+10, marker_z=rand(n), lc=:blues, dim=3)
+```
+
+![](https://cloud.githubusercontent.com/assets/933338/16069720/a880f474-329e-11e6-9ae4-c1b9e2ffbc55.png)
+
+---
+
 #### Portfolio Composition Maps
 
 ```julia
