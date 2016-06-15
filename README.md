@@ -30,11 +30,11 @@ corrplot(M, label = ["x$i" for i=1:4])
 #### Marginal Histograms
 
 ```julia
-using Distributions, PlotRecipes
-pyplot()
+using PlotRecipes, Distributions
 n = 1000
 x = rand(Gamma(2), n)
 y = -0.5x + randn(n)
+
 marginalhist(x, y, fc=:plasma, bins=40)
 ```
 
@@ -46,18 +46,50 @@ marginalhist(x, y, fc=:plasma, bins=40)
 
 ```julia
 using PlotRecipes
-pyplot()
-
-n = 20
+n = 15
 A = Float64[(rand()<0.5 ? 0 : rand()) for i=1:n,j=1:n]
-for i=1:n,j=i+1:n
-    A[i,j] = A[j,i]
+for i=1:n
+    A[i,1:i-1] = A[1:i-1,i]
 end
+node_weights = 1:n
 
-graphplot(A, markersize=20rand(n)+10, marker_z=rand(n), lc=:blues, dim=3)
+graphplot(A, node_weights,
+		  marker = (:heat, :rect),
+		  line = (3, 0.5, :blues),
+		  marker_z = 1:n)
 ```
 
-![](https://cloud.githubusercontent.com/assets/933338/16069720/a880f474-329e-11e6-9ae4-c1b9e2ffbc55.png)
+![](https://cloud.githubusercontent.com/assets/933338/16093627/9da7b26a-330a-11e6-9733-9d28d5bab604.png)
+
+```julia
+graphplot(A, node_weights,
+		  dim = 3,
+		  line = (3, 0.5, :blues),
+		  marker_z = 1:n,
+		  xlim = (-0.1,  0.15),
+		  ylim = (-0.05, 0.08),
+		  zlim = (-0.07, 0.08),
+```
+
+![](https://cloud.githubusercontent.com/assets/933338/16094180/0dd2edf0-330d-11e6-8596-d12b0b8d5393.png)
+
+---
+
+#### Arc Diagrams
+
+```julia
+using PlotRecipes
+plot(
+	arcdiagram(['A','A','A','B'], ['B','C','D','A'], [1,2,3,1]),
+	arcdiagram(rand(10), rand(10)),
+	arcdiagram(rand(10), rand(10), rand(10)),
+	arcdiagram(rand(10,10)),
+	arcdiagram(Symmetric(rand(10,10))),
+	arcdiagram(sparse([0 0 0; 1 1 0; 1 1 1]))
+)
+```
+
+![](https://cloud.githubusercontent.com/assets/2822757/16072526/aba39c2e-32b7-11e6-947c-6faab1d13cc7.png)
 
 ---
 
@@ -65,8 +97,6 @@ graphplot(A, markersize=20rand(n)+10, marker_z=rand(n), lc=:blues, dim=3)
 
 ```julia
 using PlotRecipes
-
-# fake data
 tickers = ["IBM", "Google", "Apple", "Intel"]
 N = 10
 D = length(tickers)
@@ -74,7 +104,6 @@ weights = rand(N,D)
 weights ./= sum(weights, 2)
 returns = sort!((1:N) + D*randn(N))
 
-# plot it
 portfoliocomposition(weights, returns, labels = tickers')
 ```
 

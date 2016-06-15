@@ -3,6 +3,7 @@
 #   note: you may want to pass node weights to markersize or marker_z
 # A graph has N nodes where adj_mat[i,j] is the strength of edge i --> j.  (adj_mat[i,j]==0 implies no edge)
 
+# NOTE: this is for undirected graphs... adjmat should be symmetric and non-negative
 
 @userplot GraphPlot
 
@@ -12,9 +13,13 @@
 # this recipe uses the technique of Spectral Graph Drawing, which is an
 # under-appreciated method of graph layouts; easier, simpler, and faster
 # than the more common spring-based methods.
-function spectral_graph(adjmat::AbstractMatrix)
+function spectral_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1)))
     n, m = size(adjmat)
-    @assert n == m
+    @assert n == m == length(node_weights)
+
+    # scale the edge values by the product of node_weights, so that "heavier" nodes also form
+    # stronger connections
+    adjmat = adjmat .* sqrt(node_weights * node_weights')
 
     # D is a diagonal matrix with the degrees (total weight for that node) on the diagonal
     deg = vec(sum(adjmat,1))
@@ -32,56 +37,167 @@ function spectral_graph(adjmat::AbstractMatrix)
 end
 
 
-@recipe function f(g::GraphPlot; dim = 2, T = Float64)
+# -----------------------------------------------------
+
+# TODO: maybe also implement Catmull-Rom Splines? http://www.mvps.org/directx/articles/catmull/
+
+# -----------------------------------------------------
+
+# # get the value of the curve point at position t 
+# function bezier_value(pts::AVec, t::Real)
+#     val = 0.0
+#     n = length(pts)-1
+#     for (i,p) in enumerate(pts)
+#         val += p * binomial(n, i-1) * (1-t)^(n-i+1) * t^(i-1)
+#     end
+#     val
+# end
+
+# # create segmented bezier curves in place of line segments
+# @recipe function f(::Type{Val{:curves}}, x, y, z)
+#     _3d = z != nothing
+#     args = _3d ? (x,y,z) : (x,y)
+#     newx, newy = zeros(0), zeros(0)
+#     newz = _3d ? zeros(0) : nothing
+#     for rng in iter_segments(args...)
+#         length(rng) < 2 && continue
+#         ts = linspace(0, 1, pop!(d, :npoints, 20))
+#         Plots.nanappend!(newx, map(t -> bezier_value(x[rng],t), ts))
+#         Plots.nanappend!(newy, map(t -> bezier_value(y[rng],t), ts))
+#         if _3d
+#             Plots.nanappend!(newz, map(t -> bezier_value(z[rng],t), ts))
+#         end
+#         @show rng ts newx newy newz
+#     end
+#     seriestype := :path
+#     x := newx
+#     y := newy
+#     z := newz
+#     ()
+# end
+
+# # convert pairs of ((x1,y1), (x2,y2)) or ((x1,y1,z2), (x2,y2,z2)) into valid line segments
+# @recipe function f(::Type{Val{:segments}}, x, y, z)
+#     # for each segment, we need 3 values in each of x/y/z/line_z
+#     _3d = z != nothing
+#     n = max(length(x), length(y))
+#     lx, ly = zeros(3n), zeros(3n)
+#     lz = _3d ? zeros(3n) : nothing
+#     # lx, ly, lz = zeros(T,0), zeros(T,0), zeros(T,0)
+#     # line_z = zeros(T,0)
+#     line_z = zeros(3n)
+#     for
+#     for i=1:n, j=i+1:n
+#         aij = adjmat[i,j]
+#         if aij ≉ 0
+#             # @show aij, x,y,i,j
+#             append!(lx, T[x[i], x[j], NaN])
+#             append!(ly, T[y[i], y[j], NaN])
+#             if dim == 3
+#                 append!(lz, T[z[i], z[j], NaN])
+#             end
+#             append!(line_z, T[aij, aij])
+#             # TODO: when supported, add line width for this line segment
+#         end
+#     end
+# end
+
+# we want to randomly pick a point to be the center control point of a bezier
+# curve, which is both equidistant between the endpoints and normally distributed
+# around the midpoint
+function random_control_point(xi, xj, yi, yj, curvature_scalar)
+    xmid = 0.5 * (xi+xj)
+    ymid = 0.5 * (yi+yj)
+
+    # get the angle of y relative to x
+    theta = atan((yj-yi) / (xj-xi)) + 0.5pi
+
+    # calc random shift relative to dist between x and y
+    dist = sqrt((xj-xi)^2 + (yj-yi)^2)
+    dist_from_mid = curvature_scalar * (rand()-0.5) * dist
+
+    # now we have polar coords, we can compute the position, adding to the midpoint
+    (xmid + dist_from_mid * cos(theta),
+     ymid + dist_from_mid * sin(theta))
+end
+
+
+@recipe function f(g::GraphPlot; dim = 2, T = Float64, curves = true, curvature_scalar = 1)
     @assert dim in (2, 3)
     delete!(d, :dim)
     delete!(d, :T)
+    delete!(d, :curves)
+    delete!(d, :curvature_scalar)
+    _3d = dim == 3
 
     adjmat = g.args[1]
     n, m = size(adjmat)
-    x, y, z = spectral_graph(adjmat)
+    x, y, z = spectral_graph(g.args...)
 
     # create a series for the line segments
     if get(d, :linewidth, 1) > 0
         @series begin
+            lx, ly = zeros(0), zeros(0)
+            lz = _3d ? zeros(0) : nothing
+            line_z = zeros(0)
+
             # skipped when user overrides linewidth to 0
             # we want to build new lx/ly/lz for the lines
             # note: we only do the lower triangle
-
-            lx, ly, lz = zeros(T,0), zeros(T,0), zeros(T,0)
-            line_z = zeros(T,0)
-            for i=1:n, j=i+1:n
+            for i=2:n, j=1:i-1
                 aij = adjmat[i,j]
                 if aij ≉ 0
-                    append!(lx, T[x[i], x[j], NaN])
-                    append!(ly, T[y[i], y[j], NaN])
-                    if dim == 3
-                        append!(lz, T[z[i], z[j], NaN])
+                    # @show aij, x,y,i,j
+                    # add the first point, NaN-separated
+                    Plots.nanpush!(lx, x[i])
+                    Plots.nanpush!(ly, y[i])
+                    _3d && Plots.nanpush!(lz, z[i])
+
+                    # add curve control points?
+                    if curves
+                        xpt, ypt = random_control_point(x[i], x[j], y[i], y[j], curvature_scalar)
+                        push!(lx, xpt)
+                        push!(ly, ypt)
+                        # @show (x[i], xpt, x[j]), (y[i], ypt, y[j])
+                        _3d && push!(lz, 0.5(z[i] + z[j]))
                     end
-                    append!(line_z, T[aij, aij])
-                    # TODO: when supported, add line width for this line segment
+
+                    # add the last point and line_z value
+                    push!(lx, x[j])
+                    push!(ly, y[j])
+                    _3d && push!(lz, z[j])
+                    push!(line_z, aij)
                 end
             end
+
+            # update line_z to the correct size
+            line_z = vec(repmat(line_z', curves ? 4 : 3, 1))
+
+            seriestype := (curves ? :curves : (_3d ? :path : :path3d))
             series_annotations := []
             # linecolor --> :black
             linewidth --> 1
-            line_z := line_z
+            line_z --> line_z, :quiet
             markershape := :none
             markercolor := :black
             primary := false
-            dim==3 ? (lx, ly, lz) : (lx, ly)
+            # Plots.DD(d)
+            _3d ? (lx, ly, lz) : (lx, ly)
         end
     end
 
-    seriestype := (dim==3 ? :scatter3d : :scatter)
+    seriestype := (_3d ? :scatter3d : :scatter)
     linewidth := 0
     linealpha := 0
-    foreground_color_border := nothing
-    grid := false
-    legend := false
-    ticks := nothing
-    # markersize := node_weight
-    dim==3 ? (x, y, z) : (x, y)
+    foreground_color_border --> nothing
+    grid --> false
+    legend --> false
+    ticks --> nothing
+    if length(g.args) > 1
+        node_weights = g.args[2]
+        markersize --> 10 + 100node_weights / sum(node_weights)
+    end
+    _3d ? (x, y, z) : (x, y)
 end
 
 # ---------------------------------------------------------------------------
