@@ -83,3 +83,130 @@ end
     # markersize := node_weight
     dim==3 ? (x, y, z) : (x, y)
 end
+
+# ---------------------------------------------------------------------------
+# Arc Diagram
+
+function get_source_destiny_weight{T}(mat::AbstractArray{T,2})
+    nrow, ncol = size(mat)    # rows are sources and columns are destinies
+
+    nosymmetric = !issym(mat) # plots only triu for symmetric matrices
+    nosparse = !issparse(mat) # doesn't plot zeros from a sparse matrix
+
+    L = length(mat)
+
+    source  = Array(Int, L)
+    destiny = Array(Int, L)
+    weight  = Array(T, L)
+
+    idx = 1
+    for i in 1:nrow, j in 1:ncol
+        value = mat[i, j]
+        if !isnan(value) && ( nosparse || value != zero(T) ) # TODO: deal with Nullable
+
+            if i < j
+                source[idx]  = i
+                destiny[idx] = j
+                weight[idx]  = value
+                idx += 1
+            elseif nosymmetric && (i > j)
+                source[idx]  = i
+                destiny[idx] = j
+                weight[idx]  = value
+                idx += 1
+            end
+
+        end
+    end
+
+    resize!(source, idx-1), resize!(destiny, idx-1), resize!(weight, idx-1)
+end
+
+function get_source_destiny_weight(source::AbstractVector, destiny::AbstractVector)
+    if length(source) != length(destiny)
+        throw(ArgumentError("Source and destiny must have the same length."))
+    end
+    source, destiny, Float64[ 1.0 for i in source ]
+end
+
+function get_source_destiny_weight(source::AbstractVector, destiny::AbstractVector, weight::AbstractVector)
+    if !(length(source) == length(destiny) == length(weight))
+        throw(ArgumentError("Source, destiny and weight must have the same length."))
+    end
+    source, destiny, weight
+end
+
+function arcvertices{T}(source::AbstractVector{T}, destiny::AbstractVector{T})
+    values = unique(vcat(source, destiny))
+    [ i => i for i in values ]
+end
+
+function arcvertices{T<:Union{Char,Symbol,AbstractString}}(source::AbstractVector{T}, 
+                                                                   destiny::AbstractVector{T})
+    lab2x = Dict{T,Int}()
+    n = 1
+    for element in vcat(source, destiny)
+        if !haskey(lab2x, element)
+            lab2x[element] = n
+            n += 1
+        end
+    end 
+    lab2x
+end
+
+@userplot ArcDiagram
+
+@recipe function f(h::ArcDiagram)
+    
+    source, destiny, weight = get_source_destiny_weight(h.args...)
+    
+    vertices = arcvertices(source, destiny)
+    
+    # Box setup
+    legend --> false
+    aspect_ratio --> :equal
+    grid --> false
+    foreground_color_axis --> nothing
+    foreground_color_border --> nothing
+    ticks --> nothing
+    
+    usegradient = length(unique(weight)) != 1
+
+    if usegradient
+        colorgradient = ColorGradient(get(d,:linecolor,Plots.default_gradient()))
+        wmin,wmax = extrema(weight)
+    end
+
+    for (i, j, value) in zip(source,destiny,weight)
+        @series begin
+            
+            xi = vertices[i]
+            xj = vertices[j]
+            
+            if usegradient
+                linecolor --> getColorZ(colorgradient, (value-wmin)/(wmax-wmin))
+            end
+            
+            legend --> false
+            label := ""
+            primary := false
+
+            r  = (xj - xi) / 2
+            x₀ = (xi + xj) / 2
+            θ = linspace(0,π,30)
+            x₀ + r * cos(θ), r * sin(θ)
+        end
+    end
+    
+    @series begin
+        if eltype(keys(vertices)) <: Union{Char, AbstractString, Symbol}
+            series_annotations --> collect(keys(vertices))
+            markersize --> 0
+            y = -0.1
+        else
+            y =  0.0
+        end
+        seriestype --> :scatter
+        collect(values(vertices)) , Float64[ y for i in vertices ]
+    end
+end
