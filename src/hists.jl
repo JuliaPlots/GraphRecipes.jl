@@ -7,32 +7,38 @@
 #     end
 #     x, y = h.args
 
-@recipe function f(::Type{Val{:marginalhist}})
+@recipe function f(::Type{Val{:marginalhist}}, plt::Plot; density = false)
     x, y = d[:x], d[:y]
+    delete!(d, :density)
     
     # set up the subplots
-    legend := false
+    legend --> false
     link := :both
-    # ticks := [nothing :auto nothing]
-    grid := false
-    # foreground_color_subplot := [RGBA(0,0,0,0) :match RGBA(0,0,0,0)]
-    layout := @layout [tophist           _
-                 	   hist2d{0.9w,0.9h} righthist]
+    grid --> false
+    layout --> @layout [
+        tophist           _
+        hist2d{0.9w,0.9h} righthist
+    ]
     
     # main histogram2d
     @series begin
         seriestype := :histogram2d
         subplot := 2
-        # x, y
     end
     
     # these are common to both marginal histograms... borrow the first color from the fill gradient
-    ticks := nothing
+    ticks --> nothing
     foreground_color_subplot := RGBA(0,0,0,0)
     fillcolor := getColor(colorscheme(get(d, :fillcolor, Plots.default_gradient())))
-    fillalpha := 0.3
-    linealpha := 0.3
-    seriestype := :histogram
+    fillalpha --> 0.3
+    linealpha --> 0.3
+
+    if density
+        trim := true
+        seriestype := :density
+    else
+        seriestype := :histogram
+    end
     
     # upper histogram
     @series begin
