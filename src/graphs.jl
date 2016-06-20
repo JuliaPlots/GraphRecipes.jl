@@ -122,17 +122,22 @@ function random_control_point(xi, xj, yi, yj, curvature_scalar)
 end
 
 
-@recipe function f(g::GraphPlot; dim = 2, T = Float64, curves = true, curvature_scalar = 1)
+@recipe function f(g::GraphPlot; dim = 2,
+                                 T = Float64,
+                                 curves = true,
+                                 curvature_scalar = 1,
+                                 func = spectral_graph)
     @assert dim in (2, 3)
     delete!(d, :dim)
     delete!(d, :T)
     delete!(d, :curves)
     delete!(d, :curvature_scalar)
+    delete!(d, :func)
     _3d = dim == 3
 
     adjmat = g.args[1]
     n, m = size(adjmat)
-    x, y, z = spectral_graph(g.args...)
+    x, y, z = func(g.args...)
 
     # create a series for the line segments
     if get(d, :linewidth, 1) > 0
@@ -171,13 +176,15 @@ end
             end
 
             # update line_z to the correct size
-            line_z = vec(repmat(line_z', curves ? 4 : 3, 1))
+            if isa(get(d, :linecolor, nothing), ColorGradient)
+                line_z = vec(repmat(line_z', curves ? 4 : 3, 1))
+                line_z --> line_z, :quiet
+            end
 
             seriestype := (curves ? :curves : (_3d ? :path : :path3d))
             series_annotations := []
             # linecolor --> :black
             linewidth --> 1
-            line_z --> line_z, :quiet
             markershape := :none
             markercolor := :black
             primary := false
