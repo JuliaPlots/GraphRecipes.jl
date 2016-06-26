@@ -208,7 +208,7 @@ end
 end
 
 # ---------------------------------------------------------------------------
-# Arc Diagram
+# Arc/Chord Diagrams
 
 function get_source_destiny_weight{T}(mat::AbstractArray{T,2})
     nrow, ncol = size(mat)    # rows are sources and columns are destinies
@@ -333,3 +333,171 @@ end
         collect(values(vertices)) , Float64[ y for i in vertices ]
     end
 end
+
+
+# =================================================
+# Arc and chord diagrams
+
+# "Takes an adjacency matrix and returns source, destiny and weight lists"
+# function mat2list{T}(mat::AbstractArray{T,2})
+#     nrow, ncol = size(mat) # rows are sources and columns are destinies
+
+#     nosymmetric = !issym(mat) # plots only triu for symmetric matrices
+#     nosparse = !issparse(mat) # doesn't plot zeros from a sparse matrix
+
+#     L = length(mat)
+
+#     source  = Array(Int, L)
+#     destiny = Array(Int, L)
+#     weight  = Array(T, L)
+
+#     idx = 1
+#     for i in 1:nrow, j in 1:ncol
+#         value = mat[i, j]
+#         if !isnan(value) && ( nosparse || value != zero(T) ) # TODO: deal with Nullable
+
+#             if i < j
+#                 source[idx]  = i
+#                 destiny[idx] = j
+#                 weight[idx]  = value
+#                 idx += 1
+#             elseif nosymmetric && (i > j)
+#                 source[idx]  = i
+#                 destiny[idx] = j
+#                 weight[idx]  = value
+#                 idx += 1
+#             end
+
+#         end
+#     end
+
+#     resize!(source, idx-1), resize!(destiny, idx-1), resize!(weight, idx-1)
+# end
+
+# curvecolor(value, min, max, grad) = getColorZ(grad, (value-min)/(max-min))
+
+# ---------------------------------------------------------------------------
+# Chord diagram
+
+function arcshape(θ1, θ2)
+    Plots.shape_coords(Shape(vcat(
+        Plots.partialcircle(θ1, θ2, 15, 1.1),
+        reverse(Plots.partialcircle(θ1, θ2, 15, 0.9))
+    )))
+end
+
+# colorlist(grad, ::Void) = :darkgray
+
+# function colorlist(grad, z)
+#     zmin, zmax = extrema(z)
+#     RGBA{Float64}[getColorZ(grad, (zi-zmin)/(zmax-zmin)) for zi in z]'
+# end
+
+# """
+# `chorddiagram(source, destiny, weight[, grad, zcolor, group])`
+
+# Plots a chord diagram, form `source` to `destiny`,
+# using `weight` to determine the edge colors using `grad`.
+# `zcolor` or `group` can be used to determine the node colors.
+# """
+# function chorddiagram(source, destiny, weight; kargs...)
+
+
+@userplot ChordDiagram
+
+@recipe function f(h::ChordDiagram)
+    
+    source, destiny, weight = get_source_destiny_weight(h.args...)
+
+    # args  = KW(kargs)
+    # grad  = pop!(args, :grad,   ColorGradient([colorant"darkred", colorant"darkblue"]))
+    # zcolor= pop!(args, :zcolor, nothing)
+    # group = pop!(args, :group,  nothing)
+
+    # if zcolor !== nothing && group !== nothing
+    #     throw(ErrorException("group and zcolor can not be used together."))
+    # end
+
+    # if length(source) == length(destiny) == length(weight)
+    xlims := (-1.2,1.2)
+    ylims := (-1.2,1.2)
+    legend := false
+    grid := false
+    xticks := nothing
+    yticks := nothing
+
+    nodemin, nodemax = extrema(vcat(source, destiny))
+    weightmin, weightmax = extrema(weight)
+
+    A  = 1.5π # Filled space
+    B  = 0.5π # White space (empirical)
+
+    Δα = A / nodemax
+    Δβ = B / nodemax
+    δ = Δα  + Δβ
+
+    grad = cgrad(get(d,:linecolor,:inferno), get(d, :linealpha, nothing))
+
+    for i in 1:length(source)
+        # TODO: this could be a shape with varying width
+        @series begin
+            seriestype := :curves
+            x := [cos((source[i ]-1)*δ + 0.5Δα), 0.0, cos((destiny[i]-1)*δ + 0.5Δα)]
+            y := [sin((source[i ]-1)*δ + 0.5Δα), 0.0, sin((destiny[i]-1)*δ + 0.5Δα)]
+            linecolor := grad[(weight[i] - weightmin) / (weightmax - weightmin)]
+            primary := false
+            ()
+        end
+        # curve = BezierCurve(P2[ (cos((source[i ]-1)*δ + 0.5Δα), sin((source[i ]-1)*δ + 0.5Δα)), (0,0),
+        #                         (cos((destiny[i]-1)*δ + 0.5Δα), sin((destiny[i]-1)*δ + 0.5Δα)) ])
+        # plot!(curve_points(curve), line = grad[(weight[i] - weightmin) / (weightmax - weightmin)], 1, 1))
+    end
+
+    # if group === nothing
+    #     c =  colorlist(grad, zcolor)
+    # elseif length(group) == nodemax
+
+    #     idx = collect(0:(nodemax-1))
+
+    #     for g in group
+    #         plot!([arcshape(n*δ, n*δ + Δα) for n in idx[group .== g]]; args...)
+    #     end
+
+    #     return plt
+
+    # else
+    #     throw(ErrorException("group should the ", nodemax, " elements."))
+    # end
+
+    # grad = cgrad(d[:fillcolor], d[:fillalpha])
+
+    for n in 0:(nodemax-1)
+        sx, sy = arcshape(n*δ, n*δ + Δα)
+        @series begin
+            seriestype := :shape
+            x := sx
+            y := sy
+            ()
+        end
+    end
+
+    # plot!([arcshape(n*δ, n*δ + Δα) for n in 0:(nodemax-1)]; mc=c, args...)
+
+    # return plt
+
+    # else
+    #     throw(ArgumentError("source, destiny and weight should have the same length"))
+    # end
+end
+
+# """
+# `chorddiagram(mat[, grad, zcolor, group])`
+
+# Plots a chord diagram from an adjacency matrix,
+# using the values on the matrix as weights to determine edge colors.
+# Doesn't show edges with value zero if the input is sparse.
+# For simmetric matrices, only the upper triangular values are used.
+# `zcolor` or `group` can be used to determine the node colors.
+# """
+# chorddiagram(mat::AbstractMatrix; kargs...) = chorddiagram(mat2list(mat)...; kargs...)
+
