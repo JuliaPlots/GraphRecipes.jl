@@ -152,9 +152,24 @@ function by_axis_local_stress_graph(adjmat::AbstractMatrix, node_weights::Abstra
         end
         laststress = thisstress
     end
-    @show X
+
     dims == 2 ? (X..., nothing) : X
 end
+
+
+function tree_graph end
+
+if Plot.is_installed("LightGraphs")
+    @eval begin
+        import LightGraphs
+
+        adjacency_matrix()
+
+        function tree_graph(d::KW, adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1)))
+        end
+    end
+end
+
 
 
 
@@ -245,14 +260,14 @@ end
 const _graph_funcs = KW(
     :spectral => spectral_graph,
     :stress_local => by_axis_local_stress_graph,
+    :tree => tree_graph,
 )
 
 @recipe function f(g::GraphPlot; dim = 2,
                                  T = Float64,
                                  curves = true,
                                  curvature_scalar = 1,
-                                 func = spectral_graph,
-                                 kw...)
+                                 func = spectral_graph)
     @assert dim in (2, 3)
     _3d = dim == 3
 
