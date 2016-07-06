@@ -7,13 +7,7 @@
 
 @userplot GraphPlot
 
-# see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
-# also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
-
-# this recipe uses the technique of Spectral Graph Drawing, which is an
-# under-appreciated method of graph layouts; easier, simpler, and faster
-# than the more common spring-based methods.
-function spectral_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1)))
+function compute_laplacian(adjmat::AbstractMatrix, node_weights::AbstractVector)
     n, m = size(adjmat)
     @assert n == m == length(node_weights)
 
@@ -22,11 +16,23 @@ function spectral_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = o
     adjmat = adjmat .* sqrt(node_weights * node_weights')
 
     # D is a diagonal matrix with the degrees (total weight for that node) on the diagonal
-    deg = vec(sum(adjmat,1))
+    deg = vec(sum(adjmat,1)) - diag(adjmat)
     D = diagm(deg)
 
     # Laplacian (L = D - adjmat)
     L = Float64[i == j ? deg[i] : -adjmat[i,j] for i=1:n,j=1:n]
+
+    L, D
+end
+
+# see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
+# also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
+
+# this recipe uses the technique of Spectral Graph Drawing, which is an
+# under-appreciated method of graph layouts; easier, simpler, and faster
+# than the more common spring-based methods.
+function spectral_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1)))
+    L, D = compute_laplacian(adjmat, node_weights)
 
     # get the matrix of eigenvectors
     v = eig(L, D)[2]
@@ -35,6 +41,121 @@ function spectral_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = o
     # generalized eigenvalue problem Lv = λDv
     vec(v[2,:]), vec(v[3,:]), vec(v[4,:])
 end
+
+
+# -----------------------------------------------------
+
+# Axis-by-Axis Stress Minimization -- Yehuda Koren and David Harel
+# See: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.437.3177&rep=rep1&type=pdf
+
+function make_symmetric(A::AbstractMatrix)
+    A = copy(A)
+    for i=1:size(A,1), j=i+1:size(A,2)
+        A[i,j] = A[j,i] = A[i,j]+A[j,i]
+    end
+    A
+end
+
+# # NOTES:
+# #   - dᵢⱼ = the "graph-theoretical distance between nodes i and j"
+# #         = Aᵢⱼ
+# #   - kᵢⱼ = dᵢⱼ⁻²
+# #   - b̃ᵢ = ∑ᵢ≠ⱼ ((x̃ⱼ ≤ x̃ᵢ ? 1 : -1) / dᵢⱼ)
+# #   - need to solve for x each iteration: Lx = b̃
+
+# # Solve for one axis at a time while holding the others constant.
+# # dims is 2 (2D) or 3 (3D).  free_dims is a vector of the dimensions to update (for example if you fix y and solve for x)
+# function by_axis_stress_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1));
+#                               dims = 2, free_dims = 1:dims,
+#                               x = rand(length(node_weights)),
+#                               y = rand(length(node_weights)),
+#                               z = rand(length(node_weights)))
+#     adjmat = make_symmetric(adjmat)
+#     L, D = compute_laplacian(adjmat, node_weights)
+
+#     n = length(node_weights)
+#     maxiter = 100 # TODO: something else
+
+#     @assert dims == 2
+
+#     @show adjmat L
+
+#     for _ in 1:maxiter
+#         x̃ = x
+#         b̃ = Float64[sum(Float64[(i==j || adjmat[i,j] == 0) ? 0.0 : ((x̃[j] <= x̃[i] ? 1.0 : -1.0) / adjmat[i,j]) for j=1:n]) for i=1:n]
+#         @show x̃ b̃
+#         x = L \ b̃
+
+#         xdiff = x - x̃
+#         @show norm(xdiff)
+#         if norm(xdiff) < 1e-4
+#             info("converged. norm(xdiff) = $(norm(xdiff))")
+#             break
+#         end
+#     end
+#     @show x y
+#     x, y, z
+# end
+
+norm_ij(X, i, j) = sqrt(sum(Float64[(v[i]-v[j])^2 for v in X]))
+stress(X, dist, w, i, j) = w[i,j] * (norm_ij(X, i, j) - dist[i,j])^2
+function stress(X, dist, w)
+    tot = 0.0
+    for i=1:size(X,1), j=1:i-1
+        tot += stress(X, dist, w, i, j)
+    end
+    tot
+end
+
+# follows section 2.3 from http://link.springer.com/chapter/10.1007%2F978-3-540-31843-9_25#page-1
+# Localized optimization, updates: x
+function by_axis_local_stress_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1));
+                              dims = 2, free_dims = 1:dims,
+                              x = rand(length(node_weights)),
+                              y = rand(length(node_weights)),
+                              z = rand(length(node_weights)))
+    adjmat = make_symmetric(adjmat)
+
+    n = length(node_weights)
+    maxiter = 50 # TODO: something else
+
+    # graph-theoretical distance between node i and j (i.e. shortest path distance)
+    # TODO: calculate a real distance
+    dist = map(a -> a==0 ? 5.0 : a, adjmat)
+
+    # also known as kᵢⱼ in "axis-by-axis stress minimization".  the -2 could also be 0 or -1?
+    w = dist .^ -2
+
+    # in each iteration, we update one dimension/node at a time, reducing the total stress with each update
+    X = dims == 2 ? (x, y) : (x, y, z)
+    laststress = stress(X, dist, w)
+    for _ in 1:maxiter
+        for dim in 1:dims
+            for i=1:n
+                numer, denom = 0.0, 0.0
+                for j=1:n
+                    i==j && continue
+                    numer += w[i,j] * (X[dim][j] + dist[i,j] * (X[dim][i] - X[dim][j]) / norm_ij(X, i, j))
+                    denom += w[i,j]
+                end
+                if denom != 0
+                    X[dim][i] = numer / denom
+                end
+            end
+        end
+
+        # check for convergence of the total stress
+        thisstress = stress(X, dist, w)
+        if abs(thisstress - laststress) < 1e-3
+            info("converged. last=$laststress this=$thisstress")
+            break
+        end
+        laststress = thisstress
+    end
+    @show X
+    dims == 2 ? (X..., nothing) : X
+end
+
 
 
 # -----------------------------------------------------
@@ -121,23 +242,27 @@ function random_control_point(xi, xj, yi, yj, curvature_scalar)
      ymid + dist_from_mid * sin(theta))
 end
 
+const _graph_funcs = KW(
+    :spectral => spectral_graph,
+    :stress_local => by_axis_local_stress_graph,
+)
 
 @recipe function f(g::GraphPlot; dim = 2,
                                  T = Float64,
                                  curves = true,
                                  curvature_scalar = 1,
-                                 func = spectral_graph)
+                                 func = spectral_graph,
+                                 kw...)
     @assert dim in (2, 3)
-    delete!(d, :dim)
-    delete!(d, :T)
-    delete!(d, :curves)
-    delete!(d, :curvature_scalar)
-    delete!(d, :func)
     _3d = dim == 3
+
+    if isa(func, Symbol)
+        func = _graph_funcs[func]
+    end
 
     adjmat = g.args[1]
     n, m = size(adjmat)
-    x, y, z = func(g.args...)
+    x, y, z = func(g.args...; kw...)
 
     # create a series for the line segments
     if get(d, :linewidth, 1) > 0
@@ -181,7 +306,7 @@ end
                 line_z --> line_z, :quiet
             end
 
-            seriestype := (curves ? :curves : (_3d ? :path : :path3d))
+            seriestype := (curves ? :curves : (_3d ? :path3d : :path))
             series_annotations := []
             # linecolor --> :black
             linewidth --> 1
