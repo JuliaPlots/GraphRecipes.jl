@@ -31,7 +31,7 @@ end
 # this recipe uses the technique of Spectral Graph Drawing, which is an
 # under-appreciated method of graph layouts; easier, simpler, and faster
 # than the more common spring-based methods.
-function spectral_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1)))
+function spectral_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1)); kw...)
     L, D = compute_laplacian(adjmat, node_weights)
 
     # get the matrix of eigenvectors
@@ -110,10 +110,11 @@ end
 # follows section 2.3 from http://link.springer.com/chapter/10.1007%2F978-3-540-31843-9_25#page-1
 # Localized optimization, updates: x
 function by_axis_local_stress_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1));
-                              dims = 2, free_dims = 1:dims,
+                              dim = 2, free_dims = 1:dim,
                               x = rand(length(node_weights)),
                               y = rand(length(node_weights)),
-                              z = rand(length(node_weights)))
+                              z = rand(length(node_weights)),
+                              kw...)
     adjmat = make_symmetric(adjmat)
 
     n = length(node_weights)
@@ -127,19 +128,19 @@ function by_axis_local_stress_graph(adjmat::AbstractMatrix, node_weights::Abstra
     w = dist .^ -2
 
     # in each iteration, we update one dimension/node at a time, reducing the total stress with each update
-    X = dims == 2 ? (x, y) : (x, y, z)
+    X = dim == 2 ? (x, y) : (x, y, z)
     laststress = stress(X, dist, w)
     for _ in 1:maxiter
-        for dim in 1:dims
+        for p in 1:dim
             for i=1:n
                 numer, denom = 0.0, 0.0
                 for j=1:n
                     i==j && continue
-                    numer += w[i,j] * (X[dim][j] + dist[i,j] * (X[dim][i] - X[dim][j]) / norm_ij(X, i, j))
+                    numer += w[i,j] * (X[p][j] + dist[i,j] * (X[p][i] - X[p][j]) / norm_ij(X, i, j))
                     denom += w[i,j]
                 end
                 if denom != 0
-                    X[dim][i] = numer / denom
+                    X[p][i] = numer / denom
                 end
             end
         end
@@ -153,19 +154,19 @@ function by_axis_local_stress_graph(adjmat::AbstractMatrix, node_weights::Abstra
         laststress = thisstress
     end
 
-    dims == 2 ? (X..., nothing) : X
+    dim == 2 ? (X..., nothing) : X
 end
 
 
 function tree_graph end
 
-if Plot.is_installed("LightGraphs")
+if Plots.is_installed("LightGraphs")
     @eval begin
         import LightGraphs
 
-        adjacency_matrix()
+        # adjacency_matrix()
 
-        function tree_graph(d::KW, adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1)))
+        function tree_graph(d::KW, adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1)); kw...)
         end
     end
 end
@@ -263,7 +264,7 @@ const _graph_funcs = KW(
     :tree => tree_graph,
 )
 
-@recipe function f(g::GraphPlot; dim = 2,
+@recipe function f(g::GraphPlot; dim = 2, free_dims = 1:dim,
                                  T = Float64,
                                  curves = true,
                                  curvature_scalar = 1,
@@ -277,7 +278,7 @@ const _graph_funcs = KW(
 
     adjmat = g.args[1]
     n, m = size(adjmat)
-    x, y, z = func(g.args...; kw...)
+    x, y, z = func(g.args...; dim=dim, free_dims=free_dims)
 
     # create a series for the line segments
     if get(d, :linewidth, 1) > 0
