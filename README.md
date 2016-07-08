@@ -73,6 +73,11 @@ graphplot(A, node_weights,
 
 ![](https://cloud.githubusercontent.com/assets/933338/16094180/0dd2edf0-330d-11e6-8596-d12b0b8d5393.png)
 
+
+Fun with algos:
+
+![](https://cloud.githubusercontent.com/assets/933338/16698919/ee1f9e76-451e-11e6-8936-881551f120dd.gif)
+
 ---
 
 #### Arc Diagrams

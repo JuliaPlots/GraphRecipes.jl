@@ -36,14 +36,14 @@ function get_source_destiny_weight{T}(mat::AbstractArray{T,2})
     resize!(source, idx-1), resize!(destiny, idx-1), resize!(weights, idx-1)
 end
 
-function get_source_destiny_weight(source::AVec, destiny::AVec)
+function get_source_destiny_weight(source::AVec{Int}, destiny::AVec{Int})
     if length(source) != length(destiny)
         throw(ArgumentError("Source and destiny must have the same length."))
     end
     source, destiny, Float64[ 1.0 for i in source ]
 end
 
-function get_source_destiny_weight(source::AVec, destiny::AVec, weights::AVec)
+function get_source_destiny_weight(source::AVec{Int}, destiny::AVec{Int}, weights::AVec)
     if !(length(source) == length(destiny) == length(weights))
         throw(ArgumentError("Source, destiny and weights must have the same length."))
     end
@@ -53,7 +53,7 @@ end
 # -----------------------------------------------------
 
 
-function get_adjacency_matrix(source::AVec, destiny::AVec, weights::AVec)
+function get_adjacency_matrix(source::AVec{Int}, destiny::AVec{Int}, weights::AVec)
     n = max(maximum(source), maximum(destiny))
     full(sparse(source, destiny, weights, n, n))
 end
@@ -107,7 +107,7 @@ function spectral_graph(adjmat::AMat; node_weights::AVec = ones(size(adjmat,1)),
     vec(v[2,:]), vec(v[3,:]), vec(v[4,:])
 end
 
-function spectral_graph(source::AVec, destiny::AVec, weights::AVec; kw...)
+function spectral_graph(source::AVec{Int}, destiny::AVec{Int}, weights::AVec; kw...)
     spectral_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
@@ -169,6 +169,7 @@ function stress(X, dist, w)
     tot
 end
 
+
 # follows section 2.3 from http://link.springer.com/chapter/10.1007%2F978-3-540-31843-9_25#page-1
 # Localized optimization, updates: x
 function by_axis_local_stress_graph(adjmat::AMat;
@@ -184,7 +185,7 @@ function by_axis_local_stress_graph(adjmat::AMat;
 
     # graph-theoretical distance between node i and j (i.e. shortest path distance)
     # TODO: calculate a real distance
-    dist = map(a -> a==0 ? 5.0 : a, adjmat)
+    dist = estimate_distance(adjmat)
 
     # also known as kᵢⱼ in "axis-by-axis stress minimization".  the -2 could also be 0 or -1?
     w = dist .^ -2
@@ -219,49 +220,107 @@ function by_axis_local_stress_graph(adjmat::AMat;
     dim == 2 ? (X..., nothing) : X
 end
 
-function by_axis_local_stress_graph(source::AVec, destiny::AVec, weights::AVec, args...; kw...)
-    by_axis_local_stress_graph(get_adjacency_matrix(source, destiny, weights), args...; kw...)
+function by_axis_local_stress_graph(source::AVec{Int}, destiny::AVec{Int}, weights::AVec; kw...)
+    by_axis_local_stress_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
 # -----------------------------------------------------
 
-# if Plots.is_installed("LightGraphs")
-#     @eval begin
-#         import LightGraphs
+if Plots.is_installed("LightGraphs")
+    @eval begin
+        import LightGraphs
 
-#         # adjacency_matrix()
-
-#     end
-# end
-
-function tree_graph(adjmat::AMat, args...; kw...)
-    tree_graph(get_source_destiny_weight(adjmat)..., args...; kw...)
+        # TODO: so much wasteful conversion... do better
+        function estimate_distance(adjmat::AMat)
+            source, destiny, weights = get_source_destiny_weight(adjmat)
+            n = size(adjmat,1)
+            g = LightGraphs.Graph(n)
+            for (si,di,wi) in zip(source,destiny,weights)
+                LightGraphs.add_edge!(g, si, di)
+            end
+            convert(Matrix{Float64}, hcat(map(i->LightGraphs.dijkstra_shortest_paths(g, i).dists, 1:n)...))
+        end
+    end
+else
+    @eval function estimate_distance(adjmat::AMat)
+        map(a -> a==0 ? 5.0 : a, adjmat)
+    end
 end
 
-function tree_graph(source::AVec, destiny::AVec, weights::AVec;
-                    node_weights::AVec = ones(length(source)),
-                    direction::Symbol = :down,  # flow of tree: left, right, up, down
+function tree_graph(adjmat::AMat; kw...)
+    tree_graph(get_source_destiny_weight(adjmat)...; kw...)
+end
+
+function tree_graph(source::AVec{Int}, destiny::AVec{Int}, weights::AVec;
+                    node_weights::AVec = ones(max(maximum(source), maximum(destiny))),
+                    root::Symbol = :top,  # flow of tree: left, right, top, bottom
                     layers_scalar = 1.0,
+                    layers = nothing,
                     dim = 2,
                     kw...)
     extrakw = KW(kw)
     n = length(node_weights)
-    layers = zeros(Int, n)
+
+    # @show root
 
     # TODO: compute layers, which get bigger as you go away from the root
-    layers = rand(1:4, n)
+    if layers == nothing
+        # layers = rand(1:4, n)
+
+        # build a list of children (adjacency list)
+        alist = Vector{Int}[Int[] for i=1:n]
+        indeg, outdeg = zeros(Int, n), zeros(Int, n)
+        for (si,di) in zip(source, destiny)
+            push!(alist[si], di)
+            indeg[di] += 1
+            outdeg[si] += 1
+        end
+
+        # choose root to be the node with lots going out, but few coming in
+        netdeg = outdeg - 5indeg
+        idxs = sortperm(netdeg, rev=true)
+        # rootidx = findmax(netdeg)
+        # @show outdeg indeg netdeg idxs alist
+        placed = Int[]
+
+        layers = zeros(n)
+        for i=1:n
+            idx = shift!(idxs)
+
+            # first, place this after its parents
+            for j in placed
+                if idx in alist[j]
+                    layers[idx] = max(layers[idx], layers[j] + 1)
+                end
+            end
+            
+            # next, shift its children lower
+            for j in idxs
+                if j in alist[idx]
+                    layers[j] = max(layers[j], layers[idx] + 1)
+                end
+            end
+            
+            push!(placed, idx)
+        end
+    end
+
+    # reverse direction?
+    if root in (:top, :right)
+        layers = -layers
+    end
 
     # TODO: normalize layers somehow so it's in line with distances
     layers .*= layers_scalar
     if dim == 2
-        if direction in (:up, :down)
+        if root in (:top, :bottom)
             extrakw[:y] = layers
             extrakw[:free_dims] = [1]
-        elseif direction in (:left, :right)
+        elseif root in (:left, :right)
             extrakw[:x] = layers
             extrakw[:free_dims] = [2]
         else
-            error("unknown direction: $direction")
+            error("unknown root: $root")
         end
     else
         error("3d not supported")
@@ -321,7 +380,7 @@ const _graph_funcs = KW(
                    T = Float64,
                    curves = true,
                    curvature_scalar = 0.2,
-                   direction = :down,
+                   root = :top,
                    node_weights = nothing,
                    x = nothing,
                    y = nothing,
@@ -342,6 +401,7 @@ const _graph_funcs = KW(
     # types = map(typeof, g.args)
     # adjmat = g.args[1]
     # n, m = size(adjmat)
+    # @show root
 
     # do we want to compute coordinates?
     if (_3d && (x == nothing || y == nothing || z == nothing)) || (!_3d && (x == nothing || y == nothing))
@@ -353,7 +413,7 @@ const _graph_funcs = KW(
             node_weights = node_weights,
             dim = dim,
             free_dims = free_dims,
-            direction = direction
+            root = root
         )
     end
     # @show x y z
