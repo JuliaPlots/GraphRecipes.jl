@@ -186,6 +186,7 @@ function by_axis_local_stress_graph(adjmat::AMat;
     # graph-theoretical distance between node i and j (i.e. shortest path distance)
     # TODO: calculate a real distance
     dist = estimate_distance(adjmat)
+    # @show dist
 
     # also known as kᵢⱼ in "axis-by-axis stress minimization".  the -2 could also be 0 or -1?
     w = dist .^ -2
@@ -232,7 +233,7 @@ if Plots.is_installed("LightGraphs")
 
         # TODO: so much wasteful conversion... do better
         function estimate_distance(adjmat::AMat)
-            source, destiny, weights = get_source_destiny_weight(adjmat)
+            source, destiny, weights = get_source_destiny_weight(sparse(adjmat))
             n = size(adjmat,1)
             g = LightGraphs.Graph(n)
             for (si,di,wi) in zip(source,destiny,weights)
