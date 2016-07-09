@@ -1,11 +1,4 @@
-# @userplot MarginalHist
 @shorthands marginalhist
-
-# @recipe function f(h::MarginalHist)
-#     if length(h.args) != 2 || !(typeof(h.args[1]) <: AbstractVector) || !(typeof(h.args[2]) <: AbstractVector)
-#         error("Marginal Histograms should be given two vectors.  Got: $(typeof(h.args))")
-#     end
-#     x, y = h.args
 
 @recipe function f(::Type{Val{:marginalhist}}, plt::Plot; density = false)
     x, y = d[:x], d[:y]
@@ -23,15 +16,18 @@
     # main histogram2d
     @series begin
         seriestype := :histogram2d
+        right_margin --> 0mm
+        top_margin --> 0mm
         subplot := 2
     end
     
-    # these are common to both marginal histograms... borrow the first color from the fill gradient
-    ticks --> nothing
+    # these are common to both marginal histograms
+    ticks := nothing
+    guide := ""
     foreground_color_subplot := RGBA(0,0,0,0)
-    fillcolor := getColor(colorscheme(get(d, :fillcolor, Plots.default_gradient())))
+    fillcolor --> :black
     fillalpha --> 0.3
-    linealpha --> 0.3
+    linealpha --> 0.7
 
     if density
         trim := true
@@ -43,6 +39,7 @@
     # upper histogram
     @series begin
         subplot := 1
+        bottom_margin --> 0mm
         y := x
     end
     
@@ -50,6 +47,7 @@
     @series begin
         orientation := :h
         subplot := 3
+        left_margin --> 0mm
         y := y
     end
 end
