@@ -15,6 +15,7 @@ end
 
 if Plots.is_installed("Shapefile")
     @eval begin
+        import Shapefile
         function shapefile_coords(poly::Shapefile.ESRIShape)
             start_indices = poly.parts+1
             end_indices = vcat(poly.parts[2:end], length(poly.points))
