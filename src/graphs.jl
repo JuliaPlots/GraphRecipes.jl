@@ -36,19 +36,20 @@ function get_source_destiny_weight{T}(mat::AbstractArray{T,2})
     resize!(source, idx-1), resize!(destiny, idx-1), resize!(weights, idx-1)
 end
 
-function get_source_destiny_weight(source::AVec{Int}, destiny::AVec{Int})
+function get_source_destiny_weight(source::AVec, destiny::AVec)
     if length(source) != length(destiny)
         throw(ArgumentError("Source and destiny must have the same length."))
     end
     source, destiny, Float64[ 1.0 for i in source ]
 end
 
-function get_source_destiny_weight(source::AVec{Int}, destiny::AVec{Int}, weights::AVec)
+function get_source_destiny_weight(source::AVec, destiny::AVec, weights::AVec)
     if !(length(source) == length(destiny) == length(weights))
         throw(ArgumentError("Source, destiny and weights must have the same length."))
     end
     source, destiny, weights
 end
+
 
 # -----------------------------------------------------
 
@@ -383,6 +384,7 @@ const _graph_funcs = KW(
                    curvature_scalar = 0.2,
                    root = :top,
                    node_weights = nothing,
+                   names = [],
                    x = nothing,
                    y = nothing,
                    z = nothing,
@@ -392,17 +394,17 @@ const _graph_funcs = KW(
     _3d = dim == 3
 
     source, destiny, weights = get_source_destiny_weight(g.args...)
+    if !(eltype(source) <: Integer)
+        names = unique(sort(vcat(source,destiny)))
+        source = Int[findfirst(names, si) for si in source]
+        destiny = Int[findfirst(names, di) for di in destiny]
+    end
     n = max(maximum(source), maximum(destiny))
-    # @show n source destiny weights
 
     if node_weights == nothing
         node_weights = ones(n)
     end
     @assert length(node_weights) == n
-    # types = map(typeof, g.args)
-    # adjmat = g.args[1]
-    # n, m = size(adjmat)
-    # @show root
 
     # do we want to compute coordinates?
     if (_3d && (x == nothing || y == nothing || z == nothing)) || (!_3d && (x == nothing || y == nothing))
@@ -417,7 +419,6 @@ const _graph_funcs = KW(
             root = root
         )
     end
-    # @show x y z
 
     # create a series for the line segments
     if get(d, :linewidth, 1) > 0
@@ -431,77 +432,26 @@ const _graph_funcs = KW(
                                                     curvature_scalar)
                     push!(xseg, x[si], xpt, x[di])
                     push!(yseg, y[si], ypt, y[di])
+                    _3d && push!(zseg, z[si], z[si], z[di])
                 else
                     push!(xseg, x[si], x[di])
                     push!(yseg, y[si], y[di])
+                    _3d && push!(zseg, z[si], z[di])
                 end
-                _3d && push!(zseg, z[si], z[di])
             end
 
             # generate a list of colors, one per segment
             grad = get(d, :linecolor, nothing)
             if isa(grad, ColorGradient)
-                # @show weights
                 line_z := weights
-                # wmin, wmax = extrema(weights)
-                # if wmin > wmax
-                #     # set the line_z values
-                #     line_z := weights
-                #     # line_z := [(wi-wmin)/(wmax-wmin) for wi in weights]
-                # else
-                #     # no variation in weights... override to black
-                #     linecolor := :black
-                # end
             end
-
-            # lx, ly = zeros(0), zeros(0)
-            # lz = _3d ? zeros(0) : nothing
-            # line_z = zeros(0)
-
-            # # skipped when user overrides linewidth to 0
-            # # we want to build new lx/ly/lz for the lines
-            # # note: we only do the lower triangle
-            # for i=2:n, j=1:i-1
-            #     aij = adjmat[i,j]
-            #     if aij ≉ 0
-            #         # @show aij, x,y,i,j
-            #         # add the first point, NaN-separated
-            #         Plots.nanpush!(lx, x[i])
-            #         Plots.nanpush!(ly, y[i])
-            #         _3d && Plots.nanpush!(lz, z[i])
-
-            #         # add curve control points?
-            #         if curves
-            #             xpt, ypt = random_control_point(x[i], x[j], y[i], y[j], curvature_scalar)
-            #             push!(lx, xpt)
-            #             push!(ly, ypt)
-            #             # @show (x[i], xpt, x[j]), (y[i], ypt, y[j])
-            #             _3d && push!(lz, 0.5(z[i] + z[j]))
-            #         end
-
-            #         # add the last point and line_z value
-            #         push!(lx, x[j])
-            #         push!(ly, y[j])
-            #         _3d && push!(lz, z[j])
-            #         push!(line_z, aij)
-            #     end
-            # end
-
-            # # update line_z to the correct size
-            # if isa(get(d, :linecolor, nothing), ColorGradient)
-            #     line_z = vec(repmat(line_z', curves ? 4 : 3, 1))
-            #     line_z --> line_z, :quiet
-            # end
 
             seriestype := (curves ? :curves : (_3d ? :path3d : :path))
             series_annotations := []
-            # linecolor --> :black
             linewidth --> 1
             markershape := :none
             markercolor := :black
             primary := false
-            # Plots.DD(d)
-            # _3d ? (lx, ly, lz) : (lx, ly)
             _3d ? (xseg.pts, yseg.pts, zseg.pts) : (xseg.pts, yseg.pts)
         end
     end
@@ -513,10 +463,8 @@ const _graph_funcs = KW(
     grid --> false
     legend --> false
     ticks --> nothing
-    # if length(g.args) > 1
-        # node_weights = g.args[2]
-        markersize --> 10 + 100node_weights / sum(node_weights)
-    # end
+    series_annotations --> map(string,names)
+    markersize --> 10 + 100node_weights / sum(node_weights)
     _3d ? (x, y, z) : (x, y)
 end
 
@@ -561,7 +509,7 @@ end
     usegradient = length(unique(weights)) != 1
 
     if usegradient
-        colorgradient = ColorGradient(get(d,:linecolor,Plots.default_gradient()))
+        colorgradient = ColorGradient(get(d,:linecolor,cgrad()))
         wmin,wmax = extrema(weights)
     end
 
@@ -572,7 +520,7 @@ end
             xj = vertices[j]
             
             if usegradient
-                linecolor --> getColorZ(colorgradient, (value-wmin)/(wmax-wmin))
+                linecolor --> colorgradient[(value-wmin)/(wmax-wmin)]
             end
             
             legend --> false

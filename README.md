@@ -27,22 +27,24 @@ for i=1:n
 end
 node_weights = 1:n
 
-graphplot(A, node_weights,
-		  marker = (:heat, :rect),
-		  line = (3, 0.5, :blues),
-		  marker_z = 1:n)
+graphplot(A,
+    node_weights = 1:n,
+    marker = (:heat, :rect),
+    line = (3, 0.5, :blues),
+    marker_z = 1:n,
+    names = 1:n
+)
 ```
 
 ![](https://cloud.githubusercontent.com/assets/933338/16093627/9da7b26a-330a-11e6-9733-9d28d5bab604.png)
 
 ```julia
-graphplot(A, node_weights,
-		  dim = 3,
-		  line = (3, 0.5, :blues),
-		  marker_z = 1:n,
-		  xlim = (-0.1,  0.15),
-		  ylim = (-0.05, 0.08),
-		  zlim = (-0.07, 0.08),
+graphplot(A,
+    node_weights = 1:n,
+    dim = 3,
+    line = (3, 0.5, :blues),
+    marker_z = 1:n
+)
 ```
 
 ![](https://cloud.githubusercontent.com/assets/933338/16094180/0dd2edf0-330d-11e6-8596-d12b0b8d5393.png)
