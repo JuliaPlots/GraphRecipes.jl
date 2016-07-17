@@ -212,7 +212,7 @@ function by_axis_local_stress_graph(adjmat::AMat;
 
         # check for convergence of the total stress
         thisstress = stress(X, dist, w)
-        if abs(thisstress - laststress) / abs(laststress) < 1e-4
+        if abs(thisstress - laststress) / abs(laststress) < 1e-5
             info("converged. numiter=$k last=$laststress this=$thisstress")
             break
         end
@@ -268,43 +268,7 @@ function tree_graph(source::AVec{Int}, destiny::AVec{Int}, weights::AVec;
     # TODO: compute layers, which get bigger as you go away from the root
     if layers == nothing
         # layers = rand(1:4, n)
-
-        # build a list of children (adjacency list)
-        alist = Vector{Int}[Int[] for i=1:n]
-        indeg, outdeg = zeros(Int, n), zeros(Int, n)
-        for (si,di) in zip(source, destiny)
-            push!(alist[si], di)
-            indeg[di] += 1
-            outdeg[si] += 1
-        end
-
-        # choose root to be the node with lots going out, but few coming in
-        netdeg = outdeg - 5indeg
-        idxs = sortperm(netdeg, rev=true)
-        # rootidx = findmax(netdeg)
-        # @show outdeg indeg netdeg idxs alist
-        placed = Int[]
-
-        layers = zeros(n)
-        for i=1:n
-            idx = shift!(idxs)
-
-            # first, place this after its parents
-            for j in placed
-                if idx in alist[j]
-                    layers[idx] = max(layers[idx], layers[j] + 1)
-                end
-            end
-            
-            # next, shift its children lower
-            for j in idxs
-                if j in alist[idx]
-                    layers[j] = max(layers[j], layers[idx] + 1)
-                end
-            end
-            
-            push!(placed, idx)
-        end
+        layers = compute_tree_layers2(source, destiny, n)
     end
 
     # reverse direction?
@@ -334,6 +298,82 @@ function tree_graph(source::AVec{Int}, destiny::AVec{Int}, weights::AVec;
                                dim=dim,
                                extrakw...)
 end
+
+
+function adjlist_and_degrees(source, destiny, n)
+    # build a list of children (adjacency list)
+    alist = Vector{Int}[Int[] for i=1:n]
+    indeg, outdeg = zeros(Int, n), zeros(Int, n)
+    for (si,di) in zip(source, destiny)
+        push!(alist[si], di)
+        indeg[di] += 1
+        outdeg[si] += 1
+    end
+    alist, indeg, outdeg
+end
+
+function compute_tree_layers(source, destiny, n)
+    alist, indeg, outdeg = adjlist_and_degrees(source, destiny, n)
+
+    # choose root to be the node with lots going out, but few coming in
+    netdeg = outdeg - 50indeg
+    idxs = sortperm(netdeg, rev=true)
+    # rootidx = findmax(netdeg)
+    # @show outdeg indeg netdeg idxs alist
+    placed = Int[]
+
+    layers = zeros(n)
+    for i=1:n
+        idx = shift!(idxs)
+
+        # first, place this after its parents
+        for j in placed
+            if idx in alist[j]
+                layers[idx] = max(layers[idx], layers[j] + 1)
+            end
+        end
+        
+        # next, shift its children lower
+        for j in idxs
+            if j in alist[idx]
+                layers[j] = max(layers[j], layers[idx] + 1)
+            end
+        end
+        
+        push!(placed, idx)
+    end
+    layers
+end
+
+# an alternative algo to pick tree layers... generate a list of roots,
+# and for each root, make a pass through the tree (without recurrency)
+# and push the children below their parents
+function compute_tree_layers2(source, destiny, n)
+    alist, indeg, outdeg = adjlist_and_degrees(source, destiny, n)
+    roots = filter(i->indeg[i]==0, 1:n)
+    if isempty(roots)
+        roots = [1]
+    end
+
+    layers = zeros(Int,n)
+    for i in roots
+        shift_children!(layers, alist, Int[], i)
+    end
+    layers
+end
+
+function shift_children!(layers, alist, placed, parent)
+    for idx in alist[parent]
+        if !(idx in placed) && layers[idx] <= layers[parent]
+            layers[idx] = layers[parent] + 1
+            push!(placed, idx)
+        end
+    end
+    for idx in alist[parent]
+        shift_children!(layers, alist, placed, idx)
+    end
+end
+
 
 # -----------------------------------------------------
 
@@ -388,7 +428,8 @@ const _graph_funcs = KW(
                    x = nothing,
                    y = nothing,
                    z = nothing,
-                   func = spectral_graph
+                   func = spectral_graph,
+                   shorten = 0.2
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -426,16 +467,18 @@ const _graph_funcs = KW(
             xseg, yseg, zseg = Segments(), Segments(), Segments()
             for (si, di, wi) in zip(source, destiny, weights)
                 # add a line segment
+                xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
+                # ysi, ydi = shorten_segment(y[si], y[di])
                 if curves
-                    xpt, ypt = random_control_point(x[si], x[di],
-                                                    y[si], y[di],
+                    xpt, ypt = random_control_point(xsi, xdi,
+                                                    ysi, ydi,
                                                     curvature_scalar)
-                    push!(xseg, x[si], xpt, x[di])
-                    push!(yseg, y[si], ypt, y[di])
+                    push!(xseg, xsi, xpt, xdi)
+                    push!(yseg, ysi, ypt, ydi)
                     _3d && push!(zseg, z[si], z[si], z[di])
                 else
-                    push!(xseg, x[si], x[di])
-                    push!(yseg, y[si], y[di])
+                    push!(xseg, xsi, xdi)
+                    push!(yseg, ysi, ydi)
                     _3d && push!(zseg, z[si], z[di])
                 end
             end
@@ -456,6 +499,12 @@ const _graph_funcs = KW(
         end
     end
 
+    xlims --> extrema_plus_buffer(x)
+    ylims --> extrema_plus_buffer(y)
+    if _3d
+        zlims --> extrema_plus_buffer(z)
+    end
+
     seriestype := (_3d ? :scatter3d : :scatter)
     linewidth := 0
     linealpha := 0
@@ -466,6 +515,19 @@ const _graph_funcs = KW(
     series_annotations --> map(string,names)
     markersize --> 10 + 100node_weights / sum(node_weights)
     _3d ? (x, y, z) : (x, y)
+end
+
+function extrema_plus_buffer(v)
+    vmin,vmax = extrema(v)
+    vdiff = vmax-vmin
+    buffer = vdiff * 0.1
+    vmin - buffer, vmax + buffer
+end
+
+function shorten_segment(x1, y1, x2, y2, shorten)
+    xshort = shorten * (x2-x1)
+    yshort = shorten * (y2-y1)
+    x1+xshort, y1+yshort, x2-xshort, y2-yshort
 end
 
 # ---------------------------------------------------------------------------
