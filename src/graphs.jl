@@ -613,8 +613,6 @@ end
 # =================================================
 # Arc and chord diagrams
 
-# curvecolor(value, min, max, grad) = getColorZ(grad, (value-min)/(max-min))
-
 # ---------------------------------------------------------------------------
 # Chord diagram
 
@@ -625,13 +623,6 @@ function arcshape(θ1, θ2)
     )))
 end
 
-# colorlist(grad, ::Void) = :darkgray
-
-# function colorlist(grad, z)
-#     zmin, zmax = extrema(z)
-#     RGBA{Float64}[getColorZ(grad, (zi-zmin)/(zmax-zmin)) for zi in z]'
-# end
-
 # """
 # `chorddiagram(source, destiny, weights[, grad, zcolor, group])`
 
@@ -639,25 +630,12 @@ end
 # using `weights` to determine the edge colors using `grad`.
 # `zcolor` or `group` can be used to determine the node colors.
 # """
-# function chorddiagram(source, destiny, weights; kargs...)
-
 
 @userplot ChordDiagram
 
 @recipe function f(h::ChordDiagram)
-    
     source, destiny, weights = get_source_destiny_weight(h.args...)
 
-    # args  = KW(kargs)
-    # grad  = pop!(args, :grad,   ColorGradient([colorant"darkred", colorant"darkblue"]))
-    # zcolor= pop!(args, :zcolor, nothing)
-    # group = pop!(args, :group,  nothing)
-
-    # if zcolor !== nothing && group !== nothing
-    #     throw(ErrorException("group and zcolor can not be used together."))
-    # end
-
-    # if length(source) == length(destiny) == length(weights)
     xlims := (-1.2,1.2)
     ylims := (-1.2,1.2)
     legend := false
@@ -687,28 +665,7 @@ end
             primary := false
             ()
         end
-        # curve = BezierCurve(P2[ (cos((source[i ]-1)*δ + 0.5Δα), sin((source[i ]-1)*δ + 0.5Δα)), (0,0),
-        #                         (cos((destiny[i]-1)*δ + 0.5Δα), sin((destiny[i]-1)*δ + 0.5Δα)) ])
-        # plot!(curve_points(curve), line = grad[(weights[i] - weightmin) / (weightmax - weightmin)], 1, 1))
     end
-
-    # if group === nothing
-    #     c =  colorlist(grad, zcolor)
-    # elseif length(group) == nodemax
-
-    #     idx = collect(0:(nodemax-1))
-
-    #     for g in group
-    #         plot!([arcshape(n*δ, n*δ + Δα) for n in idx[group .== g]]; args...)
-    #     end
-
-    #     return plt
-
-    # else
-    #     throw(ErrorException("group should the ", nodemax, " elements."))
-    # end
-
-    # grad = cgrad(d[:fillcolor], d[:fillalpha])
 
     for n in 0:(nodemax-1)
         sx, sy = arcshape(n*δ, n*δ + Δα)
@@ -719,14 +676,6 @@ end
             ()
         end
     end
-
-    # plot!([arcshape(n*δ, n*δ + Δα) for n in 0:(nodemax-1)]; mc=c, args...)
-
-    # return plt
-
-    # else
-    #     throw(ArgumentError("source, destiny and weights should have the same length"))
-    # end
 end
 
 
