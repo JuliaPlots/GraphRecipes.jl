@@ -4,7 +4,7 @@
 function get_source_destiny_weight{T}(mat::AbstractArray{T,2})
     nrow, ncol = size(mat)    # rows are sources and columns are destinies
 
-    nosymmetric = !issym(mat) # plots only triu for symmetric matrices
+    nosymmetric = !issymmetric(mat) # plots only triu for symmetric matrices
     nosparse = !issparse(mat) # doesn't plot zeros from a sparse matrix
 
     L = length(mat)
