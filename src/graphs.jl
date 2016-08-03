@@ -179,7 +179,7 @@ function by_axis_local_stress_graph(adjmat::AMat;
                               x = rand(length(node_weights)),
                               y = rand(length(node_weights)),
                               z = rand(length(node_weights)),
-                              maxiter = 100,
+                              maxiter = 300,
                               kw...)
     adjmat = make_symmetric(adjmat)
     n = length(node_weights)
@@ -213,7 +213,7 @@ function by_axis_local_stress_graph(adjmat::AMat;
         # check for convergence of the total stress
         thisstress = stress(X, dist, w)
         if abs(thisstress - laststress) / abs(laststress) < 1e-5
-            info("converged. numiter=$k last=$laststress this=$thisstress")
+            # info("converged. numiter=$k last=$laststress this=$thisstress")
             break
         end
         laststress = thisstress
@@ -245,6 +245,7 @@ if Plots.is_installed("LightGraphs")
     end
 else
     @eval function estimate_distance(adjmat::AMat)
+        warn("Install LightGraphs for the best layout calculations.")
         map(a -> a==0 ? 5.0 : a, adjmat)
     end
 end
@@ -359,6 +360,22 @@ function compute_tree_layers2(source, destiny, n)
     for i in roots
         shift_children!(layers, alist, Int[], i)
     end
+
+    # now that we've shifted children out, move parents closer to their closest children
+    while true
+        shifted = false
+        for parent=1:n
+            if !(isempty(alist[parent]))
+                minidx = minimum(layers[child] for child in alist[parent])
+                if layers[parent] < minidx - 1
+                    shifted = true
+                    layers[parent] = minidx - 1
+                end
+            end
+        end
+        shifted || break
+    end
+
     layers
 end
 
@@ -366,11 +383,13 @@ function shift_children!(layers, alist, placed, parent)
     for idx in alist[parent]
         if !(idx in placed) && layers[idx] <= layers[parent]
             layers[idx] = layers[parent] + 1
-            push!(placed, idx)
         end
     end
     for idx in alist[parent]
-        shift_children!(layers, alist, placed, idx)
+        if idx != parent && !(idx in placed)
+            push!(placed, idx)
+            shift_children!(layers, alist, placed, idx)
+        end
     end
 end
 
@@ -429,7 +448,7 @@ const _graph_funcs = KW(
                    y = nothing,
                    z = nothing,
                    func = spectral_graph,
-                   shorten = 0.2
+                   shorten = 0.1
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -536,7 +555,7 @@ end
 
 function arcvertices{T}(source::AVec{T}, destiny::AVec{T})
     values = unique(vcat(source, destiny))
-    [ i => i for i in values ]
+    [(i, i) for i in values ]
 end
 
 function arcvertices{T<:Union{Char,Symbol,AbstractString}}(source::AVec{T}, 
