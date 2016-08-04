@@ -277,6 +277,9 @@ function tree_graph(source::AVec{Int}, destiny::AVec{Int}, weights::AVec;
         layers = -layers
     end
 
+    # add noise
+    layers = layers + 0.6rand(size(layers)...)
+
     # TODO: normalize layers somehow so it's in line with distances
     layers .*= layers_scalar
     if dim == 2
