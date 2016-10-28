@@ -47,3 +47,43 @@ if Plots.is_installed("Shapefile")
 end
 
 # ----------------------------------------------------------------
+
+# a recipe for composite lines with varying attributes
+@userplot CompositeLine
+
+@recipe function f(h::CompositeLine)
+    x, y, linegroups = h.args
+
+    seriesx = Dict{eltype(linegroups), Vector{Float64}}()
+    seriesy = Dict{eltype(linegroups), Vector{Float64}}()
+
+    for i in 1:length(linegroups)
+        if ! haskey(seriesx, linegroups[i])
+            seriesx[linegroups[i]] = Float64[]
+            seriesy[linegroups[i]] = Float64[]
+        end
+
+        push!(seriesx[linegroups[i]], x[i])
+        push!(seriesy[linegroups[i]], y[i])
+
+        if i > 1 && linegroups[i] != linegroups[i-1]
+            # End the previous series with the same point to avoid gaps
+            push!(seriesx[linegroups[i-1]], x[i])
+            push!(seriesy[linegroups[i-1]], y[i])
+
+            # Add an NaN to stop the group
+            push!(seriesx[linegroups[i-1]], NaN)
+            push!(seriesy[linegroups[i-1]], NaN)
+
+        end
+    end
+
+    seriestype := :path
+
+    for key in keys(seriesx)
+        @series begin
+            seriesx[key], seriesy[key]
+        end
+    end
+
+end
