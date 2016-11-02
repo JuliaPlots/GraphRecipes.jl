@@ -235,12 +235,9 @@ if Plots.is_installed("LightGraphs")
         # TODO: so much wasteful conversion... do better
         function estimate_distance(adjmat::AMat)
             source, destiny, weights = get_source_destiny_weight(sparse(adjmat))
-            n = size(adjmat,1)
-            g = LightGraphs.Graph(n)
-            for (si,di,wi) in zip(source,destiny,weights)
-                LightGraphs.add_edge!(g, si, di)
-            end
-            dists = convert(Matrix{Float64}, hcat(map(i->LightGraphs.dijkstra_shortest_paths(g, i).dists, 1:n)...))
+
+            g = LightGraphs.Graph(adjmat)
+            dists = convert(Matrix{Float64}, hcat(map(i->LightGraphs.dijkstra_shortest_paths(g, i).dists, LightGraphs.vertices(g))...))
             tot = 0.0; cnt = 0
             for (i,d) in enumerate(dists)
                 if d < 1e10
@@ -257,14 +254,15 @@ if Plots.is_installed("LightGraphs")
             dists
         end
 
-        function get_source_destiny_weight(g::LightGraphs.Graph)
-            source = Int[]
-            destiny = Int[]
-            for (i,l) in enumerate(g.fadjlist)
-                for j in l
-                    push!(source, i)
-                    push!(destiny, j)
-                end
+        function get_source_destiny_weight(g::LightGraphs.SimpleGraph)
+
+            source = Vector{Int}()
+            destiny =  Vector{Int}()
+            sizehint!(source, LightGraphs.nv(g))
+            sizehint!(destiny, LightGraphs.nv(g))
+            for (u, v) in LightGraphs.edges(g)
+              push!(source, u)
+              push!(destiny, v)
             end
             get_source_destiny_weight(source, destiny)
         end
