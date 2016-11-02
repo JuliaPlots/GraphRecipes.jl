@@ -240,7 +240,33 @@ if Plots.is_installed("LightGraphs")
             for (si,di,wi) in zip(source,destiny,weights)
                 LightGraphs.add_edge!(g, si, di)
             end
-            convert(Matrix{Float64}, hcat(map(i->LightGraphs.dijkstra_shortest_paths(g, i).dists, 1:n)...))
+            dists = convert(Matrix{Float64}, hcat(map(i->LightGraphs.dijkstra_shortest_paths(g, i).dists, 1:n)...))
+            tot = 0.0; cnt = 0
+            for (i,d) in enumerate(dists)
+                if d < 1e10
+                    tot += d
+                    cnt += 1
+                end
+            end
+            avg = cnt > 0 ? tot / cnt : 1.0
+            for (i,d) in enumerate(dists)
+                if d > 1e10
+                    dists[i] = 3avg
+                end
+            end
+            dists
+        end
+
+        function get_source_destiny_weight(g::LightGraphs.Graph)
+            source = Int[]
+            destiny = Int[]
+            for (i,l) in enumerate(g.fadjlist)
+                for j in l
+                    push!(source, i)
+                    push!(destiny, j)
+                end
+            end
+            get_source_destiny_weight(source, destiny)
         end
     end
 else
@@ -336,14 +362,14 @@ function compute_tree_layers(source, destiny, n)
                 layers[idx] = max(layers[idx], layers[j] + 1)
             end
         end
-        
+
         # next, shift its children lower
         for j in idxs
             if j in alist[idx]
                 layers[j] = max(layers[j], layers[idx] + 1)
             end
         end
-        
+
         push!(placed, idx)
     end
     layers
@@ -450,7 +476,7 @@ const _graph_funcs = KW(
                    x = nothing,
                    y = nothing,
                    z = nothing,
-                   func = spectral_graph,
+                   func = by_axis_local_stress_graph,
                    shorten = 0.1
                   )
     @assert dim in (2, 3)
@@ -561,7 +587,7 @@ function arcvertices{T}(source::AVec{T}, destiny::AVec{T})
     [(i, i) for i in values ]
 end
 
-function arcvertices{T<:Union{Char,Symbol,AbstractString}}(source::AVec{T}, 
+function arcvertices{T<:Union{Char,Symbol,AbstractString}}(source::AVec{T},
                                                                    destiny::AVec{T})
     lab2x = Dict{T,Int}()
     n = 1
@@ -570,18 +596,18 @@ function arcvertices{T<:Union{Char,Symbol,AbstractString}}(source::AVec{T},
             lab2x[element] = n
             n += 1
         end
-    end 
+    end
     lab2x
 end
 
 @userplot ArcDiagram
 
 @recipe function f(h::ArcDiagram)
-    
+
     source, destiny, weights = get_source_destiny_weight(h.args...)
-    
+
     vertices = arcvertices(source, destiny)
-    
+
     # Box setup
     legend --> false
     aspect_ratio --> :equal
@@ -589,7 +615,7 @@ end
     foreground_color_axis --> nothing
     foreground_color_border --> nothing
     ticks --> nothing
-    
+
     usegradient = length(unique(weights)) != 1
 
     if usegradient
@@ -599,14 +625,14 @@ end
 
     for (i, j, value) in zip(source,destiny,weights)
         @series begin
-            
+
             xi = vertices[i]
             xj = vertices[j]
-            
+
             if usegradient
                 linecolor --> colorgradient[(value-wmin)/(wmax-wmin)]
             end
-            
+
             legend --> false
             label := ""
             primary := false
@@ -617,7 +643,7 @@ end
             x₀ + r * cos(θ), r * sin(θ)
         end
     end
-    
+
     @series begin
         if eltype(keys(vertices)) <: Union{Char, AbstractString, Symbol}
             series_annotations --> collect(keys(vertices))
@@ -699,5 +725,3 @@ end
         end
     end
 end
-
-
