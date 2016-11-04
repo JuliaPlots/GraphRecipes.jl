@@ -262,7 +262,8 @@ end
                    node_weights = nothing,
                    names = [],
                    fontsize = 9,
-                   nodeshape = :rect,
+                   nodeshape = :hexagon,
+                   nodesize = 1,
                    x = nothing,
                    y = nothing,
                    z = nothing,
@@ -330,7 +331,7 @@ end
             end
 
             seriestype := (curves ? :curves : (_3d ? :path3d : :path))
-            series_annotations := []
+            series_annotations := nothing
             linewidth --> 1
             markershape := :none
             markercolor := :black
@@ -359,14 +360,22 @@ end
     else
         @assert !_3d  # TODO: make this work in 3D
         seriestype := :scatter
-        markersize := 0
-        series_annotations := Plots.series_annotations(
-            map(string,names),
-            nodeshape,
-            font(fontsize),
-            Plots.Brush(0,get(d,:fillcolor,nothing),get(d,:fillalpha,nothing)),
-            Plots.Stroke(1,get(d,:markerstrokecolor,:black),get(d,:markerstrokealpha,nothing),:solid)
-        )
+        # markersize := get(d, :markersize, 1)
+        nodesize = get(d, :markersize, nodesize)
+        nodeshape = get(d, :markershape, nodeshape)
+        nodeshape = if isa(nodeshape, AbstractArray)
+            [Shape(sym) for sym in nodeshape]
+        else
+            Shape(nodeshape)
+        end
+        series_annotations := (map(string,names), nodeshape, font(fontsize), nodesize)
+        # series_annotations := Plots.series_annotations(
+        #     map(string,names),
+        #     nodeshape,
+        #     font(fontsize),
+        #     Plots.Brush(0,get(d,:fillcolor,nothing),get(d,:fillalpha,nothing)),
+        #     Plots.Stroke(1,get(d,:markerstrokecolor,:black),get(d,:markerstrokealpha,nothing),:solid)
+        # )
     end
     _3d ? (x, y, z) : (x, y)
 end
