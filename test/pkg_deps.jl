@@ -40,7 +40,9 @@ end
 
 
 const all_pkgs = Pkg.available()
+@show all_pkgs
 const deplists = Dict(pkg => Pkg.dependents(pkg) for pkg in all_pkgs)
+@show deplists
 
 const childlists = Dict(pkg => Set{String}() for pkg in all_pkgs)
 for pkg in all_pkgs
@@ -54,6 +56,7 @@ for pkg in all_pkgs
 		end
 	end
 end
+@show childlists
 
 function add_deps(pkg, deps = Set([pkg]))
 	for dep in deplists[pkg]
@@ -89,6 +92,10 @@ function plotdeps(pkg)
 			# 	push!(_alist, [])
 			# 	_idxmap[dep] = length(pkgs)
 			# end
+            if !haskey(idxmap, dep)
+                warn("missing: ", dep)
+                continue
+            end
 			j = idxmap[dep]
 			push!(source, j)
 			push!(destiny, i)
