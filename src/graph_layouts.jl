@@ -140,6 +140,20 @@ end
 
 # -----------------------------------------------------
 
+function buchheim_graph(adjlist::AbstractVector;
+                    node_weights::AbstractVector = ones(length(adjlist)),
+                    root::Symbol = :top,  # flow of tree: left, right, top, bottom
+                    layers_scalar = 1.0,
+                    layers = nothing,
+                    dim = 2,
+                    kw...)
+    @show adjlist
+    positions = NetworkLayout.Buchheim.layout(adjlist, nodesize = convert(Vector{Float64}, node_weights))
+    Plots.unzip(positions)
+end
+
+# -----------------------------------------------------
+
 function tree_graph(adjmat::AbstractMatrix; kw...)
     tree_graph(get_source_destiny_weight(adjmat)...; kw...)
 end

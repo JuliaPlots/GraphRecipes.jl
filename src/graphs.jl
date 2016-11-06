@@ -5,7 +5,7 @@ const _graph_funcs = KW(
     :spectral => spectral_graph,
     :stress => by_axis_local_stress_graph,
     :tree => tree_graph,
-    :buchheim => NetworkLayout.Buchheim.layout,
+    :buchheim => buchheim_graph,
 )
 
 const _graph_inputs = KW(
