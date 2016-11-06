@@ -273,16 +273,19 @@ end
                 # add a line segment
                 # xsi, ysi, xdi, ydi = Plots.shorten_segment(x[si], y[si], x[di], y[di], shorten)
                 if curves
-                    xpts, ypts = directed_curve(x[si], x[di], y[si], y[di],
-                                            xview=x, yview=y, root=root)
-                    push!(xseg, xpts)
-                    push!(yseg, ypts)
-                    # xpt, ypt = Plots.random_control_point(xsi, xdi,
-                    #                                 ysi, ydi,
-                    #                                 curvature_scalar)
-                    # push!(xseg, xsi, xpt, xdi)
-                    # push!(yseg, ysi, ypt, ydi)
-                    # _3d && push!(zseg, z[si], z[si], z[di])
+                    if method in (:tree, :buchheim)
+                        xpts, ypts = directed_curve(x[si], x[di], y[si], y[di],
+                                                xview=x, yview=y, root=root)
+                        push!(xseg, xpts)
+                        push!(yseg, ypts)
+                    else
+                        xpt, ypt = Plots.random_control_point(xsi, xdi,
+                                                        ysi, ydi,
+                                                        curvature_scalar)
+                        push!(xseg, xsi, xpt, xdi)
+                        push!(yseg, ysi, ypt, ydi)
+                        _3d && push!(zseg, z[si], z[si], z[di])
+                    end
                 else
                     push!(xseg, xsi, xdi)
                     push!(yseg, ysi, ydi)
