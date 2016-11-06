@@ -207,39 +207,6 @@ else
 end
 
 
-# -----------------------------------------------------
-
-function extrema_plus_buffer(v)
-    vmin,vmax = extrema(v)
-    vdiff = vmax-vmin
-    buffer = vdiff * 0.2
-    vmin - buffer, vmax + buffer
-end
-
-function shorten_segment(x1, y1, x2, y2, shorten)
-    xshort = shorten * (x2-x1)
-    yshort = shorten * (y2-y1)
-    x1+xshort, y1+yshort, x2-xshort, y2-yshort
-end
-
-# we want to randomly pick a point to be the center control point of a bezier
-# curve, which is both equidistant between the endpoints and normally distributed
-# around the midpoint
-function random_control_point(xi, xj, yi, yj, curvature_scalar)
-    xmid = 0.5 * (xi+xj)
-    ymid = 0.5 * (yi+yj)
-
-    # get the angle of y relative to x
-    theta = atan((yj-yi) / (xj-xi)) + 0.5pi
-
-    # calc random shift relative to dist between x and y
-    dist = sqrt((xj-xi)^2 + (yj-yi)^2)
-    dist_from_mid = curvature_scalar * (rand()-0.5) * dist
-
-    # now we have polar coords, we can compute the position, adding to the midpoint
-    (xmid + dist_from_mid * cos(theta),
-     ymid + dist_from_mid * sin(theta))
-end
 
 # -----------------------------------------------------
 
@@ -261,7 +228,7 @@ end
                    root = :top,
                    node_weights = nothing,
                    names = [],
-                   fontsize = 9,
+                   fontsize = 7,
                    nodeshape = :hexagon,
                    nodesize = 1,
                    x = nothing,
@@ -289,11 +256,7 @@ end
 
     # do we want to compute coordinates?
     if (_3d && (x == nothing || y == nothing || z == nothing)) || (!_3d && (x == nothing || y == nothing))
-        # if isa(func, Symbol)
-        #     func = _graph_funcs[func]
-        # end
         x, y, z = func(
-            # source, destiny, weights;
             prepare_graph_inputs(method, source, destiny, weights)...;
             node_weights = node_weights,
             dim = dim,
@@ -308,15 +271,18 @@ end
             xseg, yseg, zseg = Segments(), Segments(), Segments()
             for (si, di, wi) in zip(source, destiny, weights)
                 # add a line segment
-                xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
-                # ysi, ydi = shorten_segment(y[si], y[di])
+                # xsi, ysi, xdi, ydi = Plots.shorten_segment(x[si], y[si], x[di], y[di], shorten)
                 if curves
-                    xpt, ypt = random_control_point(xsi, xdi,
-                                                    ysi, ydi,
-                                                    curvature_scalar)
-                    push!(xseg, xsi, xpt, xdi)
-                    push!(yseg, ysi, ypt, ydi)
-                    _3d && push!(zseg, z[si], z[si], z[di])
+                    xpts, ypts = directed_curve(x[si], x[di], y[si], y[di],
+                                            xview=x, yview=y, root=root)
+                    push!(xseg, xpts)
+                    push!(yseg, ypts)
+                    # xpt, ypt = Plots.random_control_point(xsi, xdi,
+                    #                                 ysi, ydi,
+                    #                                 curvature_scalar)
+                    # push!(xseg, xsi, xpt, xdi)
+                    # push!(yseg, ysi, ypt, ydi)
+                    # _3d && push!(zseg, z[si], z[si], z[di])
                 else
                     push!(xseg, xsi, xdi)
                     push!(yseg, ysi, ydi)
@@ -342,10 +308,10 @@ end
 
     axis := nothing
     legend --> false
-    xlims --> extrema_plus_buffer(x)
-    ylims --> extrema_plus_buffer(y)
+    xlims --> Plots.extrema_plus_buffer(x)
+    ylims --> Plots.extrema_plus_buffer(y)
     if _3d
-        zlims --> extrema_plus_buffer(z)
+        zlims --> Plots.extrema_plus_buffer(z)
     end
 
     if isempty(names)
