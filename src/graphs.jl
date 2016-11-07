@@ -265,6 +265,19 @@ end
         )
     end
 
+    # center and rescale to the widest of all dimensions
+    xyz = _3d ? (x,y,z) : (x,y)
+
+    ahw = 1.2 * 0.5 * maximum(v -> maximum(v)-minimum(v), xyz)
+    xcenter = mean(extrema(x))
+    xlims --> (xcenter-ahw, xcenter+ahw)
+    ycenter = mean(extrema(y))
+    ylims --> (ycenter-ahw, ycenter+ahw)
+    if _3d
+        zcenter = mean(extrema(z))
+        zlims --> (zcenter-ahw, zcenter+ahw)
+    end
+
     # create a series for the line segments
     if get(d, :linewidth, 1) > 0
         @series begin
@@ -275,7 +288,7 @@ end
                 if curves
                     if method in (:tree, :buchheim)
                         xpts, ypts = directed_curve(x[si], x[di], y[si], y[di],
-                                                xview=x, yview=y, root=root)
+                                    xview=d[:xlims], yview=d[:ylims], root=root)
                         push!(xseg, xpts)
                         push!(yseg, ypts)
                     else
@@ -311,25 +324,16 @@ end
 
     axis := nothing
     legend --> false
-    xlims --> Plots.extrema_plus_buffer(x)
-    ylims --> Plots.extrema_plus_buffer(y)
-    if _3d
-        zlims --> Plots.extrema_plus_buffer(z)
-    end
 
     if isempty(names)
         seriestype := (_3d ? :scatter3d : :scatter)
         linewidth := 0
         linealpha := 0
-        # foreground_color_border --> nothing
-        # grid --> false
-        # ticks --> nothing
         series_annotations --> map(string,names)
         markersize --> 10 + 100node_weights / sum(node_weights)
     else
         @assert !_3d  # TODO: make this work in 3D
         seriestype := :scatter
-        # markersize := get(d, :markersize, 1)
         nodesize = get(d, :markersize, nodesize)
         nodeshape = get(d, :markershape, nodeshape)
         nodeshape = if isa(nodeshape, AbstractArray)
@@ -338,15 +342,8 @@ end
             Shape(nodeshape)
         end
         series_annotations := (map(string,names), nodeshape, font(fontsize), nodesize)
-        # series_annotations := Plots.series_annotations(
-        #     map(string,names),
-        #     nodeshape,
-        #     font(fontsize),
-        #     Plots.Brush(0,get(d,:fillcolor,nothing),get(d,:fillalpha,nothing)),
-        #     Plots.Stroke(1,get(d,:markerstrokecolor,:black),get(d,:markerstrokealpha,nothing),:solid)
-        # )
     end
-    _3d ? (x, y, z) : (x, y)
+    xyz
 end
 
 # ---------------------------------------------------------------------------

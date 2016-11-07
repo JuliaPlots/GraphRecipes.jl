@@ -91,7 +91,7 @@ function by_axis_local_stress_graph(adjmat::AbstractMatrix;
                               x = rand(length(node_weights)),
                               y = rand(length(node_weights)),
                               z = rand(length(node_weights)),
-                              maxiter = 300,
+                              maxiter = 1000,
                               kw...)
     adjmat = make_symmetric(adjmat)
     n = length(node_weights)
@@ -124,7 +124,7 @@ function by_axis_local_stress_graph(adjmat::AbstractMatrix;
 
         # check for convergence of the total stress
         thisstress = stress(X, dist, w)
-        if abs(thisstress - laststress) / abs(laststress) < 1e-5
+        if abs(thisstress - laststress) / abs(laststress) < 1e-6
             # info("converged. numiter=$k last=$laststress this=$thisstress")
             break
         end
@@ -147,9 +147,9 @@ function buchheim_graph(adjlist::AbstractVector;
                     layers = nothing,
                     dim = 2,
                     kw...)
-    @show adjlist
+    @show adjlist typeof(adjlist)
     positions = NetworkLayout.Buchheim.layout(adjlist, nodesize = convert(Vector{Float64}, node_weights))
-    Plots.unzip(positions)
+    Float64[p[1] for p in positions], Float64[p[2] for p in positions], nothing
 end
 
 # -----------------------------------------------------
