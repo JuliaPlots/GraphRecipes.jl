@@ -236,7 +236,7 @@ end
                    z = nothing,
                    method = :stress,
                    func = get(_graph_funcs, method, by_axis_local_stress_graph),
-                   shorten = 0.1
+                   shorten = 0.0
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -284,10 +284,10 @@ end
             xseg, yseg, zseg = Segments(), Segments(), Segments()
             for (si, di, wi) in zip(source, destiny, weights)
                 # add a line segment
-                # xsi, ysi, xdi, ydi = Plots.shorten_segment(x[si], y[si], x[di], y[di], shorten)
+                xsi, ysi, xdi, ydi = Plots.shorten_segment(x[si], y[si], x[di], y[di], shorten)
                 if curves
                     if method in (:tree, :buchheim)
-                        xpts, ypts = directed_curve(x[si], x[di], y[si], y[di],
+                        xpts, ypts = directed_curve(xsi, xdi, ysi, ydi,
                                     xview=d[:xlims], yview=d[:ylims], root=root)
                         push!(xseg, xpts)
                         push!(yseg, ypts)
