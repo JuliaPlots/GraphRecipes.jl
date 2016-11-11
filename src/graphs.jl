@@ -287,6 +287,13 @@ end
                 xsi, ysi, xdi, ydi = Plots.shorten_segment(x[si], y[si], x[di], y[di], shorten)
                 if curves
                     if method in (:tree, :buchheim)
+                        # for trees, shorten should be on one axis only
+                        # dist = sqrt((x[di]-x[si])^2 + (y[di]-y[si])^2) * shorten
+                        dist = shorten * (root in (:left,:bottom) ? 1 : -1)
+                        ishoriz = root in (:left,:right)
+                        xsi, xdi = (ishoriz ? (x[si]+dist,x[di]-dist) : (x[si],x[di]))
+                        ysi, ydi = (ishoriz ? (y[si],y[di]) : (y[si]+dist,y[di]-dist))
+
                         xpts, ypts = directed_curve(xsi, xdi, ysi, ydi,
                                     xview=d[:xlims], yview=d[:ylims], root=root)
                         push!(xseg, xpts)
@@ -335,13 +342,14 @@ end
         @assert !_3d  # TODO: make this work in 3D
         seriestype := :scatter
         nodesize = get(d, :markersize, nodesize)
+        markersize := nodesize
         nodeshape = get(d, :markershape, nodeshape)
         nodeshape = if isa(nodeshape, AbstractArray)
             [Shape(sym) for sym in nodeshape]
         else
             Shape(nodeshape)
         end
-        series_annotations := (map(string,names), nodeshape, font(fontsize), nodesize)
+        series_annotations := (map(string,names), nodeshape, font(fontsize))
     end
     xyz
 end
