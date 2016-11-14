@@ -341,15 +341,15 @@ end
     else
         @assert !_3d  # TODO: make this work in 3D
         seriestype := :scatter
-        nodesize = get(d, :markersize, nodesize)
-        markersize := nodesize
+        scalefactor = pop!(d, :markersize, nodesize)
+        # markersize := nodesize
         nodeshape = get(d, :markershape, nodeshape)
         nodeshape = if isa(nodeshape, AbstractArray)
             [Shape(sym) for sym in nodeshape]
         else
             Shape(nodeshape)
         end
-        series_annotations := (map(string,names), nodeshape, font(fontsize))
+        series_annotations := (map(string,names), nodeshape, font(fontsize), scalefactor)
     end
     xyz
 end
