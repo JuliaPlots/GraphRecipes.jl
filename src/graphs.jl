@@ -501,3 +501,37 @@ end
         end
     end
 end
+
+
+# -------------------------------------------------------------------
+# AST trees
+
+function add_ast(adjlist, names, ex::Expr, parent_idx)
+    idx = length(names)+1
+    push!(names, string(ex.head))
+    l = Int[]
+    push!(adjlist, l)
+    for arg in ex.args
+        if isa(arg, Expr) && arg.head == :line
+            continue
+        end
+        push!(l, add_ast(adjlist, names, arg, idx))
+    end
+    idx
+end
+
+function add_ast(adjlist, names, x, parent_idx)
+    push!(names, string(x))
+    push!(adjlist, Int[])
+    length(names)
+end
+
+@recipe function f(ex::Expr)
+    names = String[]
+    adjlist = Vector{Int}[]
+    add_ast(adjlist, names, ex, 0)
+    names --> names
+    method --> :tree
+    root --> :top
+    GraphPlot(get_source_destiny_weight(adjlist))
+end
