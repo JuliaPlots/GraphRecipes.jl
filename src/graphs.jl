@@ -221,7 +221,7 @@ end
 
 @recipe function f(g::GraphPlot;
                    dim = 2,
-                   free_dims = 1:dim,
+                   free_dims = nothing,
                    T = Float64,
                    curves = true,
                    curvature_scalar = 0.2,
@@ -236,7 +236,8 @@ end
                    z = nothing,
                    method = :stress,
                    func = get(_graph_funcs, method, by_axis_local_stress_graph),
-                   shorten = 0.0
+                   shorten = 0.0,
+                   layout_kw = KW()
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -249,19 +250,39 @@ end
     end
     n = max(maximum(source), maximum(destiny))
 
-    if node_weights == nothing
+    if isnothing(node_weights)
         node_weights = ones(n)
     end
     @assert length(node_weights) == n
 
+    xyz = _3d ? (x,y,z) : (x,y)
+    numnothing = count(isnothing, xyz)
+
     # do we want to compute coordinates?
-    if (_3d && (x == nothing || y == nothing || z == nothing)) || (!_3d && (x == nothing || y == nothing))
+    # if (_3d && (x == nothing || y == nothing || z == nothing)) || (!_3d && (x == nothing || y == nothing))
+    if numnothing > 0
+        if isnothing(free_dims)
+            # compute free_dims
+            free_dims = find(isnothing, xyz)
+            # free_dims = if numnothing == (_3d ? 3 : 2)
+            #     1:dim
+            # else
+            #     find(isnothing, (x,y,z))
+            #     fd = Int[]
+            #     for (i,v) in enumerate((x,y,z))
+            #         if v == nothing
+            #             push!(fd, i)
+            #         end
+            #     end
+            # end
+        end
         x, y, z = func(
             prepare_graph_inputs(method, source, destiny, weights)...;
             node_weights = node_weights,
             dim = dim,
             free_dims = free_dims,
-            root = root
+            root = root,
+            layout_kw...
         )
     end
 
@@ -500,38 +521,4 @@ end
             ()
         end
     end
-end
-
-
-# -------------------------------------------------------------------
-# AST trees
-
-function add_ast(adjlist, names, ex::Expr, parent_idx)
-    idx = length(names)+1
-    push!(names, string(ex.head))
-    l = Int[]
-    push!(adjlist, l)
-    for arg in ex.args
-        if isa(arg, Expr) && arg.head == :line
-            continue
-        end
-        push!(l, add_ast(adjlist, names, arg, idx))
-    end
-    idx
-end
-
-function add_ast(adjlist, names, x, parent_idx)
-    push!(names, string(x))
-    push!(adjlist, Int[])
-    length(names)
-end
-
-@recipe function f(ex::Expr)
-    names = String[]
-    adjlist = Vector{Int}[]
-    add_ast(adjlist, names, ex, 0)
-    names --> names
-    method --> :tree
-    root --> :top
-    GraphPlot(get_source_destiny_weight(adjlist))
 end

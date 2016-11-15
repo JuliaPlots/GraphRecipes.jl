@@ -3,7 +3,7 @@ module PlotRecipes
 
 using Reexport
 @reexport using Plots
-import Plots: Plot
+import Plots: Plot, isnothing
 @reexport using StatPlots
 import NetworkLayout
 

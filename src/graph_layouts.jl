@@ -163,9 +163,12 @@ function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, w
                     root::Symbol = :top,  # flow of tree: left, right, top, bottom
                     layers_scalar = 1.0,
                     layers = nothing,
+                    positions = nothing,
                     dim = 2,
+                    add_noise = true,
                     kw...)
     extrakw = KW(kw)
+    @show root layers positions dim add_noise extrakw
     n = length(node_weights)
 
     # @show root
@@ -182,17 +185,30 @@ function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, w
     end
 
     # add noise
-    layers = layers + 0.6rand(size(layers)...)
+    if add_noise
+        layers = layers + 0.6rand(size(layers)...)
+    end
 
     # TODO: normalize layers somehow so it's in line with distances
     layers .*= layers_scalar
     if dim == 2
         if root in (:top, :bottom)
             extrakw[:y] = layers
-            extrakw[:free_dims] = [1]
+            extrakw[:free_dims] = if isnothing(positions)
+                [1]
+            else
+                extrakw[:x] = positions
+                Int[]
+            end
         elseif root in (:left, :right)
             extrakw[:x] = layers
-            extrakw[:free_dims] = [2]
+            # extrakw[:free_dims] = [2]
+            extrakw[:free_dims] = if isnothing(positions)
+                [2]
+            else
+                extrakw[:y] = positions
+                Int[]
+            end
         else
             error("unknown root: $root")
         end
