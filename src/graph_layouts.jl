@@ -147,7 +147,7 @@ function buchheim_graph(adjlist::AbstractVector;
                     layers = nothing,
                     dim = 2,
                     kw...)
-    @show adjlist typeof(adjlist)
+    # @show adjlist typeof(adjlist)
     positions = NetworkLayout.Buchheim.layout(adjlist, nodesize = convert(Vector{Float64}, node_weights))
     Float64[p[1] for p in positions], Float64[p[2] for p in positions], nothing
 end
