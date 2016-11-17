@@ -70,6 +70,27 @@ plot(
 
 ![](https://cloud.githubusercontent.com/assets/2822757/16072526/aba39c2e-32b7-11e6-947c-6faab1d13cc7.png)
 
+#### Julia code -- AST
+
+```julia
+using PlotRecipes
+pyplot(ma=0.8,lc=:white,mc=:white,size=(1000,800))
+theme(:dark)
+
+code = :(
+function add_ast(adjlist, names, ex::Expr, parent_idx)
+   idx = length(names)+1
+   push!(names, string(ex.head))
+   push!(adjlist, Int[add_ast(adjlist, names, arg, idx) for arg in ex.args])
+   idx
+end
+)
+
+plot(code, fontsize=11, shorten=0.2, axis_buffer=0.05)
+```
+
+![](https://cloud.githubusercontent.com/assets/933338/20402948/cb618014-accc-11e6-969a-28e738a8bea0.png)
+
 ---
 
 ## Maps and Shapefile.jl
@@ -139,4 +160,3 @@ marginalhist(x, y, fc=:plasma, bins=40)
 ```
 
 ![](https://github.com/JuliaPlots/PlotReferenceImages.jl/blob/master/PlotRecipes/marginalhist.png)
-
