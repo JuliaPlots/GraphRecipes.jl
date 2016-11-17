@@ -78,11 +78,17 @@ pyplot(ma=0.8,lc=:white,mc=:white,size=(1000,800))
 theme(:dark)
 
 code = :(
-function add_ast(adjlist, names, ex::Expr, parent_idx)
-   idx = length(names)+1
-   push!(names, string(ex.head))
-   push!(adjlist, Int[add_ast(adjlist, names, arg, idx) for arg in ex.args])
-   idx
+function transform!{T}(act::Activation{:softmax,T})
+    val = forward!(act.input)
+    out = act.output.val
+    for i=1:act.n
+        out[i] = exp(val[i])
+    end
+    s = one(T) / sum(out)
+    for i=1:act.n
+        out[i] *= s
+    end
+    out
 end
 )
 
