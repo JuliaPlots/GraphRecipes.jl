@@ -237,6 +237,7 @@ end
                    method = :stress,
                    func = get(_graph_funcs, method, by_axis_local_stress_graph),
                    shorten = 0.0,
+                   axis_buffer = 0.2,
                    layout_kw = KW()
                   )
     @assert dim in (2, 3)
@@ -259,22 +260,10 @@ end
     numnothing = count(isnothing, xyz)
 
     # do we want to compute coordinates?
-    # if (_3d && (x == nothing || y == nothing || z == nothing)) || (!_3d && (x == nothing || y == nothing))
     if numnothing > 0
         if isnothing(free_dims)
             # compute free_dims
             free_dims = find(isnothing, xyz)
-            # free_dims = if numnothing == (_3d ? 3 : 2)
-            #     1:dim
-            # else
-            #     find(isnothing, (x,y,z))
-            #     fd = Int[]
-            #     for (i,v) in enumerate((x,y,z))
-            #         if v == nothing
-            #             push!(fd, i)
-            #         end
-            #     end
-            # end
         end
         x, y, z = func(
             prepare_graph_inputs(method, source, destiny, weights)...;
@@ -289,14 +278,22 @@ end
     # center and rescale to the widest of all dimensions
     xyz = _3d ? (x,y,z) : (x,y)
 
-    ahw = 1.2 * 0.5 * maximum(v -> maximum(v)-minimum(v), xyz)
-    xcenter = mean(extrema(x))
-    xlims --> (xcenter-ahw, xcenter+ahw)
-    ycenter = mean(extrema(y))
-    ylims --> (ycenter-ahw, ycenter+ahw)
-    if _3d
-        zcenter = mean(extrema(z))
-        zlims --> (zcenter-ahw, zcenter+ahw)
+    if axis_buffer < 0 # equal axes
+        ahw = 1.2 * 0.5 * maximum(v -> maximum(v)-minimum(v), xyz)
+        xcenter = mean(extrema(x))
+        xlims --> (xcenter-ahw, xcenter+ahw)
+        ycenter = mean(extrema(y))
+        ylims --> (ycenter-ahw, ycenter+ahw)
+        if _3d
+            zcenter = mean(extrema(z))
+            zlims --> (zcenter-ahw, zcenter+ahw)
+        end
+    else
+        xlims --> Plots.extrema_plus_buffer(x, axis_buffer)
+        ylims --> Plots.extrema_plus_buffer(y, axis_buffer)
+        if _3d
+            zlims --> Plots.extrema_plus_buffer(z, axis_buffer)
+        end
     end
 
     # create a series for the line segments
@@ -305,7 +302,7 @@ end
             xseg, yseg, zseg = Segments(), Segments(), Segments()
             for (si, di, wi) in zip(source, destiny, weights)
                 # add a line segment
-                xsi, ysi, xdi, ydi = Plots.shorten_segment(x[si], y[si], x[di], y[di], shorten)
+                xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
                 if curves
                     if method in (:tree, :buchheim)
                         # for trees, shorten should be on one axis only
@@ -320,7 +317,7 @@ end
                         push!(xseg, xpts)
                         push!(yseg, ypts)
                     else
-                        xpt, ypt = Plots.random_control_point(xsi, xdi,
+                        xpt, ypt = random_control_point(xsi, xdi,
                                                         ysi, ydi,
                                                         curvature_scalar)
                         push!(xseg, xsi, xpt, xdi)
@@ -462,7 +459,7 @@ end
 # Chord diagram
 
 function arcshape(θ1, θ2)
-    Plots.shape_coords(Shape(vcat(
+    coords(Shape(vcat(
         Plots.partialcircle(θ1, θ2, 15, 1.1),
         reverse(Plots.partialcircle(θ1, θ2, 15, 0.9))
     )))
