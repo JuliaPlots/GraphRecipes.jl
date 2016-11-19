@@ -2,6 +2,6 @@ julia 0.5
 
 Reexport
 RecipesBase
-Plots
+Plots 0.10
 StatPlots
 NetworkLayout
