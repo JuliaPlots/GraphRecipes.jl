@@ -70,6 +70,8 @@ plot(
 
 ![](https://cloud.githubusercontent.com/assets/2822757/16072526/aba39c2e-32b7-11e6-947c-6faab1d13cc7.png)
 
+---
+
 #### Julia code -- AST
 
 ```julia
@@ -96,6 +98,19 @@ plot(code, fontsize=11, shorten=0.2, axis_buffer=0.05)
 ```
 
 ![](https://cloud.githubusercontent.com/assets/933338/20402948/cb618014-accc-11e6-969a-28e738a8bea0.png)
+
+---
+
+#### Julia Type Trees
+
+```julia
+using PlotRecipes, Learn
+pyplot(size=(800,500))
+theme(:dark)
+plot(Learnable, method=:tree)
+```
+
+![](https://cloud.githubusercontent.com/assets/933338/20758853/2420f72c-b6e9-11e6-82dd-4e62a679b3cb.png)
 
 ---
 
