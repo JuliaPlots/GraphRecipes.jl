@@ -164,3 +164,40 @@ end
 
     GraphPlot(get_source_destiny_weight(adjlist))
 end
+
+
+# -------------------------------------------------------------------
+# Type trees
+
+function add_subs!{T}(nodes, source, destiny, ::Type{T}, supidx)
+    for sub in subtypes(T)
+        push!(nodes, sub)
+        subidx = length(nodes)
+        push!(source, supidx)
+        push!(destiny, subidx)
+        add_subs!(nodes, source, destiny, sub, subidx)
+    end
+end
+
+# recursively build a graph of subtypes of T
+@recipe function f{T}(::Type{T})
+    # get the supertypes
+    sups = [T]
+    sup = T
+    while sup != Any
+        sup = supertype(sup)
+        unshift!(sups,sup)
+    end
+
+    # add the subtypes
+    n = length(sups)
+    nodes = copy(sups)
+    source, destiny = collect(1:n-1), collect(2:n)
+    add_subs!(nodes, source, destiny, T, n)
+
+    # set up the graphplot
+    names := map(_->_.name.name, nodes)
+    method --> :buchheim
+    root --> :top
+    GraphPlot((source, destiny))
+end
