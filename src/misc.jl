@@ -180,7 +180,7 @@ function add_subs!{T}(nodes, source, destiny, ::Type{T}, supidx)
 end
 
 # recursively build a graph of subtypes of T
-@recipe function f{T}(::Type{T})
+@recipe function f{T}(::Type{T}; namefunc = _->_.name.name)
     # get the supertypes
     sups = [T]
     sup = T
@@ -196,7 +196,7 @@ end
     add_subs!(nodes, source, destiny, T, n)
 
     # set up the graphplot
-    names := map(_->_.name.name, nodes)
+    names := map(namefunc, nodes)
     method --> :buchheim
     root --> :top
     GraphPlot((source, destiny))
