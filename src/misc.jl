@@ -1,6 +1,9 @@
 
+# ----------------------------------------------------------------
+# Shapefile.jl plotting
+
 # Remove legend, axes, grid, and force the aspect ratio for shape plots
-@recipe function f(::Type{Val{:shapeplot}}, plt::Plot)
+@recipe function f(::Type{Val{:shapefile}}, x, y, z)
     legend --> false
     ticks --> nothing
     grid --> false
@@ -8,10 +11,6 @@
     seriestype := :shape
     ()
 end
-@shorthands shapeplot
-
-# ----------------------------------------------------------------
-# Shapefile.jl plotting
 
 if Plots.is_installed("Shapefile")
     @eval begin
@@ -41,8 +40,9 @@ if Plots.is_installed("Shapefile")
             x, y
         end
 
-        @recipe f(poly::Shapefile.ESRIShape) = (seriestype --> :shape; shapefile_coords(poly))
-        @recipe f{T<:Shapefile.ESRIShape}(polys::AbstractArray{T}) = (seriestype --> :shape; shapefile_coords(polys))
+        @recipe f(poly::Shapefile.ESRIShape) = (seriestype --> :shapefile; shapefile_coords(poly))
+        @recipe f{T<:Shapefile.ESRIShape}(polys::AbstractArray{T}) = (seriestype --> :shapefile; shapefile_coords(polys))
+        @recipe f{T<:Shapefile.Handle}(handle::T) = handle.shapes
     end
 end
 
