@@ -179,7 +179,7 @@ if Plots.is_installed("LightGraphs")
             dists
         end
 
-        function get_source_destiny_weight(g::LightGraphs.SimpleGraph)
+        function get_source_destiny_weight(g::LightGraphs.AbstractGraph)
             source = Vector{Int}()
             destiny =  Vector{Int}()
             sizehint!(source, LightGraphs.nv(g))
@@ -191,11 +191,11 @@ if Plots.is_installed("LightGraphs")
             get_source_destiny_weight(source, destiny)
         end
 
-        function get_adjacency_matrix(g::LightGraphs.SimpleGraph)
+        function get_adjacency_matrix(g::LightGraphs.AbstractGraph)
             get_adjacency_matrix(get_source_destiny_weight(g)...)
         end
 
-        function get_adjacency_list(g::LightGraphs.SimpleGraph)
+        function get_adjacency_list(g::LightGraphs.AbstractGraph)
             g.fadjlist
         end
     end
