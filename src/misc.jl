@@ -15,7 +15,7 @@ end
 if Plots.is_installed("Shapefile")
     @eval begin
         import Shapefile
-        function shapefile_coords(poly::Shapefile.ESRIShape)
+        function shapefile_coords(poly::Shapefile.Polygon)
             start_indices = poly.parts+1
             end_indices = vcat(poly.parts[2:end], length(poly.points))
             x, y = zeros(0), zeros(0)
@@ -30,7 +30,7 @@ if Plots.is_installed("Shapefile")
             x, y
         end
 
-        function shapefile_coords{T<:Shapefile.ESRIShape}(polys::AbstractArray{T})
+        function shapefile_coords{T<:Shapefile.Polygon}(polys::AbstractArray{T})
             x, y = [], []
             for poly in polys
                 xpart, ypart = shapefile_coords(poly)
@@ -40,8 +40,8 @@ if Plots.is_installed("Shapefile")
             x, y
         end
 
-        @recipe f(poly::Shapefile.ESRIShape) = (seriestype --> :shapefile; shapefile_coords(poly))
-        @recipe f{T<:Shapefile.ESRIShape}(polys::AbstractArray{T}) = (seriestype --> :shapefile; shapefile_coords(polys))
+        @recipe f(poly::Shapefile.Polygon) = (seriestype --> :shapefile; shapefile_coords(poly))
+        @recipe f{T<:Shapefile.Polygon}(polys::AbstractArray{T}) = (seriestype --> :shapefile; shapefile_coords(polys))
         @recipe f{T<:Shapefile.Handle}(handle::T) = handle.shapes
     end
 end
