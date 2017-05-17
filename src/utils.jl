@@ -1,4 +1,5 @@
-
+isnothing(x::Void) = true
+isnothing(x) = false
 
 # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
 # may create a loop if necessary.  Assumes the view is [0,1]

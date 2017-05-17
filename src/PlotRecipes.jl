@@ -2,9 +2,8 @@
 module PlotRecipes
 
 using Reexport
-@reexport using Plots
-import Plots: Plot, isnothing
 @reexport using StatPlots
+@reexport using Plots
 import NetworkLayout
 
 include("utils.jl")
