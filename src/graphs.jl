@@ -184,9 +184,9 @@ if Plots.is_installed("LightGraphs")
             destiny =  Vector{Int}()
             sizehint!(source, LightGraphs.nv(g))
             sizehint!(destiny, LightGraphs.nv(g))
-            for (u, v) in LightGraphs.edges(g)
-              push!(source, u)
-              push!(destiny, v)
+            for e in LightGraphs.edges(g)
+              push!(source, src(e))
+              push!(destiny, dst(e))
             end
             get_source_destiny_weight(source, destiny)
         end
