@@ -60,8 +60,8 @@ plot(
     graphplot(adjmat, method=:chorddiagram),
     graphplot(adjmat, method=:arcdiagram, markersize=3)
     )
-```
-![](https://drive.google.com/file/d/0B3LhAPLJWKt9ZHZuRHkwMzZ4Nmc/view?usp=sharing)
+```  
+![arc and chord diagrams](https://user-images.githubusercontent.com/2822757/27743452-5511e5e2-5dbc-11e7-895e-dfa753a84efc.png)  
 
 #### Fun with algos. Visualizing a stress-driven layout algorithm
 
