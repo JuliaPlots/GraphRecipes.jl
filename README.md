@@ -49,26 +49,23 @@ graphplot(A,
 
 ![](https://cloud.githubusercontent.com/assets/933338/16094180/0dd2edf0-330d-11e6-8596-d12b0b8d5393.png)
 
+#### Arc and chord diagrams
+
+```julia
+using PlotRecipes
+
+adjmat = Symmetric(sparse(rand(0:1,8,8)));
+
+plot(
+    graphplot(adjmat, method=:chorddiagram),
+    graphplot(adjmat, method=:arcdiagram, markersize=3)
+    )
+```
+![](https://drive.google.com/file/d/0B3LhAPLJWKt9ZHZuRHkwMzZ4Nmc/view?usp=sharing)
 
 #### Fun with algos. Visualizing a stress-driven layout algorithm
 
 ![](https://cloud.githubusercontent.com/assets/933338/16698919/ee1f9e76-451e-11e6-8936-881551f120dd.gif)
-
-#### Arc Diagrams
-
-```julia
-using PlotRecipes
-plot(
-	arcdiagram(['A','A','A','B'], ['B','C','D','A'], [1,2,3,1]),
-	arcdiagram(rand(10), rand(10)),
-	arcdiagram(rand(10), rand(10), rand(10)),
-	arcdiagram(rand(10,10)),
-	arcdiagram(Symmetric(rand(10,10))),
-	arcdiagram(sparse([0 0 0; 1 1 0; 1 1 1]))
-)
-```
-
-![](https://cloud.githubusercontent.com/assets/2822757/16072526/aba39c2e-32b7-11e6-947c-6faab1d13cc7.png)
 
 ---
 

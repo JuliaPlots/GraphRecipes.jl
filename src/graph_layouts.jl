@@ -320,3 +320,34 @@ end
 # -----------------------------------------------------
 
 # TODO: maybe also implement Catmull-Rom Splines? http://www.mvps.org/directx/articles/catmull/
+
+# -----------------------------------------------------
+
+function arc_diagram(source::AbstractVector{Int},
+                     destiny::AbstractVector{Int},
+                     weights::AbstractVector;
+                     kw...)
+    X = unique(vcat(source, destiny))
+    O = zeros(Int,length(X))
+    X, O, O
+end
+
+# -----------------------------------------------------
+
+function chord_diagram( source::AbstractVector{Int},
+                        destiny::AbstractVector{Int},
+                        weights::AbstractVector;
+                        kw... )
+    nodes = unique(vcat(source, destiny))
+    N = length(nodes)
+    δ = 2pi / N
+
+    x = Array(Float64,N)
+    y = Array(Float64,N)
+    for i in 1:N
+        x[i] = sin((i-1)*δ)
+        y[i] = cos((i-1)*δ)
+    end
+    
+    x, y, zeros(Int,length(x))
+end

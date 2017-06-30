@@ -6,6 +6,8 @@ const _graph_funcs = KW(
     :stress => by_axis_local_stress_graph,
     :tree => tree_graph,
     :buchheim => buchheim_graph,
+    :arcdiagram => arc_diagram,
+    :chorddiagram => chord_diagram
 )
 
 const _graph_inputs = KW(
@@ -13,6 +15,8 @@ const _graph_inputs = KW(
     :stress => :adjmat,
     :tree => :sourcedestiny,
     :buchheim => :adjlist,
+    :arcdiagram => :sourcedestiny,
+    :chorddiagram => :sourcedestiny
 )
 
 function prepare_graph_inputs(method::Symbol, inputs...)
@@ -206,10 +210,7 @@ else
     end
 end
 
-
-
 # -----------------------------------------------------
-
 
 # a graphplot takes in either an (N x N) adjacency matrix
 #   note: you may want to pass node weights to markersize or marker_z
@@ -278,7 +279,12 @@ end
     # center and rescale to the widest of all dimensions
     xyz = _3d ? (x,y,z) : (x,y)
 
-    if axis_buffer < 0 # equal axes
+    if method == :arcdiagram
+        xl, yl = arcdiagram_limits(x, source, destiny)
+        xlims --> xl
+        ylims --> yl
+        ratio --> :equal
+    elseif axis_buffer < 0 # equal axes
         ahw = 1.2 * 0.5 * maximum(v -> maximum(v)-minimum(v), xyz)
         xcenter = mean(extrema(x))
         xlims --> (xcenter-ahw, xcenter+ahw)
@@ -301,6 +307,9 @@ end
         @series begin
             xseg, yseg, zseg = Segments(), Segments(), Segments()
             for (si, di, wi) in zip(source, destiny, weights)
+
+                # TO DO : Colouring edges by weight
+
                 # add a line segment
                 xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
                 if curves
@@ -316,10 +325,22 @@ end
                                     xview=d[:xlims], yview=d[:ylims], root=root)
                         push!(xseg, xpts)
                         push!(yseg, ypts)
+                    elseif method == :arcdiagram
+                        r  = (xdi - xsi) / 2
+                        x₀ = (xdi + xsi) / 2
+                        θ = linspace(0,π,30)
+                        xpts = x₀ .+ r .* cos.(θ)
+                        ypts = r .* sin.(θ) .+ ysi # ysi == ydi
+                        push!(xseg, xpts)
+                        push!(yseg, ypts)
                     else
-                        xpt, ypt = random_control_point(xsi, xdi,
-                                                        ysi, ydi,
-                                                        curvature_scalar)
+                        xpt, ypt = if method != :chorddiagram
+                            random_control_point(xsi, xdi,
+                                                 ysi, ydi,
+                                                 curvature_scalar)
+                        else
+                            (0.0,0.0)
+                        end
                         push!(xseg, xsi, xpt, xdi)
                         push!(yseg, ysi, ypt, ydi)
                         _3d && push!(zseg, z[si], z[si], z[di])
@@ -350,172 +371,47 @@ end
     axis := nothing
     legend --> false
 
-    if isempty(names)
-        seriestype := (_3d ? :scatter3d : :scatter)
-        linewidth := 0
-        linealpha := 0
-        series_annotations --> map(string,names)
-        markersize --> 10 + 100node_weights / sum(node_weights)
-    else
-        @assert !_3d  # TODO: make this work in 3D
+    if method == :chorddiagram
         seriestype := :scatter
-        scalefactor = pop!(d, :markersize, nodesize)
-        # markersize := nodesize
-        nodeshape = get(d, :markershape, nodeshape)
-        nodeshape = if isa(nodeshape, AbstractArray)
-            [Shape(sym) for sym in nodeshape]
-        else
-            Shape(nodeshape)
+        markersize --> 0
+        ratio --> :equal
+        if length(names) == length(x)
+            annotations := [(x[i],y[i],text(names[i],fontsize,:black,:center))
+                            for i in 1:length(x)]
         end
-        series_annotations := (map(string,names), nodeshape, font(fontsize), scalefactor)
-    end
-    xyz
-end
-
-# ---------------------------------------------------------------------------
-# Arc/Chord Diagrams
-
-
-function arcvertices{T}(source::AbstractVector{T}, destiny::AbstractVector{T})
-    values = unique(vcat(source, destiny))
-    [(i, i) for i in values ]
-end
-
-function arcvertices{T<:Union{Char,Symbol,AbstractString}}(source::AbstractVector{T},
-                                                                   destiny::AbstractVector{T})
-    lab2x = Dict{T,Int}()
-    n = 1
-    for element in vcat(source, destiny)
-        if !haskey(lab2x, element)
-            lab2x[element] = n
-            n += 1
-        end
-    end
-    lab2x
-end
-
-@userplot ArcDiagram
-
-@recipe function f(h::ArcDiagram)
-
-    source, destiny, weights = get_source_destiny_weight(h.args...)
-
-    vertices = arcvertices(source, destiny)
-
-    # Box setup
-    legend --> false
-    aspect_ratio --> :equal
-    grid --> false
-    foreground_color_axis --> nothing
-    foreground_color_border --> nothing
-    ticks --> nothing
-
-    usegradient = length(unique(weights)) != 1
-
-    if usegradient
-        colorgradient = ColorGradient(get(d,:linecolor,cgrad()))
-        wmin,wmax = extrema(weights)
-    end
-
-    for (i, j, value) in zip(source,destiny,weights)
-        @series begin
-
-            xi = vertices[i]
-            xj = vertices[j]
-
-            if usegradient
-                linecolor --> colorgradient[(value-wmin)/(wmax-wmin)]
-            end
-
-            legend --> false
-            label := ""
-            primary := false
-
-            r  = (xj - xi) / 2
-            x₀ = (xi + xj) / 2
-            θ = linspace(0,π,30)
-            x₀ + r * cos(θ), r * sin(θ)
-        end
-    end
-
-    @series begin
-        if eltype(keys(vertices)) <: Union{Char, AbstractString, Symbol}
-            series_annotations --> collect(keys(vertices))
-            markersize --> 0
-            y = -0.1
-        else
-            y =  0.0
-        end
-        seriestype --> :scatter
-        collect(values(vertices)) , Float64[ y for i in vertices ]
-    end
-end
-
-
-# =================================================
-# Arc and chord diagrams
-
-# ---------------------------------------------------------------------------
-# Chord diagram
-
-function arcshape(θ1, θ2)
-    coords(Shape(vcat(
-        Plots.partialcircle(θ1, θ2, 15, 1.1),
-        reverse(Plots.partialcircle(θ1, θ2, 15, 0.9))
-    )))
-end
-
-# """
-# `chorddiagram(source, destiny, weights[, grad, zcolor, group])`
-
-# Plots a chord diagram, form `source` to `destiny`,
-# using `weights` to determine the edge colors using `grad`.
-# `zcolor` or `group` can be used to determine the node colors.
-# """
-
-@userplot ChordDiagram
-
-@recipe function f(h::ChordDiagram)
-    source, destiny, weights = get_source_destiny_weight(h.args...)
-
-    xlims := (-1.2,1.2)
-    ylims := (-1.2,1.2)
-    legend := false
-    grid := false
-    xticks := nothing
-    yticks := nothing
-
-    nodemin, nodemax = extrema(vcat(source, destiny))
-    weightmin, weightmax = extrema(weights)
-
-    A  = 1.5π # Filled space
-    B  = 0.5π # White space (empirical)
-
-    Δα = A / nodemax
-    Δβ = B / nodemax
-    δ = Δα  + Δβ
-
-    grad = cgrad(get(d,:linecolor,:inferno), get(d, :linealpha, nothing))
-
-    for i in 1:length(source)
-        # TODO: this could be a shape with varying width
-        @series begin
-            seriestype := :curves
-            x := [cos((source[i ]-1)*δ + 0.5Δα), 0.0, cos((destiny[i]-1)*δ + 0.5Δα)]
-            y := [sin((source[i ]-1)*δ + 0.5Δα), 0.0, sin((destiny[i]-1)*δ + 0.5Δα)]
-            linecolor := grad[(weights[i] - weightmin) / (weightmax - weightmin)]
-            primary := false
-            ()
-        end
-    end
-
-    for n in 0:(nodemax-1)
-        sx, sy = arcshape(n*δ, n*δ + Δα)
         @series begin
             seriestype := :shape
-            x := sx
-            y := sy
-            ()
+            angles = Array(Float64,length(x))
+            for i in 1:length(x)
+                if y[i] > 0
+                    angles[i] = acos(x[i])
+                else
+                    angles[i] = 2pi - acos(x[i])
+                end
+            end
+            δ = 0.4 * (angles[2] - angles[1])
+            Shape[ arcshape(Θ-δ,Θ+δ) for Θ in angles ]
+        end
+    else
+        if isempty(names)
+            seriestype := (_3d ? :scatter3d : :scatter)
+            linewidth := 0
+            linealpha := 0
+            series_annotations --> map(string,names)
+            markersize --> 10 + 100node_weights / sum(node_weights)
+        else
+            @assert !_3d  # TODO: make this work in 3D
+            scalefactor = pop!(d, :markersize, nodesize)
+            seriestype := :scatter
+            # markersize := nodesize
+            nodeshape = get(d, :markershape, nodeshape)
+            nodeshape = if isa(nodeshape, AbstractArray)
+                [Shape(sym) for sym in nodeshape]
+            else
+                Shape(nodeshape)
+            end
+            series_annotations := (map(string,names), nodeshape, font(fontsize), scalefactor)
         end
     end
+    xyz
 end

@@ -80,3 +80,28 @@ function random_control_point(xi, xj, yi, yj, curvature_scalar)
     (xmid + dist_from_mid * cos(theta),
      ymid + dist_from_mid * sin(theta))
 end
+
+# for chord diagrams:
+function arcshape(θ1, θ2)
+    Shape(vcat(
+        Plots.partialcircle(θ1, θ2, 15, 1.05),
+        reverse(Plots.partialcircle(θ1, θ2, 15, 0.95))
+    ))
+end
+
+# x and y limits for arc diagram ()
+function arcdiagram_limits(x, source, destiny)
+    @assert length(x) >= 2
+    margin = abs(0.1*(x[2] - x[1]))
+    xmin, xmax = extrema(x)
+    r = abs(0.5 * (xmax - xmin))
+    mean_upside = mean(source .< destiny)
+    ylims = if mean_upside == 1.0
+        (-margin, r+margin)
+    elseif mean_upside == 0.0
+        (-r-margin, margin)
+    else
+        (-r-margin, r+margin)
+    end
+    (xmin-margin, xmax+margin), ylims
+end
