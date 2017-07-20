@@ -201,3 +201,42 @@ end
     root --> :top
     GraphPlot((source, destiny))
 end
+
+
+@userplot AndrewsPlot
+
+"""
+https://en.wikipedia.org/wiki/Andrews_plot
+
+Example
+```julia
+using RDatasets, PlotRecipes
+iris   = dataset("datasets", "iris")
+y      = Array(iris[:,1:4])
+groups = Array(iris[:,5])
+andrewsplot(y, groups)
+```
+"""
+@recipe function f(h::AndrewsPlot)
+    y = h.args[1]
+    seriestype --> :path
+    title --> "Andrew's plot"
+    label := ""
+    rows,cols = size(y)
+    serieslength = 100
+    ys    = zeros(serieslength,rows)
+    t     = linspace(-π,π,serieslength)
+    for j in 1:rows, ti = eachindex(t)
+        ys[ti,j] = y[j,1]/sqrt(2) + sum(y[j,i].*sin.((i÷2).*t[ti]) for i = 2:cols)
+    end
+    if length(h.args) >= 2
+        groups = h.args[2]
+        ugroups = unique(groups)
+        nunique = length(ugroups)
+        onehot = reshape(ugroups,1,:) .== groups # This is now a onehot representation
+        onecold = sum(onehot.*(1:nunique)',2)[:] # onecold = inv(onehot())
+        colors = colormap("Blues", nunique)
+        seriescolor --> reshape(colors[onecold],1,:)
+    end
+    t,ys
+end
