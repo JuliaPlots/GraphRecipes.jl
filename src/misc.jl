@@ -206,6 +206,8 @@ end
 @userplot AndrewsPlot
 
 """
+    andrewsplot(data::AbstractArray; kind=[])
+
 https://en.wikipedia.org/wiki/Andrews_plot
 
 Example
@@ -217,6 +219,8 @@ kind   = Array(iris[:,5])
 andrewsplot(y, kind=kind)
 ```
 """
+andrewsplot
+
 @recipe function f(h::AndrewsPlot; kind=[])
     y = h.args[1]
     delete!(d, :group)
