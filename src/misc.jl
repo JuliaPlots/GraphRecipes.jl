@@ -206,16 +206,19 @@ end
 @userplot AndrewsPlot
 
 """
-    andrewsplot(data::AbstractArray; kind=[])
+    andrewsplot(data; kind=[])
 
 https://en.wikipedia.org/wiki/Andrews_plot
 
-Example
+`kind` is similar to `group` but handeled differently internally, hence the new
+keyword
+
+#Examples
 ```julia
 using RDatasets, PlotRecipes
 iris   = dataset("datasets", "iris")
-y      = Array(iris[:,1:4])
-kind   = Array(iris[:,5])
+y      = iris[:,1:4]
+kind   = iris[:,5]
 andrewsplot(y, kind=kind)
 ```
 """
@@ -223,15 +226,19 @@ andrewsplot
 
 @recipe function f(h::AndrewsPlot; kind=[])
     y = h.args[1]
-    delete!(d, :group)
+    if isa(y, DataFrame) || isa(y, DataArray)
+        y = convert(Array, DataArray(y), NaN)
+    end
+    if isa(kind, DataFrame) || isa(kind, DataFrame)
+        kind = convert(DataArray(Array), kind)
+    end
     seriestype --> :path
-    title --> "Andrew's plot"
-    label := ""
-    rows,cols = size(y)
+    label       := ""
+    rows,cols    = size(y)
     serieslength = 200
-    ys     = zeros(serieslength,rows)
-    t      = linspace(-π,π,serieslength)
-    sinmat = [sin((i÷2).*ti) for i = 2:cols, ti=t]
+    ys           = zeros(serieslength,rows)
+    t            = linspace(-π,π,serieslength)
+    sinmat       = [sin((i÷2).*ti) for i = 2:cols, ti=t]
     for j in 1:rows, ti = eachindex(t)
         ys[ti,j] = y[j,1]/sqrt(2) + sum(y[j,i].*sinmat[i-1,ti] for i = 2:cols)
     end
@@ -241,11 +248,11 @@ andrewsplot
         end
     else
         ugroup = unique(kind)
-        for (gi,g) in enumerate(ugroup)
+        for g in ugroup
             @series begin
                 groupinds = g .== kind
-                prim    = falses(sum(groupinds))
-                prim[1] = true
+                prim      = falses(sum(groupinds))
+                prim[1]   = true
                 primary --> prim'
                 t,ys[:,groupinds]
             end
