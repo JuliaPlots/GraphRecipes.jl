@@ -218,45 +218,61 @@ keyword
 using RDatasets, PlotRecipes
 iris   = dataset("datasets", "iris")
 y      = iris[:,1:4]
-kind   = iris[:,5]
-andrewsplot(y, kind=kind)
+group  = iris[:,5]
+andrewsplot(group, y)
 ```
 """
 andrewsplot
 
-@recipe function f(h::AndrewsPlot; kind=[])
-    y = h.args[1]
+@recipe function f(h::AndrewsPlot)
+    if length(h.args) == 2  # specify x if not given
+        x, y = h.args
+    else
+        y = h.args[1]
+        x = ones(size(y,1))
+    end
     if isa(y, DataFrame) || isa(y, DataArray)
         y = convert(Array, DataArray(y), NaN)
     end
-    if isa(kind, DataFrame) || isa(kind, DataFrame)
-        kind = convert(DataArray(Array), kind)
+    if isa(x, DataFrame) || isa(x, DataFrame)
+        x = convert(DataArray(Array), x)
     end
-    seriestype --> :path
-    label       := ""
-    rows,cols    = size(y)
-    serieslength = 200
-    ys           = zeros(serieslength,rows)
-    t            = linspace(-π,π,serieslength)
-    sinmat       = [sin((i÷2).*ti) for i = 2:cols, ti=t]
-    for j in 1:rows, ti = eachindex(t)
-        ys[ti,j] = y[j,1]/sqrt(2) + sum(y[j,i].*sinmat[i-1,ti] for i = 2:cols)
-    end
-    if isempty(kind)
+
+    seriestype := :andrews
+
+# series in a user recipe will have different colors
+    for g in unique(x)
         @series begin
-            t,ys
-        end
-    else
-        ugroup = unique(kind)
-        for g in ugroup
-            @series begin
-                groupinds = g .== kind
-                prim      = falses(sum(groupinds))
-                prim[1]   = true
-                primary --> prim'
-                t,ys[:,groupinds]
-            end
+            label --> "$g"
+            linspace(-π, π, 200), Surface(y[g .== x,:]) #surface needed, or the array will be split into columns
         end
     end
     nothing
+end
+
+# the series recipe
+@recipe function f(::Type{Val{:andrews}}, x, y, z)
+    y = y.surf
+    rows,cols = size(y)
+    seriestype := :path
+
+# these series are the lines, will keep the same colors
+    for j in 1:rows
+        @series begin
+            primary := false
+            ys     = zeros(length(x))
+            sinmat = [sin((i÷2).*ti) for i = 2:cols, ti=x]
+            for ti = eachindex(x)
+                ys[ti] = y[j,1]/sqrt(2) + sum(y[j,i].*sinmat[i-1,ti] for i = 2:cols)
+            end
+
+            x := x
+            y := ys
+            ()
+        end
+    end
+
+    x := []
+    y := []
+    ()
 end
