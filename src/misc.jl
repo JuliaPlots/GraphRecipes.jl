@@ -201,3 +201,78 @@ end
     root --> :top
     GraphPlot((source, destiny))
 end
+
+
+@userplot AndrewsPlot
+
+"""
+    andrewsplot(data; kind=[])
+
+https://en.wikipedia.org/wiki/Andrews_plot
+
+`kind` is similar to `group` but handeled differently internally, hence the new
+keyword
+
+#Examples
+```julia
+using RDatasets, PlotRecipes
+iris   = dataset("datasets", "iris")
+y      = iris[:,1:4]
+group  = iris[:,5]
+andrewsplot(group, y)
+```
+"""
+andrewsplot
+
+@recipe function f(h::AndrewsPlot)
+    if length(h.args) == 2  # specify x if not given
+        x, y = h.args
+    else
+        y = h.args[1]
+        x = ones(size(y,1))
+    end
+    if isa(y, DataFrame) || isa(y, DataArray)
+        y = convert(Array, DataArray(y), NaN)
+    end
+    if isa(x, DataFrame) || isa(x, DataFrame)
+        x = convert(DataArray(Array), x)
+    end
+
+    seriestype := :andrews
+
+# series in a user recipe will have different colors
+    for g in unique(x)
+        @series begin
+            label --> "$g"
+            linspace(-π, π, 200), Surface(y[g .== x,:]) #surface needed, or the array will be split into columns
+        end
+    end
+    nothing
+end
+
+# the series recipe
+@recipe function f(::Type{Val{:andrews}}, x, y, z)
+    y = y.surf
+    rows,cols = size(y)
+    seriestype := :path
+
+# these series are the lines, will keep the same colors
+    for j in 1:rows
+        @series begin
+            primary := false
+            ys     = zeros(length(x))
+            sinmat = [sin((i÷2).*ti) for i = 2:cols, ti=x]
+            for ti = eachindex(x)
+                ys[ti] = y[j,1]/sqrt(2) + sum(y[j,i].*sinmat[i-1,ti] for i = 2:cols)
+            end
+
+            x := x
+            y := ys
+            ()
+        end
+    end
+
+    x := []
+    y := []
+    ()
+end
