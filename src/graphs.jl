@@ -297,7 +297,7 @@ end
     end
 
     # create a series for the line segments
-    if get(d, :linewidth, 1) > 0
+    if get(plotattributes, :linewidth, 1) > 0
         @series begin
             xseg, yseg, zseg = Segments(), Segments(), Segments()
             for (si, di, wi) in zip(source, destiny, weights)
@@ -313,7 +313,7 @@ end
                         ysi, ydi = (ishoriz ? (y[si],y[di]) : (y[si]+dist,y[di]-dist))
 
                         xpts, ypts = directed_curve(xsi, xdi, ysi, ydi,
-                                    xview=d[:xlims], yview=d[:ylims], root=root)
+                                    xview=plotattributes[:xlims], yview=plotattributes[:ylims], root=root)
                         push!(xseg, xpts)
                         push!(yseg, ypts)
                     else
@@ -332,7 +332,7 @@ end
             end
 
             # generate a list of colors, one per segment
-            grad = get(d, :linecolor, nothing)
+            grad = get(plotattributes, :linecolor, nothing)
             if isa(grad, ColorGradient)
                 line_z := weights
             end
@@ -359,9 +359,9 @@ end
     else
         @assert !_3d  # TODO: make this work in 3D
         seriestype := :scatter
-        scalefactor = pop!(d, :markersize, nodesize)
+        scalefactor = pop!(plotattributes, :markersize, nodesize)
         # markersize := nodesize
-        nodeshape = get(d, :markershape, nodeshape)
+        nodeshape = get(plotattributes, :markershape, nodeshape)
         nodeshape = if isa(nodeshape, AbstractArray)
             [Shape(sym) for sym in nodeshape]
         else
@@ -413,7 +413,7 @@ end
     usegradient = length(unique(weights)) != 1
 
     if usegradient
-        colorgradient = ColorGradient(get(d,:linecolor,cgrad()))
+        colorgradient = ColorGradient(get(plotattributes,:linecolor,cgrad()))
         wmin,wmax = extrema(weights)
     end
 
@@ -495,7 +495,7 @@ end
     Δβ = B / nodemax
     δ = Δα  + Δβ
 
-    grad = cgrad(get(d,:linecolor,:inferno), get(d, :linealpha, nothing))
+    grad = cgrad(get(plotattributes,:linecolor,:inferno), get(plotattributes, :linealpha, nothing))
 
     for i in 1:length(source)
         # TODO: this could be a shape with varying width
