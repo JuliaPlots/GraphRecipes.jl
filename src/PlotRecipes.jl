@@ -12,4 +12,7 @@ include("graphs.jl")
 include("finance.jl")
 include("misc.jl")
 
+@deprecate arcdiagram graphplot
+@deprecate chorddiagram graphplot
+
 end # module
