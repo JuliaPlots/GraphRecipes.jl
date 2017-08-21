@@ -180,7 +180,7 @@ function add_subs!{T}(nodes, source, destiny, ::Type{T}, supidx)
 end
 
 # recursively build a graph of subtypes of T
-@recipe function f{T}(::Type{T}; namefunc = _->_.name.name)
+@recipe function f{T}(::Type{T}; namefunc = node->node.name.name)
     # get the supertypes
     sups = [T]
     sup = T
