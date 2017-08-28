@@ -19,9 +19,9 @@ function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol =
     # these points give the initial/final "rise"
     # note: this is a function of distance between points and axis scale
     y_offset = if need_loop
-        0.7dist
+        0.3dist
     else
-        min(0.7dist, 3*(y2-y1))
+        min(0.3dist, 0.5*abs(y2-y1))
     end
     y_offset = max(0.02*(maxy-miny), y_offset)
 

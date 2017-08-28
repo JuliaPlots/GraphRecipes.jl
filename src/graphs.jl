@@ -276,6 +276,17 @@ end
         )
     end
 
+    # reorient the points after root
+    if root in (:left,:right)
+        x,y = y,-x
+    end
+    if root == :left
+        x,y = -x, y
+    end
+    if root == :bottom
+        x,y = x, -y
+    end
+
     # center and rescale to the widest of all dimensions
     xyz = _3d ? (x,y,z) : (x,y)
 
