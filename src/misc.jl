@@ -228,12 +228,6 @@ andrewsplot
         y = h.args[1]
         x = ones(size(y,1))
     end
-    if isa(y, DataFrame) || isa(y, DataArray)
-        y = convert(Array, DataArray(y), NaN)
-    end
-    if isa(x, DataFrame) || isa(x, DataFrame)
-        x = convert(DataArray(Array), x)
-    end
 
     seriestype := :andrews
 
