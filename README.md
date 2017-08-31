@@ -191,7 +191,7 @@ https://en.wikipedia.org/wiki/Andrews_plot
 ```julia
 using RDatasets, PlotRecipes
 iris = dataset("datasets", "iris")
-@df iris andrewsplot(:Species, cols(1:4))
+@df iris andrewsplot(:Species, cols(1:4), legend = :topleft)
 ```
 
 <img width="592" alt="Andrew's Plot" src="https://user-images.githubusercontent.com/8429802/29936792-c3f1c2e6-8e83-11e7-8519-99888617ac8c.png">
