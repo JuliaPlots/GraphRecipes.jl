@@ -206,20 +206,17 @@ end
 @userplot AndrewsPlot
 
 """
-    andrewsplot(data; kind=[])
+    andrewsplot(args...; kw...)
 
+Shows each row of an array (or table) as a line. The `x` argument specifies a
+grouping variable. This is a way to visualize structure in high-dimensional data.
 https://en.wikipedia.org/wiki/Andrews_plot
-
-`kind` is similar to `group` but handeled differently internally, hence the new
-keyword
 
 #Examples
 ```julia
 using RDatasets, PlotRecipes
-iris   = dataset("datasets", "iris")
-y      = iris[:,1:4]
-group  = iris[:,5]
-andrewsplot(group, y)
+iris = dataset("datasets", "iris")
+@df iris andrewsplot(:Species, cols(1:4))
 ```
 """
 andrewsplot
@@ -230,12 +227,6 @@ andrewsplot
     else
         y = h.args[1]
         x = ones(size(y,1))
-    end
-    if isa(y, DataFrame) || isa(y, DataArray)
-        y = convert(Array, DataArray(y), NaN)
-    end
-    if isa(x, DataFrame) || isa(x, DataFrame)
-        x = convert(DataArray(Array), x)
     end
 
     seriestype := :andrews
