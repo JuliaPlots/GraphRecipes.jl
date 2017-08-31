@@ -187,7 +187,6 @@ AndrewsPlots are a way to visualize structure in high-dimensional data by depict
 row of an array or table as a line that varies with the values in columns.
 https://en.wikipedia.org/wiki/Andrews_plot
 
-#Examples
 ```julia
 using RDatasets, PlotRecipes
 iris = dataset("datasets", "iris")
