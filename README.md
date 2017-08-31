@@ -60,8 +60,8 @@ plot(
     graphplot(adjmat, method=:chorddiagram),
     graphplot(adjmat, method=:arcdiagram, markersize=3)
     )
-```  
-![arc and chord diagrams](https://user-images.githubusercontent.com/2822757/27743452-5511e5e2-5dbc-11e7-895e-dfa753a84efc.png)  
+```
+![arc and chord diagrams](https://user-images.githubusercontent.com/2822757/27743452-5511e5e2-5dbc-11e7-895e-dfa753a84efc.png)
 
 #### Fun with algos. Visualizing a stress-driven layout algorithm
 
@@ -164,7 +164,7 @@ corrplot(M, label = ["x$i" for i=1:4])
 
 ![](https://cloud.githubusercontent.com/assets/933338/16030833/3c84e6bc-31c3-11e6-9a04-4cee531440a4.png)
 
---
+---
 
 #### Marginal Histograms
 
@@ -178,3 +178,20 @@ marginalhist(x, y, fc=:plasma, bins=40)
 ```
 
 ![](https://github.com/JuliaPlots/PlotReferenceImages.jl/blob/master/PlotRecipes/marginalhist.png)
+
+---
+
+#### AndrewsPlot
+
+AndrewsPlots are a way to visualize structure in high-dimensional data by depicting each
+row of an array or table as a line that varies with the values in columns.
+https://en.wikipedia.org/wiki/Andrews_plot
+
+#Examples
+```julia
+using RDatasets, PlotRecipes
+iris = dataset("datasets", "iris")
+@df iris andrewsplot(:Species, cols(1:4))
+```
+
+<img width="592" alt="Andrew's Plot" src="https://user-images.githubusercontent.com/8429802/29936792-c3f1c2e6-8e83-11e7-8519-99888617ac8c.png">
