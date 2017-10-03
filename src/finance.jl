@@ -17,7 +17,7 @@
     for c=1:size(weights,2)
         sx = vcat(weights[:,c], c==1 ? zeros(n) : reverse(weights[:,c-1]))
         sy = vcat(returns, reverse(returns))
-        @series Plots.isvertical(d) ? (sx, sy) : (sy, sx)
+        @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
     end
 end
 

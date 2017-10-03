@@ -314,7 +314,7 @@ end
     end
 
     # create a series for the line segments
-    if get(d, :linewidth, 1) > 0
+    if get(plotattributes, :linewidth, 1) > 0
         @series begin
             xseg, yseg, zseg = Segments(), Segments(), Segments()
             for (si, di, wi) in zip(source, destiny, weights)
@@ -333,7 +333,7 @@ end
                         ysi, ydi = (ishoriz ? (y[si],y[di]) : (y[si]+dist,y[di]-dist))
 
                         xpts, ypts = directed_curve(xsi, xdi, ysi, ydi,
-                                    xview=d[:xlims], yview=d[:ylims], root=root)
+                                    xview=plotattributes[:xlims], yview=plotattributes[:ylims], root=root)
                         push!(xseg, xpts)
                         push!(yseg, ypts)
                     elseif method == :arcdiagram
@@ -364,7 +364,7 @@ end
             end
 
             # generate a list of colors, one per segment
-            grad = get(d, :linecolor, nothing)
+            grad = get(plotattributes, :linecolor, nothing)
             if isa(grad, ColorGradient)
                 line_z := weights
             end
@@ -412,10 +412,10 @@ end
             markersize --> 10 + 100node_weights / sum(node_weights)
         else
             @assert !_3d  # TODO: make this work in 3D
-            scalefactor = pop!(d, :markersize, nodesize)
+            scalefactor = pop!(plotattributes, :markersize, nodesize)
             seriestype := :scatter
             # markersize := nodesize
-            nodeshape = get(d, :markershape, nodeshape)
+            nodeshape = get(plotattributes, :markershape, nodeshape)
             nodeshape = if isa(nodeshape, AbstractArray)
                 [Shape(sym) for sym in nodeshape]
             else
