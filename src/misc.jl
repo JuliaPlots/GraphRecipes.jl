@@ -9,6 +9,7 @@
     grid --> false
     aspect_ratio --> 1
     seriestype := :shape
+    framestyle --> :none
     ()
 end
 
@@ -40,8 +41,8 @@ if Plots.is_installed("Shapefile")
             x, y
         end
 
-        @recipe f(poly::Shapefile.Polygon) = (seriestype --> :shapefile; shapefile_coords(poly))
-        @recipe f{T<:Shapefile.Polygon}(polys::AbstractArray{T}) = (seriestype --> :shapefile; shapefile_coords(polys))
+        @recipe f(poly::Shapefile.Polygon) = (seriestype --> :shapefile; linecolor --> :black; shapefile_coords(poly))
+        @recipe f{T<:Shapefile.Polygon}(polys::AbstractArray{T}) = (seriestype --> :shapefile; linecolor --> :black; shapefile_coords(polys))
         @recipe f{T<:Shapefile.Handle}(handle::T) = handle.shapes
     end
 end
