@@ -9,6 +9,7 @@
     grid --> false
     aspect_ratio --> 1
     seriestype := :shape
+    framestyle --> :none
     ()
 end
 
