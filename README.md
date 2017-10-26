@@ -123,8 +123,7 @@ shp = open("/tmp/$fn") do fd
 end
 plot(shp)
 ```
-
-![](https://cloud.githubusercontent.com/assets/933338/16770876/83dea362-481c-11e6-9943-bb77148be5b8.png)
+![](https://user-images.githubusercontent.com/8429802/32055561-794ded18-ba62-11e7-8acb-353ce6f86021.png)
 
 ---
 
