@@ -6,7 +6,7 @@
 
 This repo maintains a collection of recipes for machine learning, graph analysis, finance, and more.  It uses the powerful machinery of [Plots](https://github.com/tbreloff/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations.
 
-PlotRecipes also exports the recipes in [StatPlots.jl](https://github.com/JuliaPlots/StatPlots.jl), which is a collection of statistics recipes, including functionality for DataFrames and Distributions.
+PlotRecipes also exports the recipes in [StatPlots.jl](https://github.com/JuliaPlots/StatPlots.jl), which is a collection of statistics recipes, including functionality for DataFrames and Distributions.  Please visit StatPlots' repository for more examples.
 
 ---
 
@@ -143,37 +143,3 @@ portfoliocomposition(weights, returns, labels = tickers')
 
 ![](https://github.com/JuliaPlots/PlotReferenceImages.jl/blob/master/PlotRecipes/portfoliocomposition.png)
 
----
-
-## StatPlots.jl
-
-
----
-
-#### corrplot
-
-```julia
-using PlotRecipes
-M = randn(1000,4)
-M[:,2] += 0.8sqrt(abs(M[:,1])) - 0.5M[:,3] + 5
-M[:,3] -= 0.7M[:,1].^2 + 2
-
-corrplot(M, label = ["x$i" for i=1:4])
-```
-
-![](https://cloud.githubusercontent.com/assets/933338/16030833/3c84e6bc-31c3-11e6-9a04-4cee531440a4.png)
-
----
-
-#### Marginal Histograms
-
-```julia
-using PlotRecipes, Distributions
-n = 1000
-x = rand(Gamma(2), n)
-y = -0.5x + randn(n)
-
-marginalhist(x, y, fc=:plasma, bins=40)
-```
-
-![](https://github.com/JuliaPlots/PlotReferenceImages.jl/blob/master/PlotRecipes/marginalhist.png)
