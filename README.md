@@ -124,22 +124,3 @@ end
 plot(shp)
 ```
 ![](https://user-images.githubusercontent.com/8429802/32055561-794ded18-ba62-11e7-8acb-353ce6f86021.png)
-
----
-
-#### Portfolio Composition Maps
-
-```julia
-using PlotRecipes
-tickers = ["IBM", "Google", "Apple", "Intel"]
-N = 10
-D = length(tickers)
-weights = rand(N,D)
-weights ./= sum(weights, 2)
-returns = sort!((1:N) + D*randn(N))
-
-portfoliocomposition(weights, returns, labels = tickers')
-```
-
-![](https://github.com/JuliaPlots/PlotReferenceImages.jl/blob/master/PlotRecipes/portfoliocomposition.png)
-
