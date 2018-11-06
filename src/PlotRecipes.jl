@@ -1,17 +1,17 @@
 
 module PlotRecipes
 
+using LightGraphs
+using NetworkLayout
 using Reexport
 @reexport using Plots
-import Plots: Plot, isnothing
-import NetworkLayout
+
+using LinearAlgebra
+using SparseArrays
+using Statistics
 
 include("utils.jl")
 include("graphs.jl")
-include("finance.jl")
 include("misc.jl")
-
-@deprecate arcdiagram graphplot
-@deprecate chorddiagram graphplot
 
 end # module

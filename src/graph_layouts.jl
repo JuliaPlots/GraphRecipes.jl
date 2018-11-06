@@ -342,12 +342,12 @@ function chord_diagram( source::AbstractVector{Int},
     N = length(nodes)
     δ = 2pi / N
 
-    x = Array(Float64,N)
-    y = Array(Float64,N)
+    x = Array{Float64}(undef, N)
+    y = Array{Float64}(undef, N)
     for i in 1:N
         x[i] = sin((i-1)*δ)
         y[i] = cos((i-1)*δ)
     end
-    
+
     x, y, zeros(Int,length(x))
 end

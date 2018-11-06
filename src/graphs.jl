@@ -32,7 +32,7 @@ end
 
 # -----------------------------------------------------
 
-function get_source_destiny_weight{T}(mat::AbstractArray{T,2})
+function get_source_destiny_weight(mat::AbstractArray{T,2}) where T
     nrow, ncol = size(mat)    # rows are sources and columns are destinies
 
     nosymmetric = !issymmetric(mat) # plots only triu for symmetric matrices
@@ -40,9 +40,9 @@ function get_source_destiny_weight{T}(mat::AbstractArray{T,2})
 
     L = length(mat)
 
-    source  = Array(Int, L)
-    destiny = Array(Int, L)
-    weights  = Array(T, L)
+    source  = Array{Int}(undef, L)
+    destiny = Array{Int}(undef, L)
+    weights  = Array{T}(undef, L)
 
     idx = 1
     for i in 1:nrow, j in 1:ncol
@@ -81,7 +81,7 @@ function get_source_destiny_weight(source::AbstractVector, destiny::AbstractVect
     source, destiny, weights
 end
 
-function get_source_destiny_weight{V<:AbstractVector{Int}}(adjlist::AbstractVector{V})
+function get_source_destiny_weight(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
     source = Int[]
     destiny = Int[]
     for (i,l) in enumerate(adjlist)
@@ -101,10 +101,10 @@ end
 
 function get_adjacency_matrix(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector)
     n = max(maximum(source), maximum(destiny))
-    full(sparse(source, destiny, weights, n, n))
+    Matrix(sparse(source, destiny, weights, n, n))
 end
 
-function get_adjacency_matrix{V<:AbstractVector{Int}}(adjlist::AbstractVector{V})
+function get_adjacency_matrix(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
     s,d,w = get_source_destiny_weight(adjlist)
     get_adjacency_matrix(s, d, w)
 end
@@ -124,7 +124,7 @@ function get_adjacency_list(source::AbstractVector{Int}, destiny::AbstractVector
     adjlist
 end
 
-function get_adjacency_list{V<:AbstractVector{Int}}(adjlist::AbstractVector{V})
+function get_adjacency_list(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
     adjlist
 end
 
@@ -132,7 +132,7 @@ end
 
 function make_symmetric(A::AbstractMatrix)
     A = copy(A)
-    for i=1:size(A,1), j=i+1:size(A,2)
+    for i=1:size(A,1), j=(i+1):size(A,2)
         A[i,j] = A[j,i] = A[i,j]+A[j,i]
     end
     A
@@ -157,57 +157,48 @@ function compute_laplacian(adjmat::AbstractMatrix, node_weights::AbstractVector)
     L, D
 end
 
-if Plots.is_installed("LightGraphs")
-    @eval begin
-        import LightGraphs
+import LightGraphs
 
-        # TODO: so much wasteful conversion... do better
-        function estimate_distance(adjmat::AbstractMatrix)
-            source, destiny, weights = get_source_destiny_weight(sparse(adjmat))
+# TODO: so much wasteful conversion... do better
+function estimate_distance(adjmat::AbstractMatrix)
+    source, destiny, weights = get_source_destiny_weight(sparse(adjmat))
 
-            g = LightGraphs.Graph(adjmat)
-            dists = convert(Matrix{Float64}, hcat(map(i->LightGraphs.dijkstra_shortest_paths(g, i).dists, LightGraphs.vertices(g))...))
-            tot = 0.0; cnt = 0
-            for (i,d) in enumerate(dists)
-                if d < 1e10
-                    tot += d
-                    cnt += 1
-                end
-            end
-            avg = cnt > 0 ? tot / cnt : 1.0
-            for (i,d) in enumerate(dists)
-                if d > 1e10
-                    dists[i] = 3avg
-                end
-            end
-            dists
-        end
-
-        function get_source_destiny_weight(g::LightGraphs.AbstractGraph)
-            source = Vector{Int}()
-            destiny =  Vector{Int}()
-            sizehint!(source, LightGraphs.nv(g))
-            sizehint!(destiny, LightGraphs.nv(g))
-            for e in LightGraphs.edges(g)
-              push!(source, LightGraphs.src(e))
-              push!(destiny, LightGraphs.dst(e))
-            end
-            get_source_destiny_weight(source, destiny)
-        end
-
-        function get_adjacency_matrix(g::LightGraphs.Graph)
-            get_adjacency_matrix(get_source_destiny_weight(g)...)
-        end
-
-        function get_adjacency_list(g::LightGraphs.AbstractGraph)
-            g.fadjlist
+    g = LightGraphs.Graph(adjmat)
+    dists = convert(Matrix{Float64}, hcat(map(i->LightGraphs.dijkstra_shortest_paths(g, i).dists, LightGraphs.vertices(g))...))
+    tot = 0.0; cnt = 0
+    for (i,d) in enumerate(dists)
+        if d < 1e10
+            tot += d
+            cnt += 1
         end
     end
-else
-    @eval function estimate_distance(adjmat::AbstractMatrix)
-        warn("Install LightGraphs for the best layout calculations.")
-        map(a -> a==0 ? 5.0 : a, adjmat)
+    avg = cnt > 0 ? tot / cnt : 1.0
+    for (i,d) in enumerate(dists)
+        if d > 1e10
+            dists[i] = 3avg
+        end
     end
+    dists
+end
+
+function get_source_destiny_weight(g::LightGraphs.AbstractGraph)
+    source = Vector{Int}()
+    destiny =  Vector{Int}()
+    sizehint!(source, LightGraphs.nv(g))
+    sizehint!(destiny, LightGraphs.nv(g))
+    for e in LightGraphs.edges(g)
+      push!(source, LightGraphs.src(e))
+      push!(destiny, LightGraphs.dst(e))
+    end
+    get_source_destiny_weight(source, destiny)
+end
+
+function get_adjacency_matrix(g::LightGraphs.Graph)
+    get_adjacency_matrix(get_source_destiny_weight(g)...)
+end
+
+function get_adjacency_list(g::LightGraphs.AbstractGraph)
+    g.fadjlist
 end
 
 # -----------------------------------------------------
@@ -252,19 +243,19 @@ end
     end
     n = max(maximum(source), maximum(destiny))
 
-    if isnothing(node_weights)
+    if Plots.isnothing(node_weights)
         node_weights = ones(n)
     end
     @assert length(node_weights) == n
 
     xyz = _3d ? (x,y,z) : (x,y)
-    numnothing = count(isnothing, xyz)
+    numnothing = count(Plots.isnothing, xyz)
 
     # do we want to compute coordinates?
     if numnothing > 0
-        if isnothing(free_dims)
+        if Plots.isnothing(free_dims)
             # compute free_dims
-            free_dims = find(isnothing, xyz)
+            free_dims = findall(Plots.isnothing, xyz)
         end
         x, y, z = func(
             prepare_graph_inputs(method, source, destiny, weights)...;
@@ -298,18 +289,18 @@ end
     elseif axis_buffer < 0 # equal axes
         ahw = 1.2 * 0.5 * maximum(v -> maximum(v)-minimum(v), xyz)
         xcenter = mean(extrema(x))
-        xlims --> (xcenter-ahw, xcenter+ahw)
+        #xlims --> (xcenter-ahw, xcenter+ahw)
         ycenter = mean(extrema(y))
-        ylims --> (ycenter-ahw, ycenter+ahw)
+        #ylims --> (ycenter-ahw, ycenter+ahw)
         if _3d
             zcenter = mean(extrema(z))
-            zlims --> (zcenter-ahw, zcenter+ahw)
+            #zlims --> (zcenter-ahw, zcenter+ahw)
         end
     else
-        xlims --> Plots.extrema_plus_buffer(x, axis_buffer)
-        ylims --> Plots.extrema_plus_buffer(y, axis_buffer)
+        #xlims --> Plots.extrema_plus_buffer(x, axis_buffer)
+        #ylims --> Plots.extrema_plus_buffer(y, axis_buffer)
         if _3d
-            zlims --> Plots.extrema_plus_buffer(z, axis_buffer)
+            #zlims --> Plots.extrema_plus_buffer(z, axis_buffer)
         end
     end
 
@@ -339,7 +330,7 @@ end
                     elseif method == :arcdiagram
                         r  = (xdi - xsi) / 2
                         x₀ = (xdi + xsi) / 2
-                        θ = linspace(0,π,30)
+                        θ = range(0, stop=π, length=30)
                         xpts = x₀ .+ r .* cos.(θ)
                         ypts = r .* sin.(θ) .+ ysi # ysi == ydi
                         push!(xseg, xpts)
@@ -350,7 +341,7 @@ end
                                                  ysi, ydi,
                                                  curvature_scalar)
                         else
-                            (0.0,0.0)
+                            (0.0, 0.0)
                         end
                         push!(xseg, xsi, xpt, xdi)
                         push!(yseg, ysi, ypt, ydi)
@@ -392,7 +383,7 @@ end
         end
         @series begin
             seriestype := :shape
-            angles = Array(Float64,length(x))
+            angles = Array{Float64}(undef, length(x))
             for i in 1:length(x)
                 if y[i] > 0
                     angles[i] = acos(x[i])
@@ -409,7 +400,7 @@ end
             linewidth := 0
             linealpha := 0
             series_annotations --> map(string,names)
-            markersize --> 10 + 100node_weights / sum(node_weights)
+            markersize --> (10 .+ (100 .* node_weights) ./ sum(node_weights))
         else
             @assert !_3d  # TODO: make this work in 3D
             scalefactor = pop!(plotattributes, :markersize, nodesize)

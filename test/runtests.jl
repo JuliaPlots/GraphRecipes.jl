@@ -1,5 +1,5 @@
 using PlotRecipes
-using Base.Test
+using Test
 
 # write your own tests here
 @test 1 == 1
@@ -30,4 +30,4 @@ using Base.Test
 # portfoliocomposition(weights, returns, labels = tickers')
 
 # -----------------------------------------
-# 
+#
