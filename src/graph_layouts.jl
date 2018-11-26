@@ -167,7 +167,7 @@ function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, w
                     dim = 2,
                     add_noise = true,
                     kw...)
-    extrakw = KW(kw)
+    extrakw = Dict{Symbol,Any}(kw)
     # @show root layers positions dim add_noise extrakw
     n = length(node_weights)
 

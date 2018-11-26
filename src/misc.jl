@@ -70,7 +70,7 @@ end
     #     end
     # end
     #
-    # layout_kw := KW(:layers => layers, :add_noise => false, :positions => positions)
+    # layout_kw := Dict{Symbol,Any}(:layers => layers, :add_noise => false, :positions => positions)
 
     GraphPlot(get_source_destiny_weight(adjlist))
 end

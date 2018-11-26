@@ -1,19 +1,22 @@
 
-
-# build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
-# may create a loop if necessary.  Assumes the view is [0,1]
+"""
+This function builds a BezierCurve which leaves point p vertically upwards and arrives
+point q vertically upwards. It may create a loop if necessary.
+It assumes the view is [0,1]. That can be modified using the `xview` and `yview`
+keyword arguments (default: `0:1`).
+"""
 function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol = :bottom)
-    if root in (:left,:right)
+    if root in (:left, :right)
         # flip x/y to simplify
-        x1,x2,y1,y2,xview,yview = y1,y2,x1,x2,yview,xview
+        x1, x2, y1, y2, xview, yview = y1, y2, x1, x2, yview, xview
     end
-    x = [x1, x1]
-    y = [y1]
+    x = Float64[x1, x1]
+    y = Float64[y1]
 
     minx, maxx = extrema(xview)
     miny, maxy = extrema(yview)
-    dist = sqrt((x2-x1)^2+(y2-y1)^2)
-    flip = root in (:top,:right)
+    dist = sqrt((x2 - x1)^2 + (y2 - y1)^2)
+    flip = root in (:top, :right)
     need_loop = (flip && y1 <= y2) || (!flip && y1 >= y2)
 
     # these points give the initial/final "rise"
@@ -62,6 +65,7 @@ function shorten_segment(x1, y1, x2, y2, shorten)
     x1+xshort, y1+yshort, x2-xshort, y2-yshort
 end
 
+
 # we want to randomly pick a point to be the center control point of a bezier
 # curve, which is both equidistant between the endpoints and normally distributed
 # around the midpoint
@@ -81,11 +85,18 @@ function random_control_point(xi, xj, yi, yj, curvature_scalar)
      ymid + dist_from_mid * sin(theta))
 end
 
+# Function from Plots/src/components.jl
+"get an array of tuples of points on a circle with radius `r`"
+function partialcircle(start_θ, end_θ, n = 20, r = 1)
+    Tuple{Float64,Float64}[(r*cos(u), r*sin(u)) for u in
+                           range(start_θ, stop = end_θ, length = n)]
+end
+
 # for chord diagrams:
 function arcshape(θ1, θ2)
     Shape(vcat(
-        Plots.partialcircle(θ1, θ2, 15, 1.05),
-        reverse(Plots.partialcircle(θ1, θ2, 15, 0.95))
+        partialcircle(θ1, θ2, 15, 1.05),
+        reverse(partialcircle(θ1, θ2, 15, 0.95))
     ))
 end
 
@@ -105,3 +116,7 @@ function arcdiagram_limits(x, source, destiny)
     end
     (xmin-margin, xmax+margin), ylims
 end
+
+# From Plots/src/utils.jl
+isnothing(x::Nothing) = true
+isnothing(x) = false

@@ -1,10 +1,12 @@
 using PlotRecipes
 using Test
 
-# write your own tests here
-@test 1 == 1
+@testset "utils.jl" begin
 
-# TODO: actual tests
+    @test directed_curve(0.,1.,0.,1.) == directed_curve(0,1,0,1)
+
+    
+end
 
 # -----------------------------------------
 # marginalhist

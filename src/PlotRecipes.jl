@@ -3,14 +3,14 @@ module PlotRecipes
 
 using LightGraphs
 using NetworkLayout
-using Reexport
-@reexport using Plots
+using RecipesBase
 
 using LinearAlgebra
 using SparseArrays
 using Statistics
 
 include("utils.jl")
+include("graph_layouts.jl")
 include("graphs.jl")
 include("misc.jl")
 

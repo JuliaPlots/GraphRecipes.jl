@@ -1,8 +1,6 @@
 julia 0.7
 
-Reexport
 RecipesBase
-Plots 0.13
-StatPlots
 NetworkLayout
 LightGraphs
+StatPlots

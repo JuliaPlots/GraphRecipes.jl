@@ -1,7 +1,4 @@
-
-include("graph_layouts.jl")
-
-const _graph_funcs = KW(
+const _graph_funcs = Dict{Symbol,Any}(
     :spectral => spectral_graph,
     :stress => by_axis_local_stress_graph,
     :tree => tree_graph,
@@ -10,7 +7,7 @@ const _graph_funcs = KW(
     :chorddiagram => chord_diagram
 )
 
-const _graph_inputs = KW(
+const _graph_inputs = Dict{Symbol,Any}(
     :spectral => :adjmat,
     :stress => :adjmat,
     :tree => :sourcedestiny,
@@ -230,7 +227,7 @@ end
                    func = get(_graph_funcs, method, by_axis_local_stress_graph),
                    shorten = 0.0,
                    axis_buffer = 0.2,
-                   layout_kw = KW()
+                   layout_kw = Dict{Symbol,Any}()
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -243,19 +240,19 @@ end
     end
     n = max(maximum(source), maximum(destiny))
 
-    if Plots.isnothing(node_weights)
+    if isnothing(node_weights)
         node_weights = ones(n)
     end
     @assert length(node_weights) == n
 
     xyz = _3d ? (x,y,z) : (x,y)
-    numnothing = count(Plots.isnothing, xyz)
+    numnothing = count(isnothing, xyz)
 
     # do we want to compute coordinates?
     if numnothing > 0
-        if Plots.isnothing(free_dims)
+        if isnothing(free_dims)
             # compute free_dims
-            free_dims = findall(Plots.isnothing, xyz)
+            free_dims = findall(isnothing, xyz)
         end
         x, y, z = func(
             prepare_graph_inputs(method, source, destiny, weights)...;
