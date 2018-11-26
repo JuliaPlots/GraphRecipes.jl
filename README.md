@@ -20,6 +20,7 @@ PlotRecipes also exports the recipes in [StatPlots.jl](https://github.com/JuliaP
 
 ```julia
 using PlotRecipes
+using Plots
 n = 15
 A = Float64[(rand()<0.5 ? 0 : rand()) for i=1:n,j=1:n]
 for i=1:n
@@ -52,7 +53,10 @@ graphplot(A,
 #### Arc and chord diagrams
 
 ```julia
+using LinearAlgebra
+using SparseArrays
 using PlotRecipes
+using Plots
 
 adjmat = Symmetric(sparse(rand(0:1,8,8)));
 

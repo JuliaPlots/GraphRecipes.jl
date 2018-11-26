@@ -3,6 +3,7 @@ module PlotRecipes
 
 using LightGraphs
 using NetworkLayout
+using PlotUtils         # ColorGradient
 using RecipesBase
 
 using LinearAlgebra

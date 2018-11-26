@@ -94,10 +94,10 @@ end
 
 # for chord diagrams:
 function arcshape(θ1, θ2)
-    Shape(vcat(
+    vcat(
         partialcircle(θ1, θ2, 15, 1.05),
         reverse(partialcircle(θ1, θ2, 15, 0.95))
-    ))
+    )
 end
 
 # x and y limits for arc diagram ()

@@ -304,11 +304,12 @@ end
     # create a series for the line segments
     if get(plotattributes, :linewidth, 1) > 0
         @series begin
-            xseg, yseg, zseg = Segments(), Segments(), Segments()
+            xseg = Vector{Float64}()
+            yseg = Vector{Float64}()
+            zseg = Vector{Float64}()
             for (si, di, wi) in zip(source, destiny, weights)
 
                 # TO DO : Colouring edges by weight
-
                 # add a line segment
                 xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
                 if curves
@@ -322,16 +323,23 @@ end
 
                         xpts, ypts = directed_curve(xsi, xdi, ysi, ydi,
                                     xview=plotattributes[:xlims], yview=plotattributes[:ylims], root=root)
-                        push!(xseg, xpts)
-                        push!(yseg, ypts)
+                        println(xpts)
+                        push!(xseg, xpts, NaN)
+                        push!(yseg, ypts, NaN)
                     elseif method == :arcdiagram
                         r  = (xdi - xsi) / 2
                         x₀ = (xdi + xsi) / 2
                         θ = range(0, stop=π, length=30)
                         xpts = x₀ .+ r .* cos.(θ)
                         ypts = r .* sin.(θ) .+ ysi # ysi == ydi
-                        push!(xseg, xpts)
-                        push!(yseg, ypts)
+                        for x in xpts
+                            push!(xseg, x)
+                        end
+                        push!(xseg, NaN)
+                        for y in ypts
+                            push!(yseg, y)
+                        end
+                        push!(yseg, NaN)
                     else
                         xpt, ypt = if method != :chorddiagram
                             random_control_point(xsi, xdi,
@@ -340,14 +348,14 @@ end
                         else
                             (0.0, 0.0)
                         end
-                        push!(xseg, xsi, xpt, xdi)
-                        push!(yseg, ysi, ypt, ydi)
-                        _3d && push!(zseg, z[si], z[si], z[di])
+                        push!(xseg, xsi, xpt, xdi, NaN)
+                        push!(yseg, ysi, ypt, ydi, NaN)
+                        _3d && push!(zseg, z[si], z[si], z[di], NaN)
                     end
                 else
-                    push!(xseg, xsi, xdi)
-                    push!(yseg, ysi, ydi)
-                    _3d && push!(zseg, z[si], z[di])
+                    push!(xseg, xsi, xdi, NaN)
+                    push!(yseg, ysi, ydi, NaN)
+                    _3d && push!(zseg, z[si], z[di], NaN)
                 end
             end
 
@@ -363,7 +371,7 @@ end
             markershape := :none
             markercolor := :black
             primary := false
-            _3d ? (xseg.pts, yseg.pts, zseg.pts) : (xseg.pts, yseg.pts)
+            _3d ? (xseg, yseg, zseg) : (xseg, yseg)
         end
     end
 
@@ -380,8 +388,9 @@ end
         end
         @series begin
             seriestype := :shape
-            angles = Array{Float64}(undef, length(x))
-            for i in 1:length(x)
+            N = length(x)
+            angles = Vector{Float64}(undef, N)
+            for i in 1:N
                 if y[i] > 0
                     angles[i] = acos(x[i])
                 else
@@ -389,7 +398,8 @@ end
                 end
             end
             δ = 0.4 * (angles[2] - angles[1])
-            Shape[ arcshape(Θ-δ,Θ+δ) for Θ in angles ]
+            vec_vec_xy = [ arcshape(Θ-δ,Θ+δ) for Θ in angles ] # Shape
+            [ [ xy[1] for xy in vec_xy ] for vec_xy in vec_vec_xy ], [ [ xy[2] for xy in vec_xy ] for vec_xy in vec_vec_xy ]
         end
     else
         if isempty(names)
@@ -404,12 +414,13 @@ end
             seriestype := :scatter
             # markersize := nodesize
             nodeshape = get(plotattributes, :markershape, nodeshape)
-            nodeshape = if isa(nodeshape, AbstractArray)
-                [Shape(sym) for sym in nodeshape]
-            else
-                Shape(nodeshape)
-            end
-            series_annotations := (map(string,names), nodeshape, font(fontsize), scalefactor)
+            # nodeshape = if isa(nodeshape, AbstractArray)
+            #    [(sym) for sym in nodeshape] # Shape
+            # else
+            #    nodeshape # Shape
+            # end
+            # font(fontsize)
+            series_annotations := (map(string,names), nodeshape, fontsize, scalefactor)
         end
     end
     xyz
