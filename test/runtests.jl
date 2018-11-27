@@ -1,11 +1,23 @@
 using PlotRecipes
+using Plots
 using Test
 
 @testset "utils.jl" begin
 
-    @test directed_curve(0.,1.,0.,1.) == directed_curve(0,1,0,1)
+    @test directed_curve(0., 1., 0., 1.) == directed_curve(0, 1, 0, 1)
 
-    
+    @testset "Functions from Plots.jl" begin
+
+        for x in [nothing, missing, NaN, 0, 1, 0.0, 1.0]
+            @test isnothing(x) == Plots.isnothing(x)
+        end
+
+        for (s, e) in [ (rand(), rand()) for i in 1:100 ]
+            @test partialcircle(s, e) == Plots.partialcircle(s, e)
+        end
+
+    end
+
 end
 
 # -----------------------------------------

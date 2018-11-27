@@ -1,9 +1,9 @@
 
 """
-This function builds a BezierCurve which leaves point p vertically upwards and arrives
-point q vertically upwards. It may create a loop if necessary.
-It assumes the view is [0,1]. That can be modified using the `xview` and `yview`
-keyword arguments (default: `0:1`).
+This function builds a BezierCurve which leaves point p vertically upwards and
+arrives point q vertically upwards. It may create a loop if necessary.
+It assumes the view is [0,1]. That can be modified using the `xview` and
+`yview` keyword arguments (default: `0:1`).
 """
 function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol = :bottom)
     if root in (:left, :right)
@@ -66,9 +66,11 @@ function shorten_segment(x1, y1, x2, y2, shorten)
 end
 
 
-# we want to randomly pick a point to be the center control point of a bezier
-# curve, which is both equidistant between the endpoints and normally distributed
-# around the midpoint
+"""
+Randomly pick a point to be the center control point of a bezier curve,
+which is both equidistant between the endpoints and normally distributed
+around the midpoint.
+"""
 function random_control_point(xi, xj, yi, yj, curvature_scalar)
     xmid = 0.5 * (xi+xj)
     ymid = 0.5 * (yi+yj)
