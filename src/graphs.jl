@@ -307,6 +307,7 @@ end
             xseg = Vector{Float64}()
             yseg = Vector{Float64}()
             zseg = Vector{Float64}()
+            l_wg = Vector{Float64}()
             for (si, di, wi) in zip(source, destiny, weights)
 
                 # TO DO : Colouring edges by weight
@@ -322,10 +323,11 @@ end
                         ysi, ydi = (ishoriz ? (y[si],y[di]) : (y[si]+dist,y[di]-dist))
 
                         xpts, ypts = directed_curve(xsi, xdi, ysi, ydi,
-                                    xview=plotattributes[:xlims], yview=plotattributes[:ylims], root=root)
-                        println(xpts)
-                        push!(xseg, xpts, NaN)
-                        push!(yseg, ypts, NaN)
+                                    xview=get(plotattributes, :xlims, (0,1)), yview=get(plotattributes, :ylims, (0,1)), root=root)
+
+                        append!(xseg, push!(xpts, NaN))
+                        append!(yseg, push!(ypts, NaN))
+                        append!(l_wg, [ wi for i in 1:length(xpts) ] )
                     elseif method == :arcdiagram
                         r  = (xdi - xsi) / 2
                         x₀ = (xdi + xsi) / 2
@@ -334,6 +336,7 @@ end
                         ypts = r .* sin.(θ) .+ ysi # ysi == ydi
                         for x in xpts
                             push!(xseg, x)
+                            push!(l_wg, wi)
                         end
                         push!(xseg, NaN)
                         for y in ypts
@@ -351,18 +354,20 @@ end
                         push!(xseg, xsi, xpt, xdi, NaN)
                         push!(yseg, ysi, ypt, ydi, NaN)
                         _3d && push!(zseg, z[si], z[si], z[di], NaN)
+                        push!(l_wg, wi)
                     end
                 else
                     push!(xseg, xsi, xdi, NaN)
                     push!(yseg, ysi, ydi, NaN)
                     _3d && push!(zseg, z[si], z[di], NaN)
+                    push!(l_wg, wi)
                 end
             end
 
             # generate a list of colors, one per segment
             grad = get(plotattributes, :linecolor, nothing)
             if isa(grad, ColorGradient)
-                line_z := weights
+                line_z := l_wg
             end
 
             seriestype := (curves ? :curves : (_3d ? :path3d : :path))
@@ -375,16 +380,17 @@ end
         end
     end
 
+    framestyle := :none
     axis := nothing
     legend --> false
 
     if method == :chorddiagram
         seriestype := :scatter
-        markersize --> 0
+        markersize := 0
+        markeralpha := 0
         ratio --> :equal
         if length(names) == length(x)
-            annotations := [(x[i],y[i],text(names[i],fontsize,:black,:center))
-                            for i in 1:length(x)]
+            annotations := [(x[i], y[i], names[i]) for i in 1:length(x)]
         end
         @series begin
             seriestype := :shape

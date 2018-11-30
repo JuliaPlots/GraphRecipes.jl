@@ -6,9 +6,11 @@ using NetworkLayout
 using PlotUtils         # ColorGradient
 using RecipesBase
 
+using InteractiveUtils  # subtypes
 using LinearAlgebra
 using SparseArrays
 using Statistics
+
 
 include("utils.jl")
 include("graph_layouts.jl")
