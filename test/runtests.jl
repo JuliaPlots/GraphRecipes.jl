@@ -4,20 +4,20 @@ using Test
 
 @testset "utils.jl" begin
 
-    @test directed_curve(0., 1., 0., 1.) == directed_curve(0, 1, 0, 1)
+    @test PlotRecipes.directed_curve(0., 1., 0., 1.) == PlotRecipes.directed_curve(0, 1, 0, 1)
 
     @testset "Functions from Plots.jl" begin
 
-        @test isnothing(nothing) == Plots.isnothing(nothing)
-        @test isnothing(missing) == Plots.isnothing(missing)
-        @test isnothing(NaN) == Plots.isnothing(NaN)
-        @test isnothing(0) == Plots.isnothing(0)
-        @test isnothing(1) == Plots.isnothing(1)
-        @test isnothing(0.0) == Plots.isnothing(0.0)
-        @test isnothing(1.0) == Plots.isnothing(1.0)
+        @test PlotRecipes.isnothing(nothing) == Plots.isnothing(nothing)
+        @test PlotRecipes.isnothing(missing) == Plots.isnothing(missing)
+        @test PlotRecipes.isnothing(NaN) == Plots.isnothing(NaN)
+        @test PlotRecipes.isnothing(0) == Plots.isnothing(0)
+        @test PlotRecipes.isnothing(1) == Plots.isnothing(1)
+        @test PlotRecipes.isnothing(0.0) == Plots.isnothing(0.0)
+        @test PlotRecipes.isnothing(1.0) == Plots.isnothing(1.0)
 
         for (s, e) in [ (rand(), rand()) for i in 1:100 ]
-            @test partialcircle(s, e) == Plots.partialcircle(s, e)
+            @test PlotRecipes.partialcircle(s, e) == Plots.partialcircle(s, e)
         end
 
     end
