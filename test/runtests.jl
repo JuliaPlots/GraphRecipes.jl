@@ -8,9 +8,13 @@ using Test
 
     @testset "Functions from Plots.jl" begin
 
-        for x in [nothing, missing, NaN, 0, 1, 0.0, 1.0]
-            @test isnothing(x) == Plots.isnothing(x)
-        end
+        @test isnothing(nothing) == Plots.isnothing(nothing)
+        @test isnothing(missing) == Plots.isnothing(missing)
+        @test isnothing(NaN) == Plots.isnothing(NaN)
+        @test isnothing(0) == Plots.isnothing(0)
+        @test isnothing(1) == Plots.isnothing(1)
+        @test isnothing(0.0) == Plots.isnothing(0.0)
+        @test isnothing(1.0) == Plots.isnothing(1.0)
 
         for (s, e) in [ (rand(), rand()) for i in 1:100 ]
             @test partialcircle(s, e) == Plots.partialcircle(s, e)
