@@ -6,11 +6,7 @@
 
 This repo maintains a collection of recipes for graph analysis. It uses the powerful machinery of [Plots](https://github.com/tbreloff/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations.
 
----
-
 # Examples
-
----
 
 ## Graphs
 
@@ -37,7 +33,7 @@ graphplot(A,
 
 ```
 
-![](https://cloud.githubusercontent.com/assets/933338/16093627/9da7b26a-330a-11e6-9733-9d28d5bab604.png)
+![graph_one](https://user-images.githubusercontent.com/2822757/49309894-072adf00-f4dd-11e8-8e4f-0d6c4d3de77c.png)
 
 ```julia
 graphplot(A,
@@ -51,7 +47,7 @@ graphplot(A,
 
 ```
 
-![](https://cloud.githubusercontent.com/assets/933338/16094180/0dd2edf0-330d-11e6-8596-d12b0b8d5393.png)
+![graph_two](https://user-images.githubusercontent.com/2822757/49309891-02fec180-f4dd-11e8-999a-9a4d68e9e0a9.png)
 
 #### Arc and chord diagrams
 
@@ -78,20 +74,14 @@ plot(
     )
 
 ```
-![arc and chord diagrams](https://user-images.githubusercontent.com/2822757/27743452-5511e5e2-5dbc-11e7-895e-dfa753a84efc.png)
-
-#### Fun with algos. Visualizing a stress-driven layout algorithm
-
-![](https://cloud.githubusercontent.com/assets/933338/16698919/ee1f9e76-451e-11e6-8936-881551f120dd.gif)
-
----
+![graph_three](https://user-images.githubusercontent.com/2822757/49309879-f9755980-f4dc-11e8-99c6-545f0e44f118.png)
 
 #### Julia code -- AST
 
 ```julia
 using PlotRecipes
 using Plots
-pyplot(ma=0.8,lc=:white,mc=:white,size=(1000,800))
+pyplot(ma=0.8,lc=:white,mc=:white,size=(600,600))
 theme(:dark)
 
 code = :(
@@ -108,9 +98,7 @@ plot(code, fontsize=5, shorten=0.2, axis_buffer=0.05)
 
 ```
 
-![](https://cloud.githubusercontent.com/assets/933338/20402948/cb618014-accc-11e6-969a-28e738a8bea0.png)
-
----
+![graph_four](https://user-images.githubusercontent.com/2822757/49309864-eb273d80-f4dc-11e8-9254-8cc641852c0b.png)
 
 #### Julia Type Trees
 
@@ -118,11 +106,10 @@ plot(code, fontsize=5, shorten=0.2, axis_buffer=0.05)
 using PlotRecipes
 using Plots
 
-pyplot(size=(800,500))
+pyplot(size=(800,600))
 theme(:dark)
 
-plot(Number, method=:tree)
+plot(Integer, method=:tree, fontsize=4)
 
 ```
-
-![](https://cloud.githubusercontent.com/assets/933338/20758853/2420f72c-b6e9-11e6-82dd-4e62a679b3cb.png)
+![graph_five](https://user-images.githubusercontent.com/2822757/49309857-e3679900-f4dc-11e8-8b57-f878a6d9cb5e.png)
