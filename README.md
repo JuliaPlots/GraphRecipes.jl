@@ -98,7 +98,7 @@ plot(code, fontsize=5, shorten=0.2, axis_buffer=0.05)
 
 ```
 
-![graph_four](https://user-images.githubusercontent.com/2822757/49309864-eb273d80-f4dc-11e8-9254-8cc641852c0b.png)
+![graph_four](https://user-images.githubusercontent.com/2822757/49310588-faa78600-f4de-11e8-95cf-4587d0ba1077.png)
 
 #### Julia Type Trees
 
