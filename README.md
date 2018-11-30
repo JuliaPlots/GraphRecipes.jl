@@ -81,7 +81,7 @@ plot(
 ```julia
 using PlotRecipes
 using Plots
-pyplot(ma=0.8,lc=:white,mc=:white,size=(600,600))
+pyplot(ma=0.8,lc=:white,mc=:white,size=(800,600))
 theme(:dark)
 
 code = :(

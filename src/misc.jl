@@ -18,7 +18,7 @@ function add_ast(adjlist, names, depthdict, depthlists, nodetypes, ex::Expr, par
     push!(depthlists[depth], idx)
 
     for arg in (iscall ? ex.args[2:end] : ex.args)
-        if isa(arg, Expr) && arg.head == :line
+        if isa(arg, LineNumberNode)
             continue
         end
         push!(l, add_ast(adjlist, names, depthdict, depthlists, nodetypes, arg, idx))
