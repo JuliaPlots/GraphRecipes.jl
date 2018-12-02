@@ -1,14 +1,13 @@
-# PlotRecipes
+# GraphRecipes
+The repository formerly know as PlotRecipes
 
-[![Build Status](https://travis-ci.org/JuliaPlots/PlotRecipes.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/PlotRecipes.jl)
+[![Build Status](https://travis-ci.org/JuliaPlots/GraphRecipes.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/GraphRecipes.jl)
 
 ### Primary author: Thomas Breloff (@tbreloff)
 
-This repo maintains a collection of recipes for graph analysis. It uses the powerful machinery of [Plots](https://github.com/tbreloff/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations.
+This repo maintains a collection of recipes for graph analysis, and is a reduced version of the previous PlotRecipes, that has been refactored. It uses the powerful machinery of [Plots](https://github.com/tbreloff/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations.
 
 # Examples
-
-## Graphs
 
 #### Spectral
 
