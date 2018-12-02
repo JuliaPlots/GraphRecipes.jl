@@ -1,5 +1,5 @@
 
-module PlotRecipes
+module GraphRecipes
 
 using LightGraphs
 using NetworkLayout

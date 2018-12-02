@@ -5,14 +5,14 @@ The repository formerly know as PlotRecipes
 
 ### Primary author: Thomas Breloff (@tbreloff)
 
-This repo maintains a collection of recipes for graph analysis, and is a reduced version of the previous PlotRecipes, that has been refactored. It uses the powerful machinery of [Plots](https://github.com/tbreloff/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations.
+This repo maintains a collection of recipes for graph analysis, and is a reduced and refactored version of the previous PlotRecipes. It uses the powerful machinery of [Plots](https://github.com/tbreloff/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations.
 
 # Examples
 
 #### Spectral
 
 ```julia
-using PlotRecipes
+using GraphRecipes
 using Plots
 
 const n = 15
@@ -53,7 +53,7 @@ graphplot(A,
 ```julia
 using LinearAlgebra
 using SparseArrays
-using PlotRecipes
+using GraphRecipes
 using Plots
 
 adjmat = Symmetric(sparse(rand(0:1,8,8)));
@@ -78,7 +78,7 @@ plot(
 #### Julia code -- AST
 
 ```julia
-using PlotRecipes
+using GraphRecipes
 using Plots
 pyplot(ma=0.8,lc=:white,mc=:white,size=(800,600))
 theme(:dark)
@@ -102,7 +102,7 @@ plot(code, fontsize=5, shorten=0.2, axis_buffer=0.05)
 #### Julia Type Trees
 
 ```julia
-using PlotRecipes
+using GraphRecipes
 using Plots
 
 pyplot(size=(800,600))

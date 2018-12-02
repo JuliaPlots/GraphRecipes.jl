@@ -1,7 +1,7 @@
 
 module PkgDeps
 
-using PlotRecipes
+using GraphRecipes
 
 # const _pkgs = Pkg.available()
 # const _idxmap = Dict(p=>i for (i,p) in enumerate(_pkgs))
@@ -33,7 +33,7 @@ using PlotRecipes
     names --> names
     func --> :tree
     root --> :left
-    PlotRecipes.GraphPlot((source, destiny))
+    GraphRecipes.GraphPlot((source, destiny))
 end
 
 # const args = (source, destiny, pkgs)
