@@ -228,7 +228,7 @@ end
                    shorten = 0.0,
                    axis_buffer = 0.2,
                    layout_kw = Dict{Symbol,Any}(),
-                   edge_width = (s,d,w)->1
+                   edgewidth = (s,d,w)->1
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -372,7 +372,7 @@ end
             linewidthattr = get(plotattributes, :linewidth, 1)
             seriestype := (curves ? :curves : (_3d ? :path3d : :path))
             series_annotations := nothing
-            linewidth --> linewidthattr * edge_width(si, di, wi)
+            linewidth --> linewidthattr * edgewidth(si, di, wi)
             markershape := :none
             markercolor := :black
             primary := false
