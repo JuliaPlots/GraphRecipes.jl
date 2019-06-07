@@ -13,7 +13,7 @@ function spectral_graph(adjmat::AbstractMatrix; node_weights::AbstractVector = o
     L, D = compute_laplacian(adjmat, node_weights)
 
     # get the matrix of eigenvectors
-    v = eig(L, D)[2]
+    v = eigvecs(L, D) .|> real
 
     # x, y, and z are the 2nd through 4th eigenvectors of the solution to the
     # generalized eigenvalue problem Lv = λDv

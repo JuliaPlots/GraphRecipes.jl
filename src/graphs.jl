@@ -145,11 +145,11 @@ function compute_laplacian(adjmat::AbstractMatrix, node_weights::AbstractVector)
     adjmat = adjmat .* sqrt(node_weights * node_weights')
 
     # D is a diagonal matrix with the degrees (total weights for that node) on the diagonal
-    deg = vec(sum(adjmat,1)) - diag(adjmat)
-    D = diagm(deg)
+    deg = vec(sum(adjmat; dims=1)) - diag(adjmat)
+    D = diagm(0 => deg)
 
     # Laplacian (L = D - adjmat)
-    L = Float64[i == j ? deg[i] : -adjmat[i,j] for i=1:n,j=1:n]
+    L = eltype(adjmat)[i == j ? deg[i] : -adjmat[i,j] for i=1:n,j=1:n]
 
     L, D
 end
