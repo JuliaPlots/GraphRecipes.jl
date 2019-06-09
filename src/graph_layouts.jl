@@ -5,19 +5,10 @@
 # see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
 # also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
 
-# this recipe uses the technique of Spectral Graph Drawing, which is an
-# under-appreciated method of graph layouts; easier, simpler, and faster
-# than the more common spring-based methods.
 function spectral_graph(adjmat::AbstractMatrix; node_weights::AbstractVector = ones(size(adjmat,1)), kw...)
-    adjmat = make_symmetric(adjmat)
-    L, D = compute_laplacian(adjmat, node_weights)
+    positions = NetworkLayout.Spectral.layout(adjmat; node_weights=convert(Vector{Float64}, node_weights))
 
-    # get the matrix of eigenvectors
-    v = eig(L, D)[2]
-
-    # x, y, and z are the 2nd through 4th eigenvectors of the solution to the
-    # generalized eigenvalue problem Lv = λDv
-    vec(v[2,:]), vec(v[3,:]), vec(v[4,:])
+    ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
 end
 
 function spectral_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
