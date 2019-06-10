@@ -294,10 +294,10 @@ end
             #zlims --> (zcenter-ahw, zcenter+ahw)
         end
     else
-        #xlims --> Plots.extrema_plus_buffer(x, axis_buffer)
-        #ylims --> Plots.extrema_plus_buffer(y, axis_buffer)
+        xlims --> extrema_plus_buffer(x, axis_buffer)
+        ylims --> extrema_plus_buffer(y, axis_buffer)
         if _3d
-            #zlims --> Plots.extrema_plus_buffer(z, axis_buffer)
+            zlims --> extrema_plus_buffer(z, axis_buffer)
         end
     end
 

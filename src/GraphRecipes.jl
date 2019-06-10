@@ -10,6 +10,7 @@ using InteractiveUtils  # subtypes
 using LinearAlgebra
 using SparseArrays
 using Statistics
+using NaNMath
 
 
 include("utils.jl")
