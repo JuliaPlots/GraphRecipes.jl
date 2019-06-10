@@ -122,3 +122,15 @@ end
 # From Plots/src/utils.jl
 isnothing(x::Nothing) = true
 isnothing(x) = false
+
+# From Plots/src/Plots.jl
+ignorenan_extrema(x) = Base.extrema(x)
+# From Plots/src/utils.jl
+ignorenan_extrema(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.extrema(x)
+# From Plots/src/components.jl
+function extrema_plus_buffer(v, buffmult = 0.2)
+    vmin,vmax = extrema(v)
+    vdiff = vmax-vmin
+    buffer = vdiff * buffmult
+    vmin - buffer, vmax + buffer
+end
