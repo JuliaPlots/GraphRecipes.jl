@@ -431,3 +431,7 @@ end
     end
     xyz
 end
+
+@recipe function f(g::AbstractGraph)
+    GraphPlot(get_source_destiny_weight(get_adjacency_list(g)))
+end
