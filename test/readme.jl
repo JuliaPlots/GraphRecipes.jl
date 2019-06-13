@@ -2,6 +2,7 @@ using Random
 using VisualRegressionTests
 using LinearAlgebra
 using SparseArrays
+using ImageMagick
 
 istravis = "TRAVIS" ∈ keys(ENV)
 
