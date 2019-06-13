@@ -2,3 +2,4 @@ Plots
 PyPlot
 VisualRegressionTests
 ImageMagick
+PyCall

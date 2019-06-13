@@ -3,8 +3,13 @@ using VisualRegressionTests
 using LinearAlgebra
 using SparseArrays
 using ImageMagick
+using PyCall
 
 istravis = "TRAVIS" ∈ keys(ENV)
+ENV["MPLBACKEND"]="agg" # no GUI
+
+@info("Python version $(PyCall.pyversion)")
+default(show=false, reuse=true)
 
 cd(@__DIR__)
 cd("../assets")
