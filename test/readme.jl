@@ -6,15 +6,15 @@ using SparseArrays
 istravis = "TRAVIS" ∈ keys(ENV)
 
 cd(@__DIR__)
+cd("../assets")
 
 @testset "README" begin
     n = 15
-    Random.seed!(1)
+    Random.seed!(42)
     A = Float64[ rand() < 0.5 ? 0 : rand() for i=1:n, j=1:n]
     for i=1:n
         A[i, 1:i-1] = A[1:i-1, i]
     end
-    Random.seed!(2)
     x = rand(n)
     y = rand(n)
     z = rand(n)
@@ -39,7 +39,6 @@ cd(@__DIR__)
                         ) "random_3d_graph.png" popup=!istravis tol=0.02
     adjmat = Symmetric(sparse(rand(0:1,8,8)))
 
-    Random.seed!(3)
     adjmat = Symmetric(sparse(rand(0:1,8,8)))
     @plottest plot(
                    graphplot(adjmat,
@@ -68,6 +67,5 @@ cd(@__DIR__)
     pyplot(ma=0.8,lc=:white,mc=:white,size=(800,600))
     theme(:dark)
     @plottest plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15) "AST_example.png" popup=!istravis tol=0.02
-    pyplot(size=(800,600))
-    @plottest plot(Integer, method=:tree, fontsize=4) "julia_type_tree.png" popup=!istravis tol=0.04
+    @plottest plot(AbstractFloat, method=:tree, fontsize=4) "julia_type_tree.png" popup=!istravis tol=0.2
 end
