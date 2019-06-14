@@ -80,8 +80,6 @@ plot(
 ```julia
 using GraphRecipes
 using Plots
-pyplot(ma=0.8,lc=:white,mc=:white,size=(800,600))
-theme(:dark)
 
 code = :(
 function mysum(list)
@@ -104,9 +102,6 @@ plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15)
 ```julia
 using GraphRecipes
 using Plots
-
-pyplot(size=(800,600))
-theme(:dark)
 
 plot(AbstractFloat, method=:tree, fontsize=4)
 

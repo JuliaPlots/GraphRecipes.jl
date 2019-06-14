@@ -66,10 +66,8 @@ function mysum(list)
 end
 )
 
-pyplot(ma=0.8,lc=:white,mc=:white,size=(800,600))
-theme(:dark)
-plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15)
+plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15, markersize=0)
 savefig("AST_example.png")
 
-plot(AbstractFloat, method=:tree, fontsize=4)
+plot(AbstractFloat, method=:tree, fontsize=4, markersize=0)
 savefig("julia_type_tree.png")

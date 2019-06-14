@@ -3,12 +3,9 @@ using VisualRegressionTests
 using LinearAlgebra
 using SparseArrays
 using ImageMagick
-using PyCall
 
 istravis = "TRAVIS" ∈ keys(ENV)
-ENV["MPLBACKEND"]="agg" # no GUI
 
-@info("Python version $(PyCall.pyversion)")
 default(show=false, reuse=true)
 
 cd(@__DIR__)
@@ -70,8 +67,6 @@ cd("../assets")
     end
     )
 
-    pyplot(ma=0.8,lc=:white,mc=:white,size=(800,600))
-    theme(:dark)
-    @plottest plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15) "AST_example.png" popup=!istravis tol=0.02
-    @plottest plot(AbstractFloat, method=:tree, fontsize=4) "julia_type_tree.png" popup=!istravis tol=0.2
+    @plottest plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15, markersize=0) "AST_example.png" popup=!istravis tol=0.02
+    @plottest plot(AbstractFloat, method=:tree, fontsize=4, markersize=0) "julia_type_tree.png" popup=!istravis tol=0.2
 end
