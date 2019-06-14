@@ -227,7 +227,8 @@ end
                    func = get(_graph_funcs, method, by_axis_local_stress_graph),
                    shorten = 0.0,
                    axis_buffer = 0.2,
-                   layout_kw = Dict{Symbol,Any}()
+                   layout_kw = Dict{Symbol,Any}(),
+                   edgewidth = (s,d,w)->1
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -303,12 +304,14 @@ end
 
     # create a series for the line segments
     if get(plotattributes, :linewidth, 1) > 0
-        @series begin
-            xseg = Vector{Float64}()
-            yseg = Vector{Float64}()
-            zseg = Vector{Float64}()
-            l_wg = Vector{Float64}()
-            for (si, di, wi) in zip(source, destiny, weights)
+        # generate a list of colors, one per segment
+        segment_colors = get(plotattributes, :linecolor, nothing)
+        for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+            @series begin
+                xseg = Vector{Float64}()
+                yseg = Vector{Float64}()
+                zseg = Vector{Float64}()
+                l_wg = Vector{Float64}()
 
                 # TO DO : Colouring edges by weight
                 # add a line segment
@@ -362,21 +365,20 @@ end
                     _3d && push!(zseg, z[si], z[di], NaN)
                     push!(l_wg, wi)
                 end
-            end
 
-            # generate a list of colors, one per segment
-            grad = get(plotattributes, :linecolor, nothing)
-            if isa(grad, ColorGradient)
-                line_z := l_wg
+            if isa(segment_colors, ColorGradient)
+                line_z := segment_colors[i]
             end
-
+            linewidthattr = get(plotattributes, :linewidth, 1)
             seriestype := (curves ? :curves : (_3d ? :path3d : :path))
             series_annotations := nothing
-            linewidth --> 1
+            linewidth --> linewidthattr * edgewidth(si, di, wi)
             markershape := :none
             markercolor := :black
             primary := false
             _3d ? (xseg, yseg, zseg) : (xseg, yseg)
+            end
+
         end
     end
 
