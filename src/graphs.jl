@@ -228,7 +228,8 @@ end
                    shorten = 0.0,
                    axis_buffer = 0.2,
                    layout_kw = Dict{Symbol,Any}(),
-                   edgewidth = (s,d,w)->1
+                   edgewidth = (s,d,w)->1,
+                   edgelabel = nothing,
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -306,6 +307,11 @@ end
     if get(plotattributes, :linewidth, 1) > 0
         # generate a list of colors, one per segment
         segment_colors = get(plotattributes, :linecolor, nothing)
+        edge_label_array = Vector{Tuple}()
+        if typeof(edgelabel) <: AbstractArray
+            edgelabel = vec(edgelabel)
+            (edge_label_array_size = round(Int, sqrt(length(edgelabel))))
+        end
         for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
             @series begin
                 xseg = Vector{Float64}()
@@ -365,13 +371,35 @@ end
                     _3d && push!(zseg, z[si], z[di], NaN)
                     push!(l_wg, wi)
                 end
+            if typeof(edgelabel) == Dict
+                if edge_label_exsists(edgelabel, (si, di))
+                    if dim == 2
+                        push!(edge_label_array,
+                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, edgelabel[(si, di)]))
+                    else
+                        push!(edge_label_array,
+                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, 0.25zsi + 0.75zdi, edgelabel[(si, di)]))
+                    end
+                end
+            elseif typeof(edgelabel) <: AbstractVector
+                if edge_label_exsists(edgelabel, (si, di))
+                    if dim == 2
+                        push!(edge_label_array,
+                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi,
+                               edgelabel[LinearIndices((1:edge_label_array_size, 1:edge_label_array_size))[si, di]]))
+                    else  # TODO: Make 3d work.
+                        push!(edge_label_array,
+                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, 0.25z[si] + 0.75z[di],
+                              edgelabel[LinearIndices((1:edge_label_array_size, 1:edge_label_array_size))[si, di]]))
+                    end
+                end
+            end
 
             if isa(segment_colors, ColorGradient)
                 line_z := segment_colors[i]
             end
             linewidthattr = get(plotattributes, :linewidth, 1)
             seriestype := (curves ? :curves : (_3d ? :path3d : :path))
-            series_annotations := nothing
             linewidth --> linewidthattr * edgewidth(si, di, wi)
             markershape := :none
             markercolor := :black
@@ -380,6 +408,7 @@ end
             end
 
         end
+        annotations := edge_label_array
     end
 
     framestyle := :none

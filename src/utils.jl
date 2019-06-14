@@ -119,6 +119,16 @@ function arcdiagram_limits(x, source, destiny)
     (xmin-margin, xmax+margin), ylims
 end
 
+edge_label_exsists(label_list::Dict, inds::Tuple) = haskey(label_list, inds)
+
+function edge_label_exsists(label_list, inds::Tuple)
+    n = round(Int, sqrt(length(label_list)))
+    item = label_list[LinearIndices((1:n, 1:n))[inds...]]
+    ismissing(item) && return false
+    (typeof(item) <: AbstractFloat && isnan(item)) && return false
+    !in(item, (nothing, false, ""))
+end
+
 # From Plots/src/utils.jl
 isnothing(x::Nothing) = true
 isnothing(x) = false
