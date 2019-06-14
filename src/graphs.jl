@@ -375,10 +375,10 @@ end
                 if edge_label_exsists(edgelabel, (si, di))
                     if dim == 2
                         push!(edge_label_array,
-                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, edgelabel[(si, di)]))
+                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, string(edgelabel[(si, di)])))
                     else
                         push!(edge_label_array,
-                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, 0.25zsi + 0.75zdi, edgelabel[(si, di)]))
+                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, 0.25zsi + 0.75zdi, string(edgelabel[(si, di)])))
                     end
                 end
             elseif typeof(edgelabel) <: AbstractVector
@@ -386,11 +386,11 @@ end
                     if dim == 2
                         push!(edge_label_array,
                               (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi,
-                               edgelabel[LinearIndices((1:edge_label_array_size, 1:edge_label_array_size))[si, di]]))
+                               string(edgelabel[LinearIndices((1:edge_label_array_size, 1:edge_label_array_size))[si, di]])))
                     else  # TODO: Make 3d work.
                         push!(edge_label_array,
                               (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, 0.25z[si] + 0.75z[di],
-                              edgelabel[LinearIndices((1:edge_label_array_size, 1:edge_label_array_size))[si, di]]))
+                              string(edgelabel[LinearIndices((1:edge_label_array_size, 1:edge_label_array_size))[si, di]])))
                     end
                 end
             end
