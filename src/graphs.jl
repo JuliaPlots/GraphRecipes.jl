@@ -230,6 +230,7 @@ end
                    layout_kw = Dict{Symbol,Any}(),
                    edgewidth = (s,d,w)->1,
                    edgelabel = nothing,
+                   edgelabel_offset = 0.0,
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -308,9 +309,20 @@ end
         # generate a list of colors, one per segment
         segment_colors = get(plotattributes, :linecolor, nothing)
         edge_label_array = Vector{Tuple}()
-        if typeof(edgelabel) <: AbstractArray
-            edgelabel = vec(edgelabel)
-            (edge_label_array_size = round(Int, sqrt(length(edgelabel))))
+        if !isa(edgelabel, Dict) && !isnothing(edgelabel)
+            tmp = Dict()
+            if length(size(edgelabel)) < 2
+                matrix_size = round(Int, sqrt(length(edgelabel)))
+                edgelabel = reshape(edgelabel, matrix_size, matrix_size)
+            end
+            for i in 1:size(edgelabel)[1]
+                for j in 1:size(edgelabel)[2]
+                    if islabel(edgelabel[i, j])
+                        tmp[(i, j)] = edgelabel[i, j]
+                    end
+                end
+            end
+            edgelabel = tmp
         end
         for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
             @series begin
@@ -354,9 +366,9 @@ end
                         push!(yseg, NaN)
                     else
                         xpt, ypt = if method != :chorddiagram
-                            random_control_point(xsi, xdi,
-                                                 ysi, ydi,
-                                                 curvature_scalar)
+                            control_point(xsi, xdi,
+                                          ysi, ydi,
+                                          curvature_scalar)
                         else
                             (0.0, 0.0)
                         end
@@ -370,29 +382,12 @@ end
                     push!(yseg, ysi, ydi, NaN)
                     _3d && push!(zseg, z[si], z[di], NaN)
                     push!(l_wg, wi)
-                end
-            if typeof(edgelabel) == Dict
-                if edge_label_exsists(edgelabel, (si, di))
-                    if dim == 2
-                        push!(edge_label_array,
-                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, string(edgelabel[(si, di)])))
-                    else
-                        push!(edge_label_array,
-                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, 0.25zsi + 0.75zdi, string(edgelabel[(si, di)])))
-                    end
-                end
-            elseif typeof(edgelabel) <: AbstractVector
-                if edge_label_exsists(edgelabel, (si, di))
-                    if dim == 2
-                        push!(edge_label_array,
-                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi,
-                               string(edgelabel[LinearIndices((1:edge_label_array_size, 1:edge_label_array_size))[si, di]])))
-                    else  # TODO: Make 3d work.
-                        push!(edge_label_array,
-                              (0.25xsi + 0.75xdi, 0.25ysi + 0.75ydi, 0.25z[si] + 0.75z[di],
-                              string(edgelabel[LinearIndices((1:edge_label_array_size, 1:edge_label_array_size))[si, di]])))
-                    end
-                end
+            end
+            if !isnothing(edgelabel) && haskey(edgelabel, (si, di))
+                @assert !_3d  # TODO: make this work in 3D
+                q = control_point(xsi, xdi, ysi, ydi, curvature_scalar + edgelabel_offset)
+                push!(edge_label_array,
+                      (q..., string(edgelabel[(si, di)]), fontsize))
             end
 
             if isa(segment_colors, ColorGradient)

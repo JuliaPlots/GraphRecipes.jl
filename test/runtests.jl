@@ -21,16 +21,6 @@ using Test
         end
 
     end
-    @testset "edge_label_exsists" begin
-        @test GraphRecipes.edge_label_exsists(Dict((1,2) => "hello"), (1,3)) == false
-        @test GraphRecipes.edge_label_exsists(Dict((1,3) => "hi"), (1,3)) == true
-        @test GraphRecipes.edge_label_exsists(["hi",2,4,missing,false,nothing,1,2,3], (2,1)) == true
-        @test GraphRecipes.edge_label_exsists(["hi",2,4,missing,false,nothing,1,2,3], (2,2)) == false
-        @test GraphRecipes.edge_label_exsists(["hi",2,4,missing,false,nothing,1,2,3], (1,2)) == false
-        @test GraphRecipes.edge_label_exsists(["hi",2,4,missing,false,nothing,1,2,3], (3,2)) == false
-        @test GraphRecipes.edge_label_exsists(["hi",2,4,missing,false,NaN,1,2,3], (3,2)) == false
-        @test GraphRecipes.edge_label_exsists(["hi",2,4,missing,false,"",1,2,3], (3,2)) == false
-    end
 
 end
 
