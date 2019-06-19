@@ -9,8 +9,6 @@ This repo maintains a collection of recipes for graph analysis, and is a reduced
 
 # Examples
 
-#### Spectral
-
 ```julia
 using GraphRecipes
 using Plots
@@ -32,8 +30,9 @@ graphplot(A,
 
 ```
 
-![graph_one](https://user-images.githubusercontent.com/2822757/49309894-072adf00-f4dd-11e8-8e4f-0d6c4d3de77c.png)
+![](assets/random_labelled_graph.png)
 
+Now plot the graph in three dimensions.
 ```julia
 graphplot(A,
            node_weights = 1:n,
@@ -46,7 +45,7 @@ graphplot(A,
 
 ```
 
-![graph_two](https://user-images.githubusercontent.com/2822757/49309891-02fec180-f4dd-11e8-999a-9a4d68e9e0a9.png)
+![](assets/random_3d_graph.png)
 
 #### Arc and chord diagrams
 
@@ -56,7 +55,7 @@ using SparseArrays
 using GraphRecipes
 using Plots
 
-adjmat = Symmetric(sparse(rand(0:1,8,8)));
+adjmat = Symmetric(sparse(rand(0:1,8,8)))
 
 plot(
     graphplot(adjmat,
@@ -73,15 +72,14 @@ plot(
     )
 
 ```
-![graph_three](https://user-images.githubusercontent.com/2822757/49309879-f9755980-f4dc-11e8-99c6-545f0e44f118.png)
+![](assets/arc_chord_diagrams.png)
+
 
 #### Julia code -- AST
 
 ```julia
 using GraphRecipes
 using Plots
-pyplot(ma=0.8,lc=:white,mc=:white,size=(800,600))
-theme(:dark)
 
 code = :(
 function mysum(list)
@@ -93,11 +91,11 @@ function mysum(list)
 end
 )
 
-plot(code, fontsize=5, shorten=0.2, axis_buffer=0.05)
+plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15)
 
 ```
 
-![graph_four](https://user-images.githubusercontent.com/2822757/49310588-faa78600-f4de-11e8-95cf-4587d0ba1077.png)
+![](assets/AST_example.png)
 
 #### Julia Type Trees
 
@@ -105,10 +103,7 @@ plot(code, fontsize=5, shorten=0.2, axis_buffer=0.05)
 using GraphRecipes
 using Plots
 
-pyplot(size=(800,600))
-theme(:dark)
-
-plot(Integer, method=:tree, fontsize=4)
+plot(AbstractFloat, method=:tree, fontsize=4)
 
 ```
-![graph_five](https://user-images.githubusercontent.com/2822757/49309857-e3679900-f4dc-11e8-8b57-f878a6d9cb5e.png)
+![](assets/julia_type_tree.png)

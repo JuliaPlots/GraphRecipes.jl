@@ -2,6 +2,8 @@ using GraphRecipes
 using Plots
 using Test
 
+include("readme.jl")
+
 @testset "utils.jl" begin
 
     @test GraphRecipes.directed_curve(0., 1., 0., 1.) == GraphRecipes.directed_curve(0, 1, 0, 1)
