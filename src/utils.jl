@@ -87,6 +87,21 @@ function random_control_point(xi, xj, yi, yj, curvature_scalar)
      ymid + dist_from_mid * sin(theta))
 end
 
+function control_point(xi, xj, yi, yj, dist_from_mid)
+    xmid = 0.5 * (xi+xj)
+    ymid = 0.5 * (yi+yj)
+
+    # get the angle of y relative to x
+    theta = atan((yj-yi) / (xj-xi)) + 0.5pi
+
+    # dist = sqrt((xj-xi)^2 + (yj-yi)^2)
+    # dist_from_mid = curvature_scalar * 0.5dist
+
+    # now we have polar coords, we can compute the position, adding to the midpoint
+    (xmid + dist_from_mid * cos(theta),
+     ymid + dist_from_mid * sin(theta))
+end
+
 # Function from Plots/src/components.jl
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r = 1)
@@ -119,6 +134,11 @@ function arcdiagram_limits(x, source, destiny)
     (xmin-margin, xmax+margin), ylims
 end
 
+function islabel(item)
+    ismissing(item) && return false
+    (typeof(item) <: AbstractFloat && isnan(item)) && return false
+    !in(item, (nothing, false, ""))
+end
 # From Plots/src/utils.jl
 isnothing(x::Nothing) = true
 isnothing(x) = false
