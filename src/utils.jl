@@ -65,6 +65,39 @@ function shorten_segment(x1, y1, x2, y2, shorten)
     x1+xshort, y1+yshort, x2-xshort, y2-yshort
 end
 
+function shorten_segment_absolute(x1, y1, x2, y2, shorten)
+    t = shorten/sqrt(x1*(x1-2x2) + x2^2 + y1*(y1-2y2) + y2^2)
+    (1.0-t)*x1 + t*x2, (1.0-t)*y1 + t*y2, (1.0-t)*x2 + t*x1, (1.0-t)*y2 + t*y1
+end
+
+"""
+    nearest_intersection(xs, ys, xd, yd, vec_xy_d)
+Find where the line defined by [xs,ys] -> [xd,yd] intersects with the closed shape who's
+vertices are stored in `vec_xy_d`. Return the intersection that is closest to the point
+[xs,ys] (the source node).
+"""
+function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
+    t = Vector{Float64}(undef, 2)
+    xvec = Vector{Float64}(undef, 2)
+    yvec = Vector{Float64}(undef, 2)
+    xy_d_edge = Vector{Float64}(undef, 2)
+    A = Array{Float64}(undef, 2, 2)
+    for i in 1:length(vec_xy_d)-1
+        xvec .= [vec_xy_d[i][1], vec_xy_d[i+1][1]]
+        yvec .= [vec_xy_d[i][2], vec_xy_d[i+1][2]]
+        A .= [-xs+xd -xvec[1]+xvec[2] ; -ys+yd -yvec[1]+yvec[2]]
+        t .= A\[xs-xvec[1] ; ys-yvec[1]]
+        xy_d_edge .= [(1-t[2])*xvec[1] + t[2]*xvec[2], (1-t[2])*yvec[1] + t[2]*yvec[2]]
+        if (0 <= t[2] <= 1) && (abs2(xy_d_edge[1] - xs + xy_d_edge[2] - ys) < abs2(xs - xd + ys - yd))
+            break
+        end
+    end
+    xs, ys, xy_d_edge[1], xy_d_edge[2]
+end
+
+function nearest_intersection(xs, ys, zs, xd, yd, zd, vec_xyz_d)
+    # TODO make 3d work.
+end
 
 """
 Randomly pick a point to be the center control point of a bezier curve,
@@ -104,8 +137,13 @@ end
 
 # Function from Plots/src/components.jl
 "get an array of tuples of points on a circle with radius `r`"
-function partialcircle(start_θ, end_θ, n = 20, r = 1)
+function partialcircle(start_θ, end_θ; n = 20, r = 1)
     Tuple{Float64,Float64}[(r*cos(u), r*sin(u)) for u in
+                           range(start_θ, stop = end_θ, length = n)]
+end
+
+function partialcircle(start_θ, end_θ, circle_center; n = 20, r = 1)
+    Tuple{Float64,Float64}[(r*cos(u) + circle_center[1], r*sin(u) + circle_center[2]) for u in
                            range(start_θ, stop = end_θ, length = n)]
 end
 

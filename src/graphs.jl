@@ -219,7 +219,7 @@ end
                    names = [],
                    fontsize = 7,
                    nodeshape = :hexagon,
-                   nodesize = 1,
+                   nodesize = 0.1,
                    x = nothing,
                    y = nothing,
                    z = nothing,
@@ -303,7 +303,21 @@ end
             zlims --> extrema_plus_buffer(z, axis_buffer)
         end
     end
-
+    # Get the coordinates for the edges of the nodes.
+    # TODO Scale the nodes so that the nodelabels fit inside.
+    if !_3d
+        if nodeshape == :circle
+            node_vec_vec_xy = [partialcircle(0, 2π, (x[i], y[i]);
+                                             n=80, r=nodesize) for i in 1:length(x)]
+        elseif nodeshape == :hexagon
+            node_vec_vec_xy = [partialcircle(0, 2π, (x[i], y[i]);
+                                             n=7, r=nodesize) for i in 1:length(x)]
+        else
+            error("Unknown nodeshape: $(nodeshape). Choose from :circle, :hexagon.")
+        end
+    else
+       node_vec_vec_xyz = [[(cos(θ), sin(θ), cos(θ)) for θ in range(0, stop=2π, length=20)] for i in 1:length(x)]
+    end
     # create a series for the line segments
     if get(plotattributes, :linewidth, 1) > 0
         # generate a list of colors, one per segment
@@ -334,6 +348,15 @@ end
                 # TO DO : Colouring edges by weight
                 # add a line segment
                 xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
+                # For directed graphs, shorten the line segment so that the edge ends at
+                # the perimeter of the destiny node.
+                if (g.args[1] isa DiGraph && nodeshape == :circle)
+                    xsi, ysi, xdi, ydi = shorten_segment_absolute(x[si], y[si], x[di],
+                                                                  y[di], nodesize)
+                elseif g.args[1] isa DiGraph
+                    xsi, ysi, xdi, ydi = nearest_intersection(x[si], y[si], x[di], y[di],
+                                                              node_vec_vec_xy[di])
+                end
                 if curves
                     if method in (:tree, :buchheim)
                         # for trees, shorten should be on one axis only
@@ -368,7 +391,7 @@ end
                         xpt, ypt = if method != :chorddiagram
                             control_point(xsi, xdi,
                                           ysi, ydi,
-                                          curvature_scalar)
+                                          curvature_scalar*sign(si - di))
                         else
                             (0.0, 0.0)
                         end
@@ -385,7 +408,8 @@ end
             end
             if !isnothing(edgelabel) && haskey(edgelabel, (si, di))
                 @assert !_3d  # TODO: make this work in 3D
-                q = control_point(xsi, xdi, ysi, ydi, curvature_scalar + edgelabel_offset)
+                q = control_point(xsi, xdi, ysi, ydi,
+                                  (curvature_scalar + edgelabel_offset)*sign(si - di))
                 push!(edge_label_array,
                       (q..., string(edgelabel[(si, di)]), fontsize))
             end
@@ -398,12 +422,12 @@ end
             linewidth --> linewidthattr * edgewidth(si, di, wi)
             markershape := :none
             markercolor := :black
+            (g.args[1] isa DiGraph) && (arrow --> :simple, :head, 0.3, 0.3)
             primary := false
             _3d ? (xseg, yseg, zseg) : (xseg, yseg)
             end
 
         end
-        annotations := edge_label_array
     end
 
     framestyle := :none
@@ -436,23 +460,33 @@ end
     else
         if isempty(names)
             seriestype := (_3d ? :scatter3d : :scatter)
-            linewidth := 0
-            linealpha := 0
-            series_annotations --> map(string,names)
-            markersize --> (10 .+ (100 .* node_weights) ./ sum(node_weights))
+            markersize := 0
+            markeralpha := 0
+            fillcolor --> 1
+            @series begin
+                if dim == 2
+                    seriestype := :shape
+                    ([[xy[1] for xy in vec_xy] for vec_xy in node_vec_vec_xy],
+                     [[xy[2] for xy in vec_xy] for vec_xy in node_vec_vec_xy])
+                else  # TODO make 3d work.
+                    seriestype := :volume
+                    ([[xyz[1] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
+                     [[xyz[2] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
+                     [[xyz[3] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz])
+                end
+            end
         else
             @assert !_3d  # TODO: make this work in 3D
+            fillcolor --> 1
             scalefactor = pop!(plotattributes, :markersize, nodesize)
+            @series begin
+                seriestype := :shape
+                [[xy[1] for xy in vec_xy] for vec_xy in node_vec_vec_xy], [[xy[2] for xy in vec_xy] for vec_xy in node_vec_vec_xy]
+            end
             seriestype := :scatter
-            # markersize := nodesize
-            nodeshape = get(plotattributes, :markershape, nodeshape)
-            # nodeshape = if isa(nodeshape, AbstractArray)
-            #    [(sym) for sym in nodeshape] # Shape
-            # else
-            #    nodeshape # Shape
-            # end
-            # font(fontsize)
-            series_annotations := (map(string,names), nodeshape, fontsize, scalefactor)
+            markersize := 0
+            markeralpha := 0
+            annotations := [edge_label_array ; [(x[i], y[i], names[i], fontsize) for i in 1:length(x)]]
         end
     end
     xyz
