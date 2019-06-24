@@ -23,9 +23,7 @@ cd("../assets")
     z = rand(n)
     @plottest graphplot(A,
                         node_weights = 1:n,
-                        marker = (:YlOrRd, :rect),
-                        marker_z = 1:n,
-                        markersize = 3,
+                        nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
                         names = 1:n,
                         linecolor = :darkgrey,
                         layout_kw = Dict(:x => x, :y => y),
@@ -67,6 +65,6 @@ cd("../assets")
     end
     )
 
-    @plottest plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15, markersize=0) "AST_example.png" popup=!istravis tol=0.02
-    @plottest plot(AbstractFloat, method=:tree, fontsize=4, markersize=0) "julia_type_tree.png" popup=!istravis tol=0.2
+    @plottest plot(code, fontsize=5, shorten=0.01, axis_buffer=0.15, nodeshape=:rect) "AST_example.png" popup=!istravis tol=0.02
+    @plottest plot(AbstractFloat, method=:tree, fontsize=4, nodeshape=:rect) "julia_type_tree.png" popup=!istravis tol=0.2
 end

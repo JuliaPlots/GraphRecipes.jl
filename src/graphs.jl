@@ -220,6 +220,7 @@ end
                    fontsize = 7,
                    nodeshape = :hexagon,
                    nodesize = 0.1,
+                   nodecolor = 1,
                    x = nothing,
                    y = nothing,
                    z = nothing,
@@ -278,8 +279,6 @@ end
         x,y = x, -y
     end
 
-    # center and rescale to the widest of all dimensions
-    xyz = _3d ? (x,y,z) : (x,y)
 
     if method == :arcdiagram
         xl, yl = arcdiagram_limits(x, source, destiny)
@@ -297,26 +296,65 @@ end
             #zlims --> (zcenter-ahw, zcenter+ahw)
         end
     else
+        xlims = ignorenan_extrema(x)
+        if method != :chorddiagram && numnothing > 0
+            x .-= mean(x)
+            x /= (xlims[2] - xlims[1])
+            y .-= mean(y)
+            ylims = ignorenan_extrema(y)
+            y /= (ylims[2] - ylims[1])
+        end
         xlims --> extrema_plus_buffer(x, axis_buffer)
         ylims --> extrema_plus_buffer(y, axis_buffer)
         if _3d
+            if method != :chorddiagram && numnothing > 0
+                zlims = ignorenan_extrema(z)
+                z .-= mean(z)
+                z /= (zlims[2] - zlims[1])
+            end
             zlims --> extrema_plus_buffer(z, axis_buffer)
         end
     end
+    # center and rescale to the widest of all dimensions
+    xyz = _3d ? (x,y,z) : (x,y)
     # Get the coordinates for the edges of the nodes.
-    # TODO Scale the nodes so that the nodelabels fit inside.
+    node_vec_vec_xy = []
+    nodewidth = 0.0
+    nodewidth_array = Vector{Float64}(undef, length(x))
     if !_3d
-        if nodeshape == :circle
-            node_vec_vec_xy = [partialcircle(0, 2π, (x[i], y[i]);
-                                             n=80, r=nodesize) for i in 1:length(x)]
-        elseif nodeshape == :hexagon
-            node_vec_vec_xy = [partialcircle(0, 2π, (x[i], y[i]);
-                                             n=7, r=nodesize) for i in 1:length(x)]
-        else
-            error("Unknown nodeshape: $(nodeshape). Choose from :circle, :hexagon.")
+        for i in 1:length(x)
+            node_weight = isnothing(node_weights) ? 1 : (10 + 100node_weights[i]/sum(node_weights))/50
+            xextent, yextent = if isempty(names)
+                [x[i] .+ [-0.5nodesize*node_weight, 0.5nodesize*node_weight], y[i] .+ [-0.5nodesize*node_weight, 0.5nodesize*node_weight]]
+            else
+                annotation_extent(plotattributes,
+                                  (x[i], y[i], names[ifelse(i % length(names) == 0, length(names),
+                                                            i % length(names))], fontsize*nodesize*node_weight))
+            end
+            nodewidth = xextent[2] - xextent[1]
+            nodewidth_array[i] = nodewidth
+            if nodeshape == :circle
+                push!(node_vec_vec_xy, partialcircle(0, 2π, [x[i], y[i]],
+                                                     80, nodewidth))
+            elseif (nodeshape == :rect) || (nodeshape == :rectangle)
+                push!(node_vec_vec_xy, [(xextent[1],yextent[1]),
+                                        (xextent[2],yextent[1]),
+                                        (xextent[2],yextent[2]),
+                                        (xextent[1],yextent[2]),
+                                        (xextent[1],yextent[1])])
+            elseif nodeshape == :hexagon
+                push!(node_vec_vec_xy, partialcircle(0, 2π, [x[i], y[i]],
+                                                     7, nodewidth))
+            elseif nodeshape == :ellipse
+                nodeheight = (yextent[2] - yextent[1])
+                push!(node_vec_vec_xy, partialellipse(0, 2π, [x[i], y[i]],
+                                                      80, nodewidth/2, nodeheight/2))
+            else
+                error("Unknown nodeshape: $(nodeshape). Choose from :circle, ellipse, :hexagon, :rect or :rectangle.")
+            end
         end
     else
-       node_vec_vec_xyz = [[(cos(θ), sin(θ), cos(θ)) for θ in range(0, stop=2π, length=20)] for i in 1:length(x)]
+        @assert _3d # TODO Make 3d work.
     end
     # create a series for the line segments
     if get(plotattributes, :linewidth, 1) > 0
@@ -352,7 +390,7 @@ end
                 # the perimeter of the destiny node.
                 if (g.args[1] isa DiGraph && nodeshape == :circle)
                     xsi, ysi, xdi, ydi = shorten_segment_absolute(x[si], y[si], x[di],
-                                                                  y[di], nodesize)
+                                                                  y[di], nodewidth_array[di])
                 elseif g.args[1] isa DiGraph
                     xsi, ysi, xdi, ydi = nearest_intersection(x[si], y[si], x[di], y[di],
                                                               node_vec_vec_xy[di])
@@ -459,34 +497,61 @@ end
         end
     else
         if isempty(names)
-            seriestype := (_3d ? :scatter3d : :scatter)
-            markersize := 0
-            markeralpha := 0
-            fillcolor --> 1
-            @series begin
-                if dim == 2
-                    seriestype := :shape
-                    ([[xy[1] for xy in vec_xy] for vec_xy in node_vec_vec_xy],
-                     [[xy[2] for xy in vec_xy] for vec_xy in node_vec_vec_xy])
-                else  # TODO make 3d work.
-                    seriestype := :volume
-                    ([[xyz[1] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
-                     [[xyz[2] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
-                     [[xyz[3] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz])
+            if _3d
+                seriestype := :scatter3d
+                linewidth := 0
+                linealpha := 0
+                series_annotations --> map(string,names)
+                markersize --> 100*(10 .+ (100 .* node_weights) ./ sum(node_weights))
+            else
+                for (i, vec_xy) in enumerate(node_vec_vec_xy)
+                    @series begin
+                        if !_3d
+                            seriestype := :shape
+                            tmp = nodecolor isa AbstractArray ? nodecolor[i] : nodecolor
+                            fillcolor --> tmp
+                            linewidth := 0
+                            linealpha := 0
+                            ([xy[1] for xy in vec_xy], [xy[2] for xy in vec_xy])
+                        else  # TODO make 3d work.
+                            seriestype := :volume
+                            ([[xyz[1] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
+                             [[xyz[2] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
+                             [[xyz[3] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz])
+                        end
+                    end
+                    seriestype := :scatter
+                    markersize := 0
+                    markeralpha := 0
                 end
             end
         else
             @assert !_3d  # TODO: make this work in 3D
-            fillcolor --> 1
-            scalefactor = pop!(plotattributes, :markersize, nodesize)
-            @series begin
-                seriestype := :shape
-                [[xy[1] for xy in vec_xy] for vec_xy in node_vec_vec_xy], [[xy[2] for xy in vec_xy] for vec_xy in node_vec_vec_xy]
+            for (i, vec_xy) in enumerate(node_vec_vec_xy)
+                @series begin
+                    if !_3d
+                        seriestype := :shape
+                        tmp = nodecolor isa AbstractArray ? nodecolor[i] : nodecolor
+                        fillcolor --> tmp
+                        linewidth := 0
+                        linealpha := 0
+                        ([xy[1] for xy in vec_xy], [xy[2] for xy in vec_xy])
+                    else  # TODO make 3d work.
+                        seriestype := :volume
+                        ([[xyz[1] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
+                         [[xyz[2] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
+                         [[xyz[3] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz])
+                    end
+                end
             end
             seriestype := :scatter
             markersize := 0
             markeralpha := 0
-            annotations := [edge_label_array ; [(x[i], y[i], names[i], fontsize) for i in 1:length(x)]]
+            annotations := [edge_label_array ; [(x[i], y[i],
+                                                names[ifelse(i % length(names) == 0,
+                                                              length(names),
+                                                              i % length(names))],
+                                                fontsize) for i in 1:length(x)]]
         end
     end
     xyz
