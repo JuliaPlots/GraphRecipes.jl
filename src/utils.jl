@@ -67,6 +67,46 @@ end
 
 
 """
+    shorten_segment_absolute(x1, y1, x2, y2, shorten)
+
+Remove an amount `shorten` from the end of the line [x1,y1] -> [x2,y2].
+"""
+function shorten_segment_absolute(x1, y1, x2, y2, shorten)
+    t = shorten/sqrt(x1*(x1-2x2) + x2^2 + y1*(y1-2y2) + y2^2)
+    x1, y1, (1.0-t)*x2 + t*x1, (1.0-t)*y2 + t*y1
+end
+
+"""
+    nearest_intersection(xs, ys, xd, yd, vec_xy_d)
+
+Find where the line defined by [xs,ys] -> [xd,yd] intersects with the closed shape who's
+vertices are stored in `vec_xy_d`. Return the intersection that is closest to the point
+[xs,ys] (the source node).
+"""
+function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
+    t = Vector{Float64}(undef, 2)
+    xvec = Vector{Float64}(undef, 2)
+    yvec = Vector{Float64}(undef, 2)
+    xy_d_edge = Vector{Float64}(undef, 2)
+    A = Array{Float64}(undef, 2, 2)
+    for i in 1:length(vec_xy_d)-1
+        xvec .= [vec_xy_d[i][1], vec_xy_d[i+1][1]]
+        yvec .= [vec_xy_d[i][2], vec_xy_d[i+1][2]]
+        A .= [-xs+xd -xvec[1]+xvec[2] ; -ys+yd -yvec[1]+yvec[2]]
+        t .= A\[xs-xvec[1] ; ys-yvec[1]]
+        xy_d_edge .= [(1-t[2])*xvec[1] + t[2]*xvec[2], (1-t[2])*yvec[1] + t[2]*yvec[2]]
+        if (0 <= t[2] <= 1) && (abs2(xy_d_edge[1] - xs + xy_d_edge[2] - ys) < abs2(xs - xd + ys - yd))
+            break
+        end
+    end
+    xs, ys, xy_d_edge[1], xy_d_edge[2]
+end
+
+function nearest_intersection(xs, ys, zs, xd, yd, zd, vec_xyz_d)
+    # TODO make 3d work.
+end
+
+"""
 Randomly pick a point to be the center control point of a bezier curve,
 which is both equidistant between the endpoints and normally distributed
 around the midpoint.
@@ -102,10 +142,41 @@ function control_point(xi, xj, yi, yj, dist_from_mid)
      ymid + dist_from_mid * sin(theta))
 end
 
+function annotation_extent(p, annotation)
+    width_scalar=0.06; height_scalar=0.096
+    str = string(annotation[3])
+    position = annotation[1:2]
+    plot_size = get(p, :size, (600, 400))
+    fontsize = annotation[4]
+    xextent_length = width_scalar*(600/plot_size[1])*fontsize*length(str)^0.8
+    xextent = [position[1]-xextent_length,position[1]+xextent_length]
+    yextent_length = height_scalar*(400/plot_size[2])*fontsize
+    yextent = [position[2] - yextent_length, position[2] + yextent_length]
+
+    [xextent, yextent]
+end
+
 # Function from Plots/src/components.jl
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r = 1)
     Tuple{Float64,Float64}[(r*cos(u), r*sin(u)) for u in
+                           range(start_θ, stop = end_θ, length = n)]
+end
+
+function partialcircle(start_θ, end_θ, circle_center::Array{T,1}, n = 20, r = 1) where T
+    Tuple{Float64,Float64}[(r*cos(u) + circle_center[1], r*sin(u) + circle_center[2]) for u in
+                           range(start_θ, stop = end_θ, length = n)]
+end
+
+function partialellipse(start_θ, end_θ, n = 20, major_axis = 2, minor_axis = 1)
+    Tuple{Float64,Float64}[(major_axis*cos(u), minor_axis*sin(u)) for u in
+                           range(start_θ, stop = end_θ, length = n)]
+end
+
+function partialellipse(start_θ, end_θ, ellipse_center::Array{T,1}, n = 20, major_axis = 2,
+                        minor_axis = 1) where T
+    Tuple{Float64,Float64}[(major_axis*cos(u) + ellipse_center[1],
+                            minor_axis*sin(u) + ellipse_center[2]) for u in
                            range(start_θ, stop = end_θ, length = n)]
 end
 

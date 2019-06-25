@@ -21,9 +21,7 @@ end
 
 graphplot(A,
           node_weights = 1:n,
-          marker = (:YlOrRd, :rect),
-          marker_z = 1:n,
-          markersize = 3,
+          nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
           names = 1:n,
           linecolor = :darkgrey,
        )
@@ -91,7 +89,7 @@ function mysum(list)
 end
 )
 
-plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15)
+plot(code, fontsize=5, shorten=0.01, axis_buffer=0.15, nodeshape=:rect)
 
 ```
 
@@ -103,7 +101,7 @@ plot(code, fontsize=5, shorten=0.2, axis_buffer=0.15)
 using GraphRecipes
 using Plots
 
-plot(AbstractFloat, method=:tree, fontsize=4)
+plot(AbstractFloat, method=:tree, fontsize=4, nodeshape=:rect)
 
 ```
 ![](assets/julia_type_tree.png)
