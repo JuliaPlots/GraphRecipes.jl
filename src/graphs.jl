@@ -428,7 +428,7 @@ end
                         for y in ypts
                             push!(yseg, y)
                         end
-                                    push!(yseg, NaN)
+                        push!(yseg, NaN)
                     else
                         xpt, ypt = if method != :chorddiagram
                             control_point(xsi, xdi,
@@ -499,7 +499,19 @@ end
                 line_z := segment_colors[i]
             end
             linewidthattr = get(plotattributes, :linewidth, 1)
-            seriestype := (curves ? :curves : (_3d ? :path3d : :path))
+            seriestype := if si == di
+                :curves
+            else
+                if curves
+                    :curves
+                else
+                    if _3d
+                        :path3d
+                    else
+                        :path
+                    end
+                end
+            end
             linewidth --> linewidthattr * edgewidth(si, di, wi)
             markershape := :none
             markercolor := :black
