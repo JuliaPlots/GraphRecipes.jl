@@ -72,6 +72,9 @@ end
 Remove an amount `shorten` from the end of the line [x1,y1] -> [x2,y2].
 """
 function shorten_segment_absolute(x1, y1, x2, y2, shorten)
+    if x1 == x2 && y1 == y2
+        return x1, y1, x2, y2
+    end
     t = shorten/sqrt(x1*(x1-2x2) + x2^2 + y1*(y1-2y2) + y2^2)
     x1, y1, (1.0-t)*x2 + t*x1, (1.0-t)*y2 + t*y1
 end
@@ -84,6 +87,9 @@ vertices are stored in `vec_xy_d`. Return the intersection that is closest to th
 [xs,ys] (the source node).
 """
 function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
+    if xs == xd && ys == yd
+        return xs, ys, xd, yd
+    end
     t = Vector{Float64}(undef, 2)
     xvec = Vector{Float64}(undef, 2)
     yvec = Vector{Float64}(undef, 2)
@@ -95,7 +101,9 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
         A .= [-xs+xd -xvec[1]+xvec[2] ; -ys+yd -yvec[1]+yvec[2]]
         t .= A\[xs-xvec[1] ; ys-yvec[1]]
         xy_d_edge .= [(1-t[2])*xvec[1] + t[2]*xvec[2], (1-t[2])*yvec[1] + t[2]*yvec[2]]
-        if (0 <= t[2] <= 1) && (abs2(xy_d_edge[1] - xs + xy_d_edge[2] - ys) < abs2(xs - xd + ys - yd))
+        if ((0 <= t[2] <= 1)
+            && (abs2(xd - xy_d_edge[1] + yd - xy_d_edge[2]) < abs2(xd - xs + yd - ys))
+            && (abs2(xy_d_edge[1] - xs + xy_d_edge[2] - ys) < abs2(xs - xd + ys - yd)))
             break
         end
     end
@@ -142,8 +150,7 @@ function control_point(xi, xj, yi, yj, dist_from_mid)
      ymid + dist_from_mid * sin(theta))
 end
 
-function annotation_extent(p, annotation)
-    width_scalar=0.06; height_scalar=0.096
+function annotation_extent(p, annotation; width_scalar=0.06, height_scalar=0.096)
     str = string(annotation[3])
     position = annotation[1:2]
     plot_size = get(p, :size, (600, 400))
@@ -156,6 +163,49 @@ function annotation_extent(p, annotation)
     [xextent, yextent]
 end
 
+function clockwise_difference(angle1, angle2)
+    pi - abs(abs(angle1 - angle2) - pi)
+end
+
+function clockwise_mean(angles)
+    if clockwise_difference(angles[2], angles[1]) > angles[2] - angles[1]
+        return mean(angles) + pi
+    else
+        return mean(angles)
+    end
+end
+
+
+"""
+    unoccupied_angle(x1, y1, x, y)
+
+Starting from the point [x1,y1], find the angle theta such that a line leaving at an angle
+theta will have maximum distance from the points [x[i],y[i]]
+"""
+function unoccupied_angle(x1, y1, x, y)
+    @assert length(x) == length(y)
+    max_range = zeros(2)
+    # Calculate all angles between the point [x1,y1] and all points [x[i],y[i]], make sure
+    # that all of the angles are between 0 and 2pi
+    angles = [atan(y[i] - y1, x[i] - x1) for i in 1:length(x)]
+    for i in 1:length(angles)
+        if angles[i] < 0
+            angles[i] += 2pi
+        end
+    end
+    # Sort all of the angles and calculate which two angles subtend the largest gap.
+    sort!(angles)
+    max_range .= [angles[end], angles[1]]
+    for i in 2:length(x)
+        if (clockwise_difference(angles[i], angles[i-1])
+            > clockwise_difference(max_range[2], max_range[1]))
+            max_range .= [angles[i-1], angles[i]]
+        end
+    end
+    # Return the angle that is in the middle of the two angles subtending the largest
+    # empty angle.
+    clockwise_mean(max_range)
+end
 # Function from Plots/src/components.jl
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r = 1)

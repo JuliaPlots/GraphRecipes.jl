@@ -232,9 +232,13 @@ end
                    edgewidth = (s,d,w)->1,
                    edgelabel = nothing,
                    edgelabel_offset = 0.0,
+                   self_edge_size = 0.2,
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
+    isdirected = g.args[1] isa DiGraph || (!(g.args[1] isa Vector) && !issymmetric(g.args[1]))
+    isdirected && (g.args = (DiGraph(g.args[1]), g.args[2:end]...))
+    adj_mat = g.args[1] isa AbstractArray ? g.args[1] : adjacency_matrix(g.args[1])
 
     source, destiny, weights = get_source_destiny_weight(g.args...)
     if !(eltype(source) <: Integer)
@@ -335,7 +339,7 @@ end
             nodewidth_array[i] = nodewidth
             if nodeshape == :circle
                 push!(node_vec_vec_xy, partialcircle(0, 2π, [x[i], y[i]],
-                                                     80, nodewidth))
+                                                     80, nodewidth/2))
             elseif (nodeshape == :rect) || (nodeshape == :rectangle)
                 push!(node_vec_vec_xy, [(xextent[1],yextent[1]),
                                         (xextent[2],yextent[1]),
@@ -388,10 +392,10 @@ end
                 xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
                 # For directed graphs, shorten the line segment so that the edge ends at
                 # the perimeter of the destiny node.
-                if (g.args[1] isa DiGraph && nodeshape == :circle)
+                if isdirected && nodeshape == :circle
                     xsi, ysi, xdi, ydi = shorten_segment_absolute(x[si], y[si], x[di],
-                                                                  y[di], nodewidth_array[di])
-                elseif g.args[1] isa DiGraph
+                                                                  y[di], nodewidth_array[di]/2)
+                elseif isdirected
                     xsi, ysi, xdi, ydi = nearest_intersection(x[si], y[si], x[di], y[di],
                                                               node_vec_vec_xy[di])
                 end
@@ -442,7 +446,46 @@ end
                     push!(xseg, xsi, xdi, NaN)
                     push!(yseg, ysi, ydi, NaN)
                     _3d && push!(zseg, z[si], z[di], NaN)
-                    push!(l_wg, wi)
+                end
+            if si == di
+                inds = ((adj_mat[:, si] .!= 0) .| (adj_mat[si, :] .!= 0)) .& (1:n .!= si)
+                θ1 = unoccupied_angle(xsi, ysi, x[inds], y[inds]) - pi/8
+                θ2 = θ1 + pi/4
+                nodewidth = nodewidth_array[si]
+                if nodeshape == :circle
+                    xpts = [xsi + nodewidth*cos(θ1)/2,
+                            xsi + (nodewidth + self_edge_size)*cos(θ1),
+                            xsi + (nodewidth + self_edge_size)*cos(θ2),
+                            xsi + nodewidth*cos(θ2)/2]
+                    ypts = [ysi + nodewidth*sin(θ1)/2,
+                            ysi + (nodewidth + self_edge_size)*sin(θ1),
+                            ysi + (nodewidth + self_edge_size)*sin(θ2),
+                            ysi + nodewidth*sin(θ2)/2]
+
+                else
+                    _, _,
+                    start_point1,
+                    start_point2 = nearest_intersection(xsi, ysi,
+                                                        xsi + 2nodewidth*cos(θ1),
+                                                        ysi + 2nodewidth*sin(θ1),
+                                                        node_vec_vec_xy[si])
+                    _, _, end_point1,
+                    end_point2 = nearest_intersection(xsi, ysi,
+                                                      xsi + 2nodewidth*cos(θ2),
+                                                      ysi + 2nodewidth*sin(θ2),
+                                                      node_vec_vec_xy[si])
+
+                    xpts = [start_point1,
+                            xsi + (nodewidth + self_edge_size)*cos(θ1),
+                            xsi + (nodewidth + self_edge_size)*cos(θ2),
+                            end_point1]
+                    ypts = [start_point2,
+                            ysi + (nodewidth + self_edge_size)*sin(θ1),
+                            ysi + (nodewidth + self_edge_size)*sin(θ2),
+                            end_point2]
+                end
+                append!(xseg, push!(xpts, NaN))
+                append!(yseg, push!(ypts, NaN))
             end
             if !isnothing(edgelabel) && haskey(edgelabel, (si, di))
                 @assert !_3d  # TODO: make this work in 3D
@@ -456,11 +499,23 @@ end
                 line_z := segment_colors[i]
             end
             linewidthattr = get(plotattributes, :linewidth, 1)
-            seriestype := (curves ? :curves : (_3d ? :path3d : :path))
+            seriestype := if si == di
+                :curves
+            else
+                if curves
+                    :curves
+                else
+                    if _3d
+                        :path3d
+                    else
+                        :path
+                    end
+                end
+            end
             linewidth --> linewidthattr * edgewidth(si, di, wi)
             markershape := :none
             markercolor := :black
-            (g.args[1] isa DiGraph) && (arrow --> :simple, :head, 0.3, 0.3)
+            isdirected && (arrow --> :simple, :head, 0.3, 0.3)
             primary := false
             _3d ? (xseg, yseg, zseg) : (xseg, yseg)
             end
@@ -471,7 +526,6 @@ end
     framestyle := :none
     axis := nothing
     legend --> false
-
     if method == :chorddiagram
         seriestype := :scatter
         markersize := 0
