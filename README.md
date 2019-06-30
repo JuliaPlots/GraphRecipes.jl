@@ -78,6 +78,7 @@ plot(
 ```julia
 using GraphRecipes
 using Plots
+default(size=(1000, 1000))
 
 code = :(
 function mysum(list)
@@ -89,7 +90,7 @@ function mysum(list)
 end
 )
 
-plot(code, fontsize=5, shorten=0.01, axis_buffer=0.15, nodeshape=:rect)
+plot(code, fontsize=12, shorten=0.01, axis_buffer=0.15, nodeshape=:rect)
 
 ```
 
@@ -100,8 +101,9 @@ plot(code, fontsize=5, shorten=0.01, axis_buffer=0.15, nodeshape=:rect)
 ```julia
 using GraphRecipes
 using Plots
+default(size=(1000, 1000))
 
-plot(AbstractFloat, method=:tree, fontsize=4, nodeshape=:rect)
+plot(AbstractFloat, method=:tree, fontsize=10, nodeshape=:ellipse)
 
 ```
 ![](assets/julia_type_tree.png)

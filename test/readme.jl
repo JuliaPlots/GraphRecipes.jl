@@ -13,7 +13,7 @@ cd("../assets")
 
 @testset "README" begin
     n = 15
-    Random.seed!(42)
+    Random.seed!(1)
     A = Float64[ rand() < 0.5 ? 0 : rand() for i=1:n, j=1:n]
     for i=1:n
         A[i, 1:i-1] = A[1:i-1, i]
@@ -65,6 +65,7 @@ cd("../assets")
     end
     )
 
-    @plottest plot(code, fontsize=5, shorten=0.01, axis_buffer=0.15, nodeshape=:rect) "AST_example.png" popup=!istravis tol=0.02
-    @plottest plot(AbstractFloat, method=:tree, fontsize=4, nodeshape=:rect) "julia_type_tree.png" popup=!istravis tol=0.2
+    default(size=(1000, 1000))
+    @plottest plot(code, fontsize=10, shorten=0.01, axis_buffer=0.15, nodeshape=:rect) "AST_example.png" popup=!istravis tol=0.02
+    @plottest plot(AbstractFloat, method=:tree, fontsize=10, nodeshape=:ellipse) "julia_type_tree.png" popup=!istravis tol=0.2
 end
