@@ -66,18 +66,18 @@ function shorten_segment(x1, y1, x2, y2, shorten)
 end
 
 
-"""
-    shorten_segment_absolute(x1, y1, x2, y2, shorten)
-
-Remove an amount `shorten` from the end of the line [x1,y1] -> [x2,y2].
-"""
-function shorten_segment_absolute(x1, y1, x2, y2, shorten)
-    if x1 == x2 && y1 == y2
-        return x1, y1, x2, y2
-    end
-    t = shorten/sqrt(x1*(x1-2x2) + x2^2 + y1*(y1-2y2) + y2^2)
-    x1, y1, (1.0-t)*x2 + t*x1, (1.0-t)*y2 + t*y1
-end
+# """
+#     shorten_segment_absolute(x1, y1, x2, y2, shorten)
+#
+# Remove an amount `shorten` from the end of the line [x1,y1] -> [x2,y2].
+# """
+# function shorten_segment_absolute(x1, y1, x2, y2, shorten)
+#     if x1 == x2 && y1 == y2
+#         return x1, y1, x2, y2
+#     end
+#     t = shorten/sqrt(x1*(x1-2x2) + x2^2 + y1*(y1-2y2) + y2^2)
+#     x1, y1, (1.0-t)*x2 + t*x1, (1.0-t)*y2 + t*y1
+# end
 
 """
     nearest_intersection(xs, ys, xd, yd, vec_xy_d)
@@ -94,20 +94,24 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
     xvec = Vector{Float64}(undef, 2)
     yvec = Vector{Float64}(undef, 2)
     xy_d_edge = Vector{Float64}(undef, 2)
+    ret = Vector{Float64}(undef, 2)
     A = Array{Float64}(undef, 2, 2)
+    nearest = Inf
     for i in 1:length(vec_xy_d)-1
         xvec .= [vec_xy_d[i][1], vec_xy_d[i+1][1]]
         yvec .= [vec_xy_d[i][2], vec_xy_d[i+1][2]]
         A .= [-xs+xd -xvec[1]+xvec[2] ; -ys+yd -yvec[1]+yvec[2]]
         t .= A\[xs-xvec[1] ; ys-yvec[1]]
         xy_d_edge .= [(1-t[2])*xvec[1] + t[2]*xvec[2], (1-t[2])*yvec[1] + t[2]*yvec[2]]
-        if ((0 <= t[2] <= 1)
-            && (abs2(xd - xy_d_edge[1] + yd - xy_d_edge[2]) < abs2(xd - xs + yd - ys))
-            && (abs2(xy_d_edge[1] - xs + xy_d_edge[2] - ys) < abs2(xs - xd + ys - yd)))
-            break
+        if 0 <= t[2] <= 1
+            tmp = abs2(xy_d_edge[1] - xs) + abs2(xy_d_edge[2] - ys)
+            if tmp < nearest
+                ret .= xy_d_edge
+                nearest = tmp
+            end
         end
     end
-    xs, ys, xy_d_edge[1], xy_d_edge[2]
+    xs, ys, ret[1], ret[2]
 end
 
 function nearest_intersection(xs, ys, zs, xd, yd, zd, vec_xyz_d)
