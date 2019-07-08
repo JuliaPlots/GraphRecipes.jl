@@ -22,6 +22,28 @@ include("readme.jl")
             @test GraphRecipes.partialcircle(s, e) == Plots.partialcircle(s, e)
         end
 
+        @testset "nearest_intersection" begin
+            @test GraphRecipes.nearest_intersection(0, 0, 3, 3, [(1,0), (0,1)]) == (0,0,0.5,0.5)
+            @test GraphRecipes.nearest_intersection(1, 2, 1, 2, []) == (1, 2, 1, 2)
+        end
+
+        @testset "unoccupied_angle" begin
+            @test GraphRecipes.unoccupied_angle(1, 1, [1, 1, 1, 1], [2, 0, 3, -1]) == 2pi
+        end
+
+        @testset "islabel" begin
+            @test GraphRecipes.islabel("hi") == true
+            @test GraphRecipes.islabel(1) == true
+            @test GraphRecipes.islabel(missing) == false
+            @test GraphRecipes.islabel(NaN) == false
+            @test GraphRecipes.islabel(false) == false
+            @test GraphRecipes.islabel("") == false
+        end
+
+        @testset "control_point" begin
+            @test GraphRecipes.control_point(0, 0, 6, 0, 4) == (4,3)
+        end
+
     end
 
 end
