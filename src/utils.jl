@@ -261,7 +261,7 @@ end
 
 function islabel(item)
     ismissing(item) && return false
-    (typeof(item) <: AbstractFloat && isnan(item)) && return false
+    ((item isa AbstractFloat) && isnan(item)) && return false
     !in(item, (nothing, false, ""))
 end
 # From Plots/src/utils.jl
