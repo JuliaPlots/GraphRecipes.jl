@@ -15,6 +15,30 @@ function spectral_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int
     spectral_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
+function spring_graph(adjmat::AbstractMatrix;
+                      dim = 2,
+                      x = rand(size(adjmat)[1]),
+                      y = rand(size(adjmat)[1]),
+                      z = rand(size(adjmat)[1]),
+                      maxiter = 100, initialtemp = 2.0, C = 2.0, kw...
+                      )
+    @assert dim == 2 || dim == 3
+    T = Float64
+    startpostions = if dim == 2
+        [Point(T(x[i]), T(y[i])) for i in 1:length(x)]
+    elseif dim == 3
+        [Point(T(x[i]), T(y[i]), T(z[i])) for i in 1:length(x)]
+    end
+
+    positions = NetworkLayout.Spring.layout(adjmat, GeometryTypes.Point{dim, Float32};
+                                            iterations = maxiter, initialtemp = initialtemp,
+                                            C = C, startpositions = startpostions)
+    if dim == 2
+        ([p[1] for p in positions], [p[2] for p in positions], nothing)
+    else
+        ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
+    end
+end
 
 # -----------------------------------------------------
 

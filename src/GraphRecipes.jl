@@ -11,6 +11,7 @@ using LinearAlgebra
 using SparseArrays
 using Statistics
 using NaNMath
+using GeometryTypes
 
 
 include("utils.jl")
