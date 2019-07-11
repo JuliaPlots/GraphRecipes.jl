@@ -239,6 +239,7 @@ end
                    edgelabel = nothing,
                    edgelabel_offset = 0.0,
                    self_edge_size = 0.1,
+                   edge_label_box = true,
                   )
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -507,13 +508,6 @@ end
                 append!(xseg, push!(xpts, NaN))
                 append!(yseg, push!(ypts, NaN))
             end
-            if !isnothing(edgelabel) && haskey(edgelabel, (si, di))
-                @assert !_3d  # TODO: make this work in 3D
-                q = control_point(xsi, xdi, ysi, ydi,
-                                  (curvature_scalar + edgelabel_offset)*sign(si - di))
-                push!(edge_label_array,
-                      (q..., string(edgelabel[(si, di)]), fontsize))
-            end
 
             if isa(segment_colors, ColorGradient)
                 line_z := segment_colors[i]
@@ -540,6 +534,34 @@ end
             _3d ? (xseg, yseg, zseg) : (xseg, yseg)
             end
 
+        end
+    end
+
+    for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+        edge_has_been_seen[(si, di)] += 1
+        xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
+        if !isnothing(edgelabel) && haskey(edgelabel, (si, di))
+            @assert !_3d  # TODO: make this work in 3D
+            q = control_point(xsi, xdi, ysi, ydi,
+                              (curvature_scalar + edgelabel_offset)*sign(si - di))
+            push!(edge_label_array,
+                  (q..., string(edgelabel[(si, di)]), fontsize))
+            edge_label_box_vertices = annotation_extent(plotattributes, (q[1], q[2],
+                                               edgelabel[(si, di)], 0.05fontsize))
+            if edge_label_box
+                @series begin
+                    seriestype := :shape
+                    fillcolor --> get(plotattributes, :background_color, :white)
+                    linewidth := 0
+                    linealpha := 0
+                    ([edge_label_box_vertices[1][1], edge_label_box_vertices[1][2],
+                      edge_label_box_vertices[1][2], edge_label_box_vertices[1][1],
+                      edge_label_box_vertices[1][1]],
+                     [edge_label_box_vertices[2][1], edge_label_box_vertices[2][1],
+                      edge_label_box_vertices[2][2], edge_label_box_vertices[2][2],
+                      edge_label_box_vertices[2][1]])
+                end
+            end
         end
     end
 
