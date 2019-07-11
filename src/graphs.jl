@@ -1,5 +1,6 @@
 const _graph_funcs = Dict{Symbol,Any}(
     :spectral => spectral_graph,
+    :spring => spring_graph,
     :stress => by_axis_local_stress_graph,
     :tree => tree_graph,
     :buchheim => buchheim_graph,
@@ -10,6 +11,7 @@ const _graph_funcs = Dict{Symbol,Any}(
 const _graph_inputs = Dict{Symbol,Any}(
     :spectral => :adjmat,
     :stress => :adjmat,
+    :spring => :adjmat,
     :tree => :sourcedestiny,
     :buchheim => :adjlist,
     :arcdiagram => :sourcedestiny,
@@ -401,7 +403,7 @@ end
                 # For directed graphs, shorten the line segment so that the edge ends at
                 # the perimeter of the destiny node.
                 θ = (edge_has_been_seen[(si, di)] - 1)*pi/8
-                if isdirected && si != di
+                if isdirected && si != di && !_3d
                     α = atan(y[si] - y[di], x[si] - x[di])
                     if sign(si - di) < 0
                         α = x[si] < x[di] ? θ + α : α - θ
@@ -463,7 +465,7 @@ end
                     push!(yseg, ysi, ydi, NaN)
                     _3d && push!(zseg, z[si], z[di], NaN)
                 end
-            if si == di
+            if si == di && !_3d
                 inds = 1:n .!= si
                 self_edge_angle = pi/8 + (edge_has_been_seen[(si, di)] - 1)*pi/8
                 θ1 = unoccupied_angle(xsi, ysi, x[inds], y[inds]) - self_edge_angle/2
@@ -574,7 +576,7 @@ end
                 linewidth := 0
                 linealpha := 0
                 series_annotations --> map(string,names)
-                markersize --> 100*(10 .+ (100 .* node_weights) ./ sum(node_weights))
+                markersize --> (10 .+ (100 .* node_weights) ./ sum(node_weights))
             else
                 for (i, vec_xy) in enumerate(node_vec_vec_xy)
                     @series begin
