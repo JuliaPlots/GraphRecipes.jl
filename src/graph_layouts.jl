@@ -24,6 +24,7 @@ function spring_graph(adjmat::AbstractMatrix;
                       )
     @assert dim == 2 || dim == 3
     T = Float64
+    adjmat = make_symmetric(adjmat)
     startpostions = if dim == 2
         [Point(T(x[i]), T(y[i])) for i in 1:length(x)]
     elseif dim == 3
@@ -38,6 +39,74 @@ function spring_graph(adjmat::AbstractMatrix;
     else
         ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
     end
+end
+
+function spring_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+    spring_graph(get_adjacency_matrix(source, destiny, weights); kw...)
+end
+
+function sfdp_graph(adjmat::AbstractMatrix;
+                    dim = 2,
+                    x = rand(size(adjmat)[1]),
+                    y = rand(size(adjmat)[1]),
+                    z = rand(size(adjmat)[1]),
+                    maxiter = 100, tol = 1e-10, C = 1.0, K = 1.0, kw...
+                    )
+    @assert dim == 2 || dim == 3
+    adjmat = make_symmetric(adjmat)
+    T = Float64
+    startpostions = if dim == 2
+        [Point(T(x[i]), T(y[i])) for i in 1:length(x)]
+    elseif dim == 3
+        [Point(T(x[i]), T(y[i]), T(z[i])) for i in 1:length(x)]
+    end
+
+    positions = NetworkLayout.SFDP.layout(adjmat, dim,
+                                          iterations = maxiter, tol = tol, C = C, K = K)
+    if dim == 2
+        ([p[1] for p in positions], [p[2] for p in positions], nothing)
+    else
+        ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
+    end
+end
+
+function sfdp_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+    sfpd_graph(get_adjacency_matrix(source, destiny, weights); kw...)
+end
+
+function circular_graph(adjmat::AbstractMatrix;
+                        dim = 2,
+                        x = rand(size(adjmat)[1]),
+                        y = rand(size(adjmat)[1]),
+                        z = rand(size(adjmat)[1]),
+                        kw...
+                        )
+    @assert dim == 2
+
+    positions = NetworkLayout.Circular.layout(adjmat)
+
+    ([p[1] for p in positions], [p[2] for p in positions], nothing)
+end
+
+function circular_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+    circular_graph(get_adjacency_matrix(source, destiny, weights); kw...)
+end
+
+function shell_graph(adjmat::AbstractMatrix;
+                     dim = 2,
+                     x = rand(size(adjmat)[1]),
+                     y = rand(size(adjmat)[1]),
+                     z = rand(size(adjmat)[1]),
+                     nlist = nothing, kw...
+                     )
+    @assert dim == 2
+    positions = NetworkLayout.Shell.layout(adjmat, nlist=nlist)
+
+    ([p[1] for p in positions], [p[2] for p in positions], nothing)
+end
+
+function shell_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+    shell_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
 # -----------------------------------------------------
