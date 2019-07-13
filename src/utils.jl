@@ -101,7 +101,7 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
         xvec .= [vec_xy_d[i][1], vec_xy_d[i+1][1]]
         yvec .= [vec_xy_d[i][2], vec_xy_d[i+1][2]]
         A .= [-xs+xd -xvec[1]+xvec[2] ; -ys+yd -yvec[1]+yvec[2]]
-        t .= A\[xs-xvec[1] ; ys-yvec[1]]
+        t .= (A + eps()*I)\[xs-xvec[1] ; ys-yvec[1]]
         xy_d_edge .= [(1-t[2])*xvec[1] + t[2]*xvec[2], (1-t[2])*yvec[1] + t[2]*yvec[2]]
         if 0 <= t[2] <= 1
             tmp = abs2(xy_d_edge[1] - xs) + abs2(xy_d_edge[2] - ys)

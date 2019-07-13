@@ -1,5 +1,8 @@
 const _graph_funcs = Dict{Symbol,Any}(
     :spectral => spectral_graph,
+    :sfdp => sfdp_graph,
+    :circular => circular_graph,
+    :shell => shell_graph,
     :spring => spring_graph,
     :stress => by_axis_local_stress_graph,
     :tree => tree_graph,
@@ -10,6 +13,9 @@ const _graph_funcs = Dict{Symbol,Any}(
 
 const _graph_inputs = Dict{Symbol,Any}(
     :spectral => :adjmat,
+    :sfdp => :adjmat,
+    :circular => :adjmat,
+    :shell => :adjmat,
     :stress => :adjmat,
     :spring => :adjmat,
     :tree => :sourcedestiny,
