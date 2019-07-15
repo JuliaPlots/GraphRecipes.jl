@@ -1,5 +1,5 @@
 # GraphRecipes
-The repository formerly know as PlotRecipes
+The repository formerly known as PlotRecipes
 
 [![Build Status](https://travis-ci.org/JuliaPlots/GraphRecipes.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/GraphRecipes.jl)
 
