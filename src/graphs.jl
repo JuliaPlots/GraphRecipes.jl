@@ -626,6 +626,7 @@ end
                     markersize := 0
                     markeralpha := 0
                 end
+                !isnothing(edgelabel) && (annotation := edge_label_array)
             end
         else
             @assert !_3d  # TODO: make this work in 3D
