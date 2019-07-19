@@ -12,7 +12,7 @@ using SparseArrays
 using Statistics
 using NaNMath
 using GeometryTypes
-
+using Interpolations
 
 include("utils.jl")
 include("graph_layouts.jl")
