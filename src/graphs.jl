@@ -377,6 +377,7 @@ end
         # generate a list of colors, one per segment
         segment_colors = get(plotattributes, :linecolor, nothing)
         edge_label_array = Vector{Tuple}()
+        edge_label_box_vertices_array = Vector{Array}()
         if !isa(edgelabel, Dict) && !isnothing(edgelabel)
             tmp = Dict()
             if length(size(edgelabel)) < 2
@@ -391,6 +392,16 @@ end
                 end
             end
             edgelabel = tmp
+        end
+        # If the edgelabel dictionary is full of length two tuples, then make all of the
+        # tuples length three with last element 1. (i.e. a multigraph that has no extra
+        # edges).
+        if edgelabel isa Dict
+            for key in keys(edgelabel)
+                if length(key) == 2
+                    edgelabel[(key..., 1)] = edgelabel[key]
+                end
+            end
         end
         edge_has_been_seen = Dict()
         for edge in zip(source, destiny)
@@ -456,16 +467,48 @@ end
                         push!(yseg, NaN)
                     else
                         xpt, ypt = if method != :chorddiagram
-                            control_point(xsi, xdi,
-                                          ysi, ydi,
+                            control_point(xsi, x[di],
+                                          ysi, y[di],
                                           edge_has_been_seen[(si, di)]*curvature_scalar*sign(si - di))
                         else
                             (0.0, 0.0)
                         end
-                        push!(xseg, xsi, xpt, xdi, NaN)
-                        push!(yseg, ysi, ypt, ydi, NaN)
-                        _3d && push!(zseg, z[si], z[si], z[di], NaN)
-                        push!(l_wg, wi)
+                        xpts = [xsi, xpt, xdi]
+                        ypts = [ysi, ypt, ydi]
+                        t = range(0, stop=1, length=3)
+                        A = hcat(xpts, ypts)
+
+                        itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
+
+                        tfine = range(0, 1, length=30)
+                        xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
+                        if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
+                            q = control_point(xsi, x[di],
+                                              ysi, y[di],
+                                              (edgelabel_offset
+                                              + edge_has_been_seen[(si, di)]*curvature_scalar)*sign(si - di))
+                            push!(edge_label_array,
+                                  (q...,
+                                   string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
+                            edge_label_box_vertices = (
+                            annotation_extent(plotattributes,
+                                              (q[1], q[2],
+                                              edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                              0.05fontsize)))
+                            if !any(isnan.(q))
+                                push!(edge_label_box_vertices_array, edge_label_box_vertices)
+                            end
+                        end
+                        if method != :chorddiagram && !_3d
+                            append!(xseg, push!(xpts, NaN))
+                            append!(yseg, push!(ypts, NaN))
+                            push!(l_wg, wi)
+                        else
+                            push!(xseg, xsi, xpt, xdi, NaN)
+                            push!(yseg, ysi, ypt, ydi, NaN)
+                            _3d && push!(zseg, z[si], z[si], z[di], NaN)
+                            push!(l_wg, wi)
+                        end
                     end
                 else
                     push!(xseg, xsi, xdi, NaN)
@@ -480,14 +523,25 @@ end
                 nodewidth = nodewidth_array[si]
                 if nodeshape == :circle
                     xpts = [xsi + nodewidth*cos(θ1)/2,
-                            xsi + edge_has_been_seen[(si, di)]*(nodewidth + self_edge_size)*cos(θ1),
-                            xsi + edge_has_been_seen[(si, di)]*(nodewidth + self_edge_size)*cos(θ2),
+                            NaN, NaN, NaN,
                             xsi + nodewidth*cos(θ2)/2]
+                    xpts[2] = mean([xpts[1], xpts[end]]) + 0.5*(0.5 + edge_has_been_seen[(si, di)])*self_edge_size*cos(θ1)
+                    xpts[3] = mean([xpts[1], xpts[end]]) + edge_has_been_seen[(si, di)]*self_edge_size*cos((θ1 + θ2)/2)
+                    xpts[4] = mean([xpts[1], xpts[end]]) + 0.5*(0.5 + edge_has_been_seen[(si, di)])*self_edge_size*cos(θ2)
                     ypts = [ysi + nodewidth*sin(θ1)/2,
-                            ysi + edge_has_been_seen[(si, di)]*(nodewidth + self_edge_size)*sin(θ1),
-                            ysi + edge_has_been_seen[(si, di)]*(nodewidth + self_edge_size)*sin(θ2),
+                            NaN, NaN, NaN,
                             ysi + nodewidth*sin(θ2)/2]
+                    ypts[2] = mean([ypts[1], ypts[end]]) + 0.5*(0.5 + edge_has_been_seen[(si, di)])*self_edge_size*sin(θ1)
+                    ypts[3] = mean([ypts[1], ypts[end]]) + edge_has_been_seen[(si, di)]*self_edge_size*sin((θ1 + θ2)/2)
+                    ypts[4] = mean([ypts[1], ypts[end]]) + 0.5*(0.5 + edge_has_been_seen[(si, di)])*self_edge_size*sin(θ2)
 
+                    t = range(0, stop=1, length=5)
+                    A = hcat(xpts, ypts)
+
+                    itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
+
+                    tfine = range(0, 1, length=50)
+                    xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
                 else
                     _, _,
                     start_point1,
@@ -503,33 +557,59 @@ end
                                                       node_vec_vec_xy[si])
 
                     xpts = [start_point1,
-                            xsi + edge_has_been_seen[(si, di)]*(nodewidth + self_edge_size)*cos(θ1),
-                            xsi + edge_has_been_seen[(si, di)]*(nodewidth + self_edge_size)*cos(θ2),
+                            NaN, NaN, NaN,
                             end_point1]
+                    xpts[2] = mean([xpts[1], xpts[end]]) + 0.5*(0.5 + edge_has_been_seen[(si, di)])*self_edge_size*cos(θ1)
+                    xpts[3] = mean([xpts[1], xpts[end]]) + edge_has_been_seen[(si, di)]*self_edge_size*cos((θ1 + θ2)/2)
+                    xpts[4] = mean([xpts[1], xpts[end]]) + 0.5*(0.5 + edge_has_been_seen[(si, di)])*self_edge_size*cos(θ2)
                     ypts = [start_point2,
-                            ysi + edge_has_been_seen[(si, di)]*(nodewidth + self_edge_size)*sin(θ1),
-                            ysi + edge_has_been_seen[(si, di)]*(nodewidth + self_edge_size)*sin(θ2),
+                            NaN, NaN, NaN,
                             end_point2]
+                    ypts[2] = mean([ypts[1], ypts[end]]) + 0.5*(0.5 + edge_has_been_seen[(si, di)])*self_edge_size*sin(θ1)
+                    ypts[3] = mean([ypts[1], ypts[end]]) + edge_has_been_seen[(si, di)]*self_edge_size*sin((θ1 + θ2)/2)
+                    ypts[4] = mean([ypts[1], ypts[end]]) + 0.5*(0.5 + edge_has_been_seen[(si, di)])*self_edge_size*sin(θ2)
+
+                    t = range(0, stop=1, length=5)
+                    A = hcat(xpts, ypts)
+
+                    itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
+
+                    tfine = range(0, 1, length=50)
+                    xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
                 end
                 append!(xseg, push!(xpts, NaN))
                 append!(yseg, push!(ypts, NaN))
+                mid_ind = div(length(xpts), 2)
+                q = [xpts[mid_ind] + edgelabel_offset*cos((θ1 + θ2)/2),
+                     ypts[mid_ind] + edgelabel_offset*sin((θ1 + θ2)/2)]
+                if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
+                    push!(edge_label_array,
+                          (q...,
+                           string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
+                    edge_label_box_vertices = annotation_extent(plotattributes, (q...,
+                                                                edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                                                0.05fontsize))
+                    if !any(isnan.(q))
+                        push!(edge_label_box_vertices_array, edge_label_box_vertices)
+                    end
+                end
             end
 
             if isa(segment_colors, ColorGradient)
                 line_z := segment_colors[i]
             end
             linewidthattr = get(plotattributes, :linewidth, 1)
-            seriestype := if si == di
+            seriestype := if method in (:tree, :buchheim, :chorddiagram)
                 :curves
             else
-                if curves
-                    :curves
-                else
-                    if _3d
-                        :path3d
+                if _3d
+                    if curves
+                        :curves
                     else
-                        :path
+                        :path3d
                     end
+                else
+                    :path
                 end
             end
             linewidth --> linewidthattr * edgewidth(si, di, wi)
@@ -542,24 +622,24 @@ end
 
         end
     end
-
-    for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
-        edge_has_been_seen[(si, di)] += 1
-        xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
-        if !isnothing(edgelabel) && haskey(edgelabel, (si, di))
-            @assert !_3d  # TODO: make this work in 3D
-            q = control_point(xsi, xdi, ysi, ydi,
-                              (curvature_scalar + edgelabel_offset)*sign(si - di))
-            push!(edge_label_array,
-                  (q..., string(edgelabel[(si, di)]), fontsize))
-            edge_label_box_vertices = annotation_extent(plotattributes, (q[1], q[2],
-                                               edgelabel[(si, di)], 0.05fontsize))
-            if edge_label_box
+    # The boxes around edge labels are defined as another list of series that sits on top
+    # of the series for the edges.
+    edge_has_been_seen = Dict()
+    for edge in zip(source, destiny)
+        edge_has_been_seen[edge] = 0
+    end
+    if edge_label_box
+        index = 0
+        for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+            edge_has_been_seen[(si, di)] += 1
+            if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
+                index += 1
                 @series begin
                     seriestype := :shape
                     fillcolor --> get(plotattributes, :background_color, :white)
                     linewidth := 0
                     linealpha := 0
+                    edge_label_box_vertices = edge_label_box_vertices_array[index]
                     ([edge_label_box_vertices[1][1], edge_label_box_vertices[1][2],
                       edge_label_box_vertices[1][2], edge_label_box_vertices[1][1],
                       edge_label_box_vertices[1][1]],
