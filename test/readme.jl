@@ -4,6 +4,14 @@ using LinearAlgebra
 using SparseArrays
 using ImageMagick
 
+using AbstractTrees
+AbstractTrees.children(d::Dict) = [p for p in d]
+AbstractTrees.children(p::Pair) = AbstractTrees.children(p[2])
+function AbstractTrees.printnode(io::IO, p::Pair)
+    str = isempty(AbstractTrees.children(p[2])) ? string(p[1], ": ", p[2]) : string(p[1], ": ")
+    print(io, str)
+end
+
 istravis = "TRAVIS" ∈ keys(ENV)
 
 default(show=false, reuse=true)
@@ -68,4 +76,8 @@ cd("../assets")
     default(size=(1000, 1000))
     @plottest plot(code, fontsize=10, shorten=0.01, axis_buffer=0.15, nodeshape=:rect) "AST_example.png" popup=!istravis tol=0.02
     @plottest plot(AbstractFloat, method=:tree, fontsize=10, nodeshape=:ellipse) "julia_type_tree.png" popup=!istravis tol=0.2
+
+    d = Dict(:a => 2,:d => Dict(:b => 4,:c => "Hello"),:e => 5.0)
+    @plottest plot(TreePlot(d), method=:tree, fontsize=10, nodeshape=:ellipse) "julia_dict_tree.png" popup=!istravis tol=0.2
+
 end

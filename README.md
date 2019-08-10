@@ -107,3 +107,27 @@ plot(AbstractFloat, method=:tree, fontsize=10, nodeshape=:ellipse)
 
 ```
 ![](assets/julia_type_tree.png)
+
+
+#### `AbstractTrees` Trees
+
+```julia
+using AbstractTrees
+
+AbstractTrees.children(d::Dict) = [p for p in d]
+AbstractTrees.children(p::Pair) = AbstractTrees.children(p[2])
+function AbstractTrees.printnode(io::IO, p::Pair)
+    str = isempty(AbstractTrees.children(p[2])) ? string(p[1], ": ", p[2]) : string(p[1], ": ")
+    print(io, str)
+end
+
+d = Dict(:a => 2,:d => Dict(:b => 4,:c => "Hello"),:e => 5.0)
+
+using GraphRecipes
+using Plots
+default(size=(1000, 1000))
+
+plot(TreePlot(d), method=:tree, fontsize=10, nodeshape=:ellipse)
+
+```
+![](assets/julia_dict_tree.png)
