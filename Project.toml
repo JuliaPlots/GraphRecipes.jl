@@ -1,6 +1,6 @@
 name = "GraphRecipes"
 uuid = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
-version = "0.4.1"
+version = "0.5.0"
 
 [deps]
 GeometryTypes = "4d00f742-c7ba-57c2-abde-4428a4b178cb"
