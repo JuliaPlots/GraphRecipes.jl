@@ -18,5 +18,6 @@ include("utils.jl")
 include("graph_layouts.jl")
 include("graphs.jl")
 include("misc.jl")
+include("trees.jl")
 
 end # module
