@@ -21,7 +21,7 @@ end
 
 graphplot(A,
           node_weights = 1:n,
-          nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
+          markercolor = range(colorant"yellow", stop=colorant"red", length=n),
           names = 1:n,
           linecolor = :darkgrey,
        )
