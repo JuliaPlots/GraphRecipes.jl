@@ -3,6 +3,7 @@ using LinearAlgebra
 using SparseArrays
 using GraphRecipes
 using Plots
+using LightGraphs
 
 cd(@__DIR__)
 cd("../assets")
@@ -17,6 +18,7 @@ x = rand(n)
 y = rand(n)
 z = rand(n)
 graphplot(A,
+          nodesize = 0.25,
           node_weights = 1:n,
           nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
           names = 1:n,
@@ -36,7 +38,40 @@ graphplot(A,
           )
 savefig("random_3d_graph.png")
 
-adjmat = Symmetric(sparse(rand(0:1,8,8)))
+g = wheel_graph(10)
+graphplot(g, curves=false)
+savefig("LightGraphs.png")
+
+g = [0 1 1;
+     0 0 1;
+     0 1 0]
+
+graphplot(g, names=1:3, curvature_scalar=0.1)
+savefig("directed.png")
+
+n = 8
+g = wheel_digraph(n)
+edgelabel_dict = Dict()
+for i in 1:n
+    for j in 1:n
+        edgelabel_dict[(i, j)] = string("edge ", i, " to ", j)
+    end
+end
+
+graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect)
+
+savefig("edgelabel.png")
+
+g = [0 1 1;
+     0 1 0;
+     0 1 0]
+
+graphplot(g)
+
+savefig("selfedges.png")
+
+graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.2)
+savefig("multigraphs.png")
 
 adjmat = Symmetric(sparse(rand(0:1,8,8)))
 plot(

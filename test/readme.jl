@@ -3,6 +3,7 @@ using VisualRegressionTests
 using LinearAlgebra
 using SparseArrays
 using ImageMagick
+using LightGraphs
 
 using AbstractTrees
 AbstractTrees.children(d::Dict) = [p for p in d]
@@ -30,6 +31,7 @@ cd("../assets")
     y = rand(n)
     z = rand(n)
     @plottest graphplot(A,
+                        nodesize = 0.25,
                         node_weights = 1:n,
                         nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
                         names = 1:n,
@@ -46,7 +48,35 @@ cd("../assets")
                         linealpha = 0.5,
                         layout_kw = Dict(:x => x, :y => y, :z => z),
                         ) "random_3d_graph.png" popup=!istravis tol=0.02
-    adjmat = Symmetric(sparse(rand(0:1,8,8)))
+
+    g = wheel_graph(10)
+    @plottest graphplot(g, curves=false) "LightGraphs.png" popup=!istravis tol=0.02
+
+    g = [0 1 1;
+         0 0 1;
+         0 1 0]
+
+    @plottest graphplot(g, names=1:3, curvature_scalar=0.1) "directed.png" popup=!istravis tol=0.02
+
+    n = 8
+    g = wheel_digraph(n)
+    edgelabel_dict = Dict()
+    edgelabel_mat = Array{String}(undef, n, n)
+    for i in 1:n
+        for j in 1:n
+            edgelabel_dict[(i, j)] = string("edge ", i, " to ", j)
+        end
+    end
+
+    @plottest graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect) "edgelabel.png" popup=!istravis tol=0.1
+
+    g = [0 1 1;
+         0 1 0;
+         0 1 0]
+
+    @plottest graphplot(g) "selfedges.png" popup=!istravis tol=0.02
+
+    @plottest graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.2) "multigraphs.png" popup=!istravis tol=0.1
 
     adjmat = Symmetric(sparse(rand(0:1,8,8)))
     @plottest plot(
