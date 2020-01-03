@@ -34,7 +34,7 @@ cd("../assets")
     @plottest graphplot(A,
                         nodesize = 0.25,
                         node_weights = 1:n,
-                        nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
+                        nodecolor = range(colorant"yellow"; stop=colorant"red", length=n),
                         names = 1:n,
                         linecolor = :darkgrey,
                         layout_kw = Dict(:x => x, :y => y),
