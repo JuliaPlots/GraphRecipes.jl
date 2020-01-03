@@ -4,6 +4,7 @@ using SparseArrays
 using GraphRecipes
 using Plots
 using LightGraphs
+using Colors
 
 cd(@__DIR__)
 cd("../assets")

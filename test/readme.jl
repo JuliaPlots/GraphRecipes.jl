@@ -4,6 +4,7 @@ using LinearAlgebra
 using SparseArrays
 using ImageMagick
 using LightGraphs
+using Colors
 
 using AbstractTrees
 AbstractTrees.children(d::Dict) = [p for p in d]
