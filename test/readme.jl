@@ -33,7 +33,7 @@ cd("../assets")
     @plottest graphplot(A,
                         nodesize = 0.2,
                         node_weights = 1:n,
-                        nodecolor = colormap("Oranges", n),
+                        nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
                         names = 1:n,
                         fontsize = 10,
                         linecolor = :darkgrey,

@@ -484,7 +484,7 @@ end
 
                         itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
 
-                        tfine = range(0, 1, length=30)
+                        tfine = range(0, stop=1, length=30)
                         xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
                         if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                             q = control_point(xsi, x[di],
@@ -559,7 +559,7 @@ end
 
                     itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
 
-                    tfine = range(0, 1, length=50)
+                    tfine = range(0, stop=1, length=50)
                     xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
                 else
                     _, _,
@@ -593,7 +593,7 @@ end
 
                     itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
 
-                    tfine = range(0, 1, length=50)
+                    tfine = range(0, stop=1, length=50)
                     xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
                 end
                 append!(xseg, push!(xpts, NaN))
