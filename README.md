@@ -20,13 +20,14 @@ for i=1:n
 end
 
 graphplot(A,
-          nodesize = 0.25,
+          nodesize = 0.2,
           node_weights = 1:n,
-          nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
+          nodecolor = colormap("Oranges", n),
           names = 1:n,
+          fontsize = 10,
           linecolor = :darkgrey,
-       )
-
+          layout_kw = Dict(:x => x, :y => y),
+          )
 ```
 
 ![](assets/random_labelled_graph.png)

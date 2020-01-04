@@ -4,7 +4,6 @@ using LinearAlgebra
 using SparseArrays
 using ImageMagick
 using LightGraphs
-using Colors
 
 using AbstractTrees
 AbstractTrees.children(d::Dict) = [p for p in d]
@@ -32,10 +31,11 @@ cd("../assets")
     y = rand(n)
     z = rand(n)
     @plottest graphplot(A,
-                        nodesize = 0.25,
+                        nodesize = 0.2,
                         node_weights = 1:n,
-                        nodecolor = range(colorant"yellow"; stop=colorant"red", length=n),
+                        nodecolor = colormap("Oranges", n),
                         names = 1:n,
+                        fontsize = 10,
                         linecolor = :darkgrey,
                         layout_kw = Dict(:x => x, :y => y),
                         ) "random_labelled_graph.png" popup=!istravis tol=0.03
