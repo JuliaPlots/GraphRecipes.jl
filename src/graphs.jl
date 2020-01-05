@@ -251,6 +251,9 @@ end
     _3d = dim == 3
     adj_mat = get_adjacency_matrix(g.args...)
     isdirected = (g.args[1] isa DiGraph || !issymmetric(adj_mat)) && !in(method, (:tree, :buchheim))
+    if isdirected && (g.args[1] isa Matrix)
+        g = GraphPlot((adjacency_matrix(DiGraph(g.args[1])),))
+    end
 
     source, destiny, weights = get_source_destiny_weight(g.args...)
     if !(eltype(source) <: Integer)
@@ -397,6 +400,7 @@ end
         # tuples length three with last element 1. (i.e. a multigraph that has no extra
         # edges).
         if edgelabel isa Dict
+            edgelabel = convert(Dict{Any,Any}, edgelabel)
             for key in keys(edgelabel)
                 if length(key) == 2
                     edgelabel[(key..., 1)] = edgelabel[key]
@@ -480,7 +484,7 @@ end
 
                         itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
 
-                        tfine = range(0, 1, length=30)
+                        tfine = range(0, stop=1, length=30)
                         xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
                         if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                             q = control_point(xsi, x[di],
@@ -514,6 +518,21 @@ end
                     push!(xseg, xsi, xdi, NaN)
                     push!(yseg, ysi, ydi, NaN)
                     _3d && push!(zseg, z[si], z[di], NaN)
+
+                    if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
+                        q = [(xsi + xdi)/2, (ysi + ydi)/2]
+                        push!(edge_label_array,
+                              (q...,
+                               string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
+                        edge_label_box_vertices = (
+                        annotation_extent(plotattributes,
+                                          (q[1], q[2],
+                                          edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                          0.05fontsize)))
+                        if !any(isnan.(q))
+                            push!(edge_label_box_vertices_array, edge_label_box_vertices)
+                        end
+                    end
                 end
             if si == di && !_3d
                 inds = 1:n .!= si
@@ -540,7 +559,7 @@ end
 
                     itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
 
-                    tfine = range(0, 1, length=50)
+                    tfine = range(0, stop=1, length=50)
                     xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
                 else
                     _, _,
@@ -574,7 +593,7 @@ end
 
                     itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
 
-                    tfine = range(0, 1, length=50)
+                    tfine = range(0, stop=1, length=50)
                     xpts, ypts = [itp(t,1) for t in tfine], [itp(t,2) for t in tfine]
                 end
                 append!(xseg, push!(xpts, NaN))
