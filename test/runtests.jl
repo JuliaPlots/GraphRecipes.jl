@@ -44,6 +44,17 @@ include("readme.jl")
             @test GraphRecipes.control_point(0, 0, 6, 0, 4) == (4,3)
         end
 
+        # TODO: Actually test that the aliases produce the same plots, rather than just
+        # checking that they don't error. Also, test all of the different aliases.
+        @testset "Aliases" begin
+            A = [1 0 1 0;0 0 1 1;1 1 1 1;0 0 1 1]
+            graphplot(A, markercolor=:red, markershape=:rect, markersize=0.5)
+            graphplot(A, nodeweights=1:4)
+            graphplot(A, curvaturescalar=0)
+            graphplot(A, el=Dict((1,2)=>""), elb=true)
+            graphplot(A, ew=(s,d,w)->3)
+            graphplot(A, ses=0.5)
+        end
     end
 
 end

@@ -54,7 +54,7 @@ end
     method := :buchheim
     root --> :top
 
-    markercolor --> Symbol[(nt == :call ? :pink : nt == :leaf ? :white : :lightgreen) for nt in nodetypes]
+    # markercolor --> Symbol[(nt == :call ? :pink : nt == :leaf ? :white : :lightgreen) for nt in nodetypes]
 
     # # compute the y-values from the depthdict dict
     # n = length(depthlists)-1

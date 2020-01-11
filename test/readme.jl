@@ -22,7 +22,7 @@ cd("../assets")
 
 @testset "README" begin
     n = 15
-    Random.seed!(1)
+    Random.seed!(2)
     A = Float64[ rand() < 0.5 ? 0 : rand() for i=1:n, j=1:n]
     for i=1:n
         A[i, 1:i-1] = A[1:i-1, i]
@@ -71,11 +71,11 @@ cd("../assets")
 
     @plottest graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect) "edgelabel.png" popup=!istravis tol=0.1
 
-    g = [0 1 1;
-         0 1 0;
-         0 1 0]
+    g = [1 1 1;
+         0 0 1;
+         0 0 1]
 
-    @plottest graphplot(g) "selfedges.png" popup=!istravis tol=0.02
+    @plottest graphplot(DiGraph(g), self_edge_size=0.2) "selfedges.png" popup=!istravis tol=0.02
 
     @plottest graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.2) "multigraphs.png" popup=!istravis tol=0.1
 
@@ -89,7 +89,7 @@ cd("../assets")
 
                    graphplot(adjmat,
                              method=:arcdiagram,
-                             markersize=3,
+                             markersize=0.5,
                              linecolor=:black,
                              markercolor=:black)
                   ) "arc_chord_diagrams.png" popup=!istravis tol=0.02

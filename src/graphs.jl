@@ -218,6 +218,20 @@ end
 
 # NOTE: this is for undirected graphs... adjmat should be symmetric and non-negative
 
+const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
+                           :node_weights => [:nodeweights],
+                           :nodeshape => [:node_shape],
+                           :nodesize => [:node_size],
+                           :nodecolor => [:marker_color],
+                           :shorten => [:shorten_edge],
+                           :axis_buffer => [:axisbuffer],
+                           :edgewidth => [:edge_width,:ew],
+                           :edgelabel => [:edge_label,:el],
+                           :edgelabel_offset => [:edgelabeloffset,:elo],
+                           :self_edge_size => [:selfedgesize,:ses],
+                           :edge_label_box => [:edgelabelbox,:edgelabel_box,:elb],
+)
+
 @userplot GraphPlot
 
 @recipe function f(g::GraphPlot;
@@ -247,6 +261,39 @@ end
                    self_edge_size = 0.1,
                    edge_label_box = true,
                   )
+    # Process GraphRecipes aliases, keywords that are already in Plots.jl have to be dealt
+    # with individually, since they cannot be deleted from the plotattributes
+    # dictionary.
+    if haskey(plotattributes, :markercolor)
+        plotattributes[:nodecolor] = nodecolor
+        nodecolor = plotattributes[:markercolor]
+        delete!(plotattributes, :nodecolor)
+    end
+    if haskey(plotattributes, :markersize)
+        plotattributes[:nodesize] = nodesize
+        nodesize = plotattributes[:markersize]
+        delete!(plotattributes, :nodesize)
+    end
+    if haskey(plotattributes, :markershape)
+        plotattributes[:nodeshape] = nodeshape
+        nodeshape = plotattributes[:markershape]
+        delete!(plotattributes, :nodeshape)
+    end
+
+    curvature_scalar = replace_kwarg!(curvature_scalar, :curvature_scalar, plotattributes, graph_aliases)
+    node_weights = replace_kwarg!(node_weights, :node_weights, plotattributes, graph_aliases)
+    nodeshape = replace_kwarg!(nodeshape, :nodeshape, plotattributes, graph_aliases)
+    nodesize = replace_kwarg!(nodesize, :nodesize, plotattributes, graph_aliases)
+    nodecolor = replace_kwarg!(nodecolor, :nodecolor, plotattributes, graph_aliases)
+    shorten = replace_kwarg!(shorten, :shorten, plotattributes, graph_aliases)
+    axis_buffer = replace_kwarg!(axis_buffer, :axis_buffer, plotattributes, graph_aliases)
+    edgewidth = replace_kwarg!(edgewidth, :edgewidth, plotattributes, graph_aliases)
+    edgelabel = replace_kwarg!(edgelabel, :edgelabel, plotattributes, graph_aliases)
+    edgelabel_offset = replace_kwarg!(edgelabel_offset, :edgelabel_offset, plotattributes, graph_aliases)
+    self_edge_size = replace_kwarg!(self_edge_size, :self_edge_size, plotattributes, graph_aliases)
+    edge_label_box = replace_kwarg!(edge_label_box, :edge_label_box, plotattributes, graph_aliases)
+    edgelabel = replace_kwarg!(edgelabel, :edgelabel, plotattributes, graph_aliases)
+
     @assert dim in (2, 3)
     _3d = dim == 3
     adj_mat = get_adjacency_matrix(g.args...)
