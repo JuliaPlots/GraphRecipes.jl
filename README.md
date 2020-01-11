@@ -20,9 +20,9 @@ for i=1:n
 end
 
 graphplot(A,
-          nodesize = 0.2,
+          markersize = 0.2,
           node_weights = 1:n,
-          nodecolor = range(colorant"yellow", stop=colorant"red", length=n),
+          markercolor = range(colorant"yellow", stop=colorant"red", length=n),
           names = 1:n,
           fontsize = 10,
           linecolor = :darkgrey
@@ -57,7 +57,7 @@ graphplot(g, curves=false)
 ```
 
 ![](assets/LightGraphs.png)
-#### Directed Graphs
+#### Directed Graphs -- Only on master!
 I you pass `graphplot` a `LightGraphs.DiGraph` or an asymmetric adjacency matrix, then `graphplot` will use arrows to indicate the direction of the edges. Note that using the `arrow` attribute with the `pyplot` backend will allow you to control the aesthetics of the arrows.
 ```julia
 using GraphRecipes, Plots
@@ -69,7 +69,7 @@ graphplot(g, names=1:3, curvature_scalar=0.1)
 ```
 
 ![](assets/directed.png)
-#### Edge Labels
+#### Edge Labels -- Only on master!
 Edge labels can be passed via the `edgelabel` keyword argument. You can pass edge labels
 as a dictionary of `(si::Int, di::Int) => label`, where `si`, `di` are the indices of the source and destiny nodes for the edge being labeled. Alternatively, you can pass a matrix or a vector of labels. `graphplot` will try to convert any label you pass it into a string unless you pass one of `missing`, `NaN`, `nothing`, `false` or `""`, in which case, `graphplot` will skip the label.
 
@@ -92,18 +92,18 @@ graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect)
 ```
 
 ![](assets/edgelabel.png)
-#### Self edges
+#### Self edges -- Only on master!
 ```julia
-using LightGraphs, Plots
+using LightGraphs, Plots, GraphRecipes
 
-g = [0 1 1;
-     0 1 0;
-     0 1 0]
+g = [1 1 1;
+     0 0 1;
+     0 0 1]
 
-graphplot(g)
+graphplot(DiGraph(g), self_edge_size=0.2)
 ```
 ![](assets/selfedges.png)
-#### Multigraphs
+#### Multigraphs -- Only on master!
 ```julia
 graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.2)
 ```
@@ -127,7 +127,7 @@ plot(
 
     graphplot(adjmat,
               method=:arcdiagram,
-              markersize=3,
+              markersize=0.5,
               linecolor=:black,
               markercolor=:black)
     )
@@ -159,7 +159,7 @@ plot(code, fontsize=12, shorten=0.01, axis_buffer=0.15, nodeshape=:rect)
 
 ![](assets/AST_example.png)
 
-#### Julia Type Trees
+#### Julia Type Trees -- Only on master!
 
 ```julia
 using GraphRecipes
@@ -172,7 +172,7 @@ plot(AbstractFloat, method=:tree, fontsize=10, nodeshape=:ellipse)
 ![](assets/julia_type_tree.png)
 
 
-#### `AbstractTrees` Trees
+#### `AbstractTrees` Trees -- Only on master!
 
 ```julia
 using AbstractTrees

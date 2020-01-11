@@ -9,7 +9,7 @@ cd(@__DIR__)
 cd("../assets")
 
 n = 15
-Random.seed!(1)
+Random.seed!(2)
 A = Float64[ rand() < 0.5 ? 0 : rand() for i=1:n, j=1:n]
 for i=1:n
     A[i, 1:i-1] = A[1:i-1, i]
@@ -63,11 +63,11 @@ graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect)
 
 savefig("edgelabel.png")
 
-g = [0 1 1;
-     0 1 0;
-     0 1 0]
+g = [1 1 1;
+     0 0 1;
+     0 0 1]
 
-graphplot(g)
+graphplot(DiGraph(g), self_edge_size=0.2)
 
 savefig("selfedges.png")
 
@@ -84,7 +84,7 @@ plot(
 
      graphplot(adjmat,
                method=:arcdiagram,
-               markersize=3,
+               markersize=0.5,
                linecolor=:black,
                markercolor=:black)
                )

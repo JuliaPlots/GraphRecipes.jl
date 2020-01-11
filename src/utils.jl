@@ -264,6 +264,17 @@ function islabel(item)
     ((item isa AbstractFloat) && isnan(item)) && return false
     !in(item, (nothing, false, ""))
 end
+
+function replace_kwarg!(name, sym, plotattributes, graph_aliases)
+    for alias in graph_aliases[sym]
+        if haskey(plotattributes, alias)
+            name = get(plotattributes, alias, name)
+            delete!(plotattributes, alias)
+        end
+    end
+    name
+end
+
 # From Plots/src/utils.jl
 isnothing(x::Nothing) = true
 isnothing(x) = false
