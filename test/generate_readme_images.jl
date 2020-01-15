@@ -9,10 +9,11 @@ cd(@__DIR__)
 cd("../assets")
 
 n = 15
-Random.seed!(2)
+Random.seed!(1)
 A = Float64[ rand() < 0.5 ? 0 : rand() for i=1:n, j=1:n]
 for i=1:n
     A[i, 1:i-1] = A[1:i-1, i]
+    A[i, i] = 0
 end
 x = rand(n)
 y = rand(n)
@@ -71,7 +72,7 @@ graphplot(DiGraph(g), self_edge_size=0.2)
 
 savefig("selfedges.png")
 
-graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.2)
+graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.25)
 savefig("multigraphs.png")
 
 adjmat = Symmetric(sparse(rand(0:1,8,8)))
