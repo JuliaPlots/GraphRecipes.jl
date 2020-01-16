@@ -261,6 +261,14 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                    self_edge_size = 0.1,
                    edge_label_box = true,
                   )
+    # Process the args so that they are a LightGraphs.Graph.
+    if length(g.args) <= 1 && !(eltype(g.args[1]) <: AbstractArray) && !(g.args[1] isa LightGraphs.AbstractGraph) && method != :chorddiagram && method != :arcdiagram
+        if !LinearAlgebra.issymmetric(g.args[1]) || any(diag(g.args[1]) .!= zeros(length(diag(g.args[1]))))
+            g.args = (LightGraphs.DiGraph(g.args[1]),)
+        elseif LinearAlgebra.issymmetric(g.args[1])
+            g.args = (LightGraphs.Graph(g.args[1]),)
+        end
+    end
     # Process GraphRecipes aliases, keywords that are already in Plots.jl have to be dealt
     # with individually, since they cannot be deleted from the plotattributes
     # dictionary.
@@ -345,6 +353,9 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
         x,y = x, -y
     end
 
+    # Since we do nadehapes manually, they only work with aspect_ratio=1.
+    # TODO: rescale the nodeshapes based on the ranges of x,y,z.
+    aspect_ratio --> 1
 
     if method == :arcdiagram
         xl, yl = arcdiagram_limits(x, source, destiny)
@@ -387,8 +398,12 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
     node_vec_vec_xy = []
     nodewidth = 0.0
     nodewidth_array = Vector{Float64}(undef, length(x))
+    if !(nodeshape isa Array)
+        nodeshape = repeat([nodeshape], length(x))
+    end
     if !_3d
         for i in 1:length(x)
+            node_number = i % length(nodeshape) == 0 ? length(nodeshape) : i % length(nodeshape)
             node_weight = isnothing(node_weights) ? 1 : (10 + 100node_weights[i]/sum(node_weights))/50
             xextent, yextent = if isempty(names)
                 [x[i] .+ [-0.5nodesize*node_weight, 0.5nodesize*node_weight], y[i] .+ [-0.5nodesize*node_weight, 0.5nodesize*node_weight]]
@@ -399,24 +414,24 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
             end
             nodewidth = xextent[2] - xextent[1]
             nodewidth_array[i] = nodewidth
-            if nodeshape == :circle
+            if nodeshape[node_number] == :circle
                 push!(node_vec_vec_xy, partialcircle(0, 2π, [x[i], y[i]],
                                                      80, nodewidth/2))
-            elseif (nodeshape == :rect) || (nodeshape == :rectangle)
+            elseif (nodeshape[node_number] == :rect) || (nodeshape[node_number] == :rectangle)
                 push!(node_vec_vec_xy, [(xextent[1],yextent[1]),
                                         (xextent[2],yextent[1]),
                                         (xextent[2],yextent[2]),
                                         (xextent[1],yextent[2]),
                                         (xextent[1],yextent[1])])
-            elseif nodeshape == :hexagon
+            elseif nodeshape[node_number] == :hexagon
                 push!(node_vec_vec_xy, partialcircle(0, 2π, [x[i], y[i]],
                                                      7, nodewidth/2))
-            elseif nodeshape == :ellipse
+            elseif nodeshape[node_number] == :ellipse
                 nodeheight = (yextent[2] - yextent[1])
                 push!(node_vec_vec_xy, partialellipse(0, 2π, [x[i], y[i]],
                                                       80, nodewidth/2, nodeheight/2))
             else
-                error("Unknown nodeshape: $(nodeshape). Choose from :circle, ellipse, :hexagon, :rect or :rectangle.")
+                error("Unknown nodeshape: $(nodeshape[node_number]). Choose from :circle, ellipse, :hexagon, :rect or :rectangle.")
             end
         end
     else
