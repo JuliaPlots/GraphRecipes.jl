@@ -17,6 +17,7 @@ const n = 15
 const A = Float64[ rand() < 0.5 ? 0 : rand() for i=1:n, j=1:n]
 for i=1:n
     A[i, 1:i-1] = A[1:i-1, i]
+    A[i, i] = 0
 end
 
 graphplot(A,
@@ -57,7 +58,7 @@ graphplot(g, curves=false)
 ```
 
 ![](assets/LightGraphs.png)
-#### Directed Graphs -- Only on master!
+#### Directed Graphs
 I you pass `graphplot` a `LightGraphs.DiGraph` or an asymmetric adjacency matrix, then `graphplot` will use arrows to indicate the direction of the edges. Note that using the `arrow` attribute with the `pyplot` backend will allow you to control the aesthetics of the arrows.
 ```julia
 using GraphRecipes, Plots
@@ -69,7 +70,7 @@ graphplot(g, names=1:3, curvature_scalar=0.1)
 ```
 
 ![](assets/directed.png)
-#### Edge Labels -- Only on master!
+#### Edge Labels
 Edge labels can be passed via the `edgelabel` keyword argument. You can pass edge labels
 as a dictionary of `(si::Int, di::Int) => label`, where `si`, `di` are the indices of the source and destiny nodes for the edge being labeled. Alternatively, you can pass a matrix or a vector of labels. `graphplot` will try to convert any label you pass it into a string unless you pass one of `missing`, `NaN`, `nothing`, `false` or `""`, in which case, `graphplot` will skip the label.
 
@@ -92,7 +93,7 @@ graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect)
 ```
 
 ![](assets/edgelabel.png)
-#### Self edges -- Only on master!
+#### Self edges
 ```julia
 using LightGraphs, Plots, GraphRecipes
 
@@ -103,7 +104,7 @@ g = [1 1 1;
 graphplot(DiGraph(g), self_edge_size=0.2)
 ```
 ![](assets/selfedges.png)
-#### Multigraphs -- Only on master!
+#### Multigraphs
 ```julia
 graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.25)
 ```
@@ -159,7 +160,7 @@ plot(code, fontsize=12, shorten=0.01, axis_buffer=0.15, nodeshape=:rect)
 
 ![](assets/AST_example.png)
 
-#### Julia Type Trees -- Only on master!
+#### Julia Type Trees
 
 ```julia
 using GraphRecipes
@@ -172,7 +173,7 @@ plot(AbstractFloat, method=:tree, fontsize=10, nodeshape=:ellipse)
 ![](assets/julia_type_tree.png)
 
 
-#### `AbstractTrees` Trees -- Only on master!
+#### `AbstractTrees` Trees
 
 ```julia
 using AbstractTrees
