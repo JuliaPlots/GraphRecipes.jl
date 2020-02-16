@@ -287,6 +287,7 @@ ignorenan_extrema(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.extrem
 function extrema_plus_buffer(v, buffmult = 0.2)
     vmin,vmax = extrema(v)
     vdiff = vmax-vmin
-    buffer = vdiff * buffmult
+    zero_buffer = vdiff == 0 ? 1.0 : 0.0
+    buffer = (vdiff+zero_buffer) * buffmult
     vmin - buffer, vmax + buffer
 end

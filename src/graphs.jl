@@ -356,13 +356,16 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
     # Since we do nadehapes manually, they only work with aspect_ratio=1.
     # TODO: rescale the nodeshapes based on the ranges of x,y,z.
     aspect_ratio --> 1
+    if length(axis_buffer) == 1
+        axis_buffer = fill(axis_buffer, dim)
+    end
 
     if method == :arcdiagram
         xl, yl = arcdiagram_limits(x, source, destiny)
         xlims --> xl
         ylims --> yl
         ratio --> :equal
-    elseif axis_buffer < 0 # equal axes
+    elseif all(axis_buffer .< 0) # equal axes
         ahw = 1.2 * 0.5 * maximum(v -> maximum(v)-minimum(v), xyz)
         xcenter = mean(extrema(x))
         #xlims --> (xcenter-ahw, xcenter+ahw)
@@ -381,15 +384,15 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
             ylims = ignorenan_extrema(y)
             y /= (ylims[2] - ylims[1])
         end
-        xlims --> extrema_plus_buffer(x, axis_buffer)
-        ylims --> extrema_plus_buffer(y, axis_buffer)
+        xlims --> extrema_plus_buffer(x, axis_buffer[1])
+        ylims --> extrema_plus_buffer(y, axis_buffer[2])
         if _3d
             if method != :chorddiagram && numnothing > 0
                 zlims = ignorenan_extrema(z)
                 z .-= mean(z)
                 z /= (zlims[2] - zlims[1])
             end
-            zlims --> extrema_plus_buffer(z, axis_buffer)
+            zlims --> extrema_plus_buffer(z, axis_buffer[3])
         end
     end
     # center and rescale to the widest of all dimensions
@@ -473,6 +476,9 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
         for edge in zip(source, destiny)
             edge_has_been_seen[edge] = 0
         end
+        if length(curvature_scalar) == 1
+            curvature_scalar = fill(curvature_scalar, size(g.args[1])[1], size(g.args[1])[1])
+        end
         for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
             edge_has_been_seen[(si, di)] += 1
             @series begin
@@ -497,8 +503,15 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                     xdi = x[di] + nodewidth_array[di]*cos(α)/2
                     ydi = y[di] + nodewidth_array[di]*sin(α)/2
                     if nodeshape != :circle
+                        xpt, ypt = if method != :chorddiagram
+                            control_point(xsi, xdi,
+                                          ysi, ydi,
+                                          edge_has_been_seen[(si, di)]*curvature_scalar[si, di]*sign(si - di))
+                        end
                         xsi, ysi, xdi, ydi = nearest_intersection(x[si], y[si], xdi, ydi,
                                                                   node_vec_vec_xy[di])
+                        _, _, xdi, ydi = nearest_intersection(xpt, ypt, x[di], y[di],
+                                                              node_vec_vec_xy[di])
                     end
                 end
                 if curves
@@ -535,7 +548,7 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                         xpt, ypt = if method != :chorddiagram
                             control_point(xsi, x[di],
                                           ysi, y[di],
-                                          edge_has_been_seen[(si, di)]*curvature_scalar*sign(si - di))
+                                          edge_has_been_seen[(si, di)]*curvature_scalar[si, di]*sign(si - di))
                         else
                             (0.0, 0.0)
                         end
@@ -552,7 +565,7 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                             q = control_point(xsi, x[di],
                                               ysi, y[di],
                                               (edgelabel_offset
-                                              + edge_has_been_seen[(si, di)]*curvature_scalar)*sign(si - di))
+                                              + edge_has_been_seen[(si, di)]*curvature_scalar[si, di])*sign(si - di))
                             push!(edge_label_array,
                                   (q...,
                                    string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
