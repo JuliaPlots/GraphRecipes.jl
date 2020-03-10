@@ -34,7 +34,6 @@ graphplot(g,
 ```
 ![juliagraph](https://user-images.githubusercontent.com/8610352/76132303-27016900-6077-11ea-8fb1-d613c4ddda59.png)
 
+Original author: Thomas Breloff (@tbreloff)
 
-### Primary author: Thomas Breloff (@tbreloff)
-
-This repo maintains a collection of recipes for graph analysis, and is a reduced and refactored version of the previous PlotRecipes. It uses the powerful machinery of [Plots](https://github.com/JuliPlots/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations. Recently, the JuliaPlots organization has taken over the maintenance of GraphRecipes, so contacting them (via opening an issue on this repo) will be a faster way to resolve issues than contacting Tom Brellof.
+This repo maintains a collection of recipes for graph analysis, and is a reduced and refactored version of the previous PlotRecipes. It uses the powerful machinery of [Plots](https://github.com/JuliPlots/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl) to turn simple transformations into flexible visualizations.
