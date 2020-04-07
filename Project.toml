@@ -24,7 +24,7 @@ LightGraphs = "1.3.0"
 NaNMath = "0.3.3"
 NetworkLayout = "0.2.0"
 PlotUtils = "0.6.2"
-RecipesBase = "0.7, 0.8"
+RecipesBase = "0.7, 0.8, 1"
 julia = "^1"
 
 [extras]
