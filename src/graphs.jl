@@ -220,9 +220,16 @@ end
 
 const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                            :node_weights => [:nodeweights],
-                           :nodeshape => [:node_shape],
-                           :nodesize => [:node_size],
-                           :nodecolor => [:marker_color],
+                           :nodeshape => [:node_shape,:markershape],
+                           :nodesize => [:node_size,:markersize],
+                           :nodecolor => [:marker_color,:markercolor],
+                           :node_z => [:marker_z],
+                           :nodestrokealpha => [:markerstrokealpha],
+                           :nodealpha => [:markeralpha],
+                           :nodestrokewidth => [:markerstrokewidth],
+                           :nodestrokealpha => [:markerstrokealpha],
+                           :nodestrokecolor => [:markerstrokecolor],
+                           :nodestrokestyle => [:markerstrokestyle],
                            :shorten => [:shorten_edge],
                            :axis_buffer => [:axisbuffer],
                            :edgewidth => [:edge_width,:ew],
@@ -232,6 +239,50 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                            :edge_label_box => [:edgelabelbox,:edgelabel_box,:elb],
 )
 
+"""
+    graphplot(g; kwargs...)
+
+Visualize the graph `g`, where `g` represents a graph via a matrix or a
+`LightGraphs.graph`.
+## Keyword arguments
+```
+dim = 2
+free_dims = nothing
+T = Float64
+curves = true
+curvature_scalar = 0.05
+root = :top
+node_weights = nothing
+names = []
+fontsize = 7
+nodeshape = :hexagon
+nodesize = 0.1
+node_z = nothing
+nodecolor = 1
+nodestrokealpha = 1
+nodealpha = 1
+nodestrokewidth = 1
+nodestrokealpha = 0.5
+nodestrokecolor = :black
+nodestrokestyle = :solid
+x = nothing
+y = nothing
+z = nothing
+method = :stress
+func = get(_graph_funcs, method, by_axis_local_stress_graph)
+shorten = 0.0
+axis_buffer = 0.2
+layout_kw = Dict{Symbol,Any}()
+edgewidth = (s,d,w)->1
+edgelabel = nothing
+edgelabel_offset = 0.0
+self_edge_size = 0.1
+edge_label_box = true
+```
+
+See the [documentation]( http://docs.juliaplots.org/latest/graphrecipes/introduction/ ) for
+more details.
+"""
 @userplot GraphPlot
 
 @recipe function f(g::GraphPlot;
@@ -246,7 +297,14 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                    fontsize = 7,
                    nodeshape = :hexagon,
                    nodesize = 0.1,
+                   node_z = nothing,
                    nodecolor = 1,
+                   nodestrokealpha = 1,
+                   nodealpha = 1,
+                   nodestrokewidth = 1,
+                   nodestrokealpha = 0.5,
+                   nodestrokecolor = :black,
+                   nodestrokestyle = :solid,
                    x = nothing,
                    y = nothing,
                    z = nothing,
@@ -269,38 +327,27 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
             g.args = (LightGraphs.Graph(g.args[1]),)
         end
     end
-    # Process GraphRecipes aliases, keywords that are already in Plots.jl have to be dealt
-    # with individually, since they cannot be deleted from the plotattributes
-    # dictionary.
-    if haskey(plotattributes, :markercolor)
-        plotattributes[:nodecolor] = nodecolor
-        nodecolor = plotattributes[:markercolor]
-        delete!(plotattributes, :nodecolor)
-    end
-    if haskey(plotattributes, :markersize)
-        plotattributes[:nodesize] = nodesize
-        nodesize = plotattributes[:markersize]
-        delete!(plotattributes, :nodesize)
-    end
-    if haskey(plotattributes, :markershape)
-        plotattributes[:nodeshape] = nodeshape
-        nodeshape = plotattributes[:markershape]
-        delete!(plotattributes, :nodeshape)
-    end
 
-    curvature_scalar = replace_kwarg!(curvature_scalar, :curvature_scalar, plotattributes, graph_aliases)
-    node_weights = replace_kwarg!(node_weights, :node_weights, plotattributes, graph_aliases)
-    nodeshape = replace_kwarg!(nodeshape, :nodeshape, plotattributes, graph_aliases)
-    nodesize = replace_kwarg!(nodesize, :nodesize, plotattributes, graph_aliases)
-    nodecolor = replace_kwarg!(nodecolor, :nodecolor, plotattributes, graph_aliases)
-    shorten = replace_kwarg!(shorten, :shorten, plotattributes, graph_aliases)
-    axis_buffer = replace_kwarg!(axis_buffer, :axis_buffer, plotattributes, graph_aliases)
-    edgewidth = replace_kwarg!(edgewidth, :edgewidth, plotattributes, graph_aliases)
-    edgelabel = replace_kwarg!(edgelabel, :edgelabel, plotattributes, graph_aliases)
-    edgelabel_offset = replace_kwarg!(edgelabel_offset, :edgelabel_offset, plotattributes, graph_aliases)
-    self_edge_size = replace_kwarg!(self_edge_size, :self_edge_size, plotattributes, graph_aliases)
-    edge_label_box = replace_kwarg!(edge_label_box, :edge_label_box, plotattributes, graph_aliases)
-    edgelabel = replace_kwarg!(edgelabel, :edgelabel, plotattributes, graph_aliases)
+    # To process aliases that are unique to graphplot, find aliases that are in
+    # plotattributes and replace the attributes with their aliases. Then delete the alias
+    # names from the plotattributes dictionary.
+    @process_aliases plotattributes graph_aliases
+    for arg in keys(graph_aliases)
+        remove_aliases!(arg, plotattributes, graph_aliases)
+    end
+    # The above process will remove all marker properties from the plotattributes
+    # dictionary. To enusre consistency between markers and nodes, we replace all marker
+    # properties with the corresponding node property.
+    marker_node_collection = zip([:markershape,:markersize,:markercolor,
+                                  :marker_z,:markerstrokealpha,:markeralpha,
+                                  :markerstrokewidth,:markerstrokealpha,
+                                  :markerstrokecolor,:markerstrokestyle],
+                                 [nodeshape,nodesize,nodecolor,node_z,nodestrokealpha,
+                                  nodealpha,nodestrokewidth,nodestrokealpha,
+                                  nodestrokecolor,nodestrokestyle])
+    for (markerproperty, nodeproperty) in marker_node_collection
+        plotattributes[markerproperty] = nodeproperty
+    end
 
     @assert dim in (2, 3)
     _3d = dim == 3
@@ -706,9 +753,11 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                     :path
                 end
             end
-            linewidth --> linewidthattr * edgewidth(si, di, wi)
+            colorbar_entry --> false
+            linewidth := linewidthattr * edgewidth(si, di, wi)
             markershape := :none
             markercolor := :black
+            marker_z := nothing
             isdirected && (arrow --> :simple, :head, 0.3, 0.3)
             primary := false
             _3d ? (xseg, yseg, zseg) : (xseg, yseg)
@@ -730,9 +779,11 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
                 index += 1
                 @series begin
                     seriestype := :shape
+
+                    colorbar_entry --> false
                     fillcolor --> get(plotattributes, :background_color, :white)
-                    linewidth := 0
-                    linealpha := 0
+                    linewidth --> 0
+                    linealpha --> 0
                     edge_label_box_vertices = edge_label_box_vertices_array[index]
                     ([edge_label_box_vertices[1][1], edge_label_box_vertices[1][2],
                       edge_label_box_vertices[1][2], edge_label_box_vertices[1][1],
@@ -772,63 +823,63 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
             [ [ xy[1] for xy in vec_xy ] for vec_xy in vec_vec_xy ], [ [ xy[2] for xy in vec_xy ] for vec_xy in vec_vec_xy ]
         end
     else
-        if isempty(names)
-            if _3d
-                seriestype := :scatter3d
-                linewidth := 0
-                linealpha := 0
-                series_annotations --> map(string,names)
-                markersize --> (10 .+ (100 .* node_weights) ./ sum(node_weights))
-            else
-                for (i, vec_xy) in enumerate(node_vec_vec_xy)
-                    @series begin
-                        if !_3d
-                            seriestype := :shape
-                            tmp = nodecolor isa AbstractArray ? nodecolor[i] : nodecolor
-                            fillcolor --> tmp
-                            linewidth := 0
-                            linealpha := 0
-                            ([xy[1] for xy in vec_xy], [xy[2] for xy in vec_xy])
-                        else  # TODO make 3d work.
-                            seriestype := :volume
-                            ([[xyz[1] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
-                             [[xyz[2] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
-                             [[xyz[3] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz])
-                        end
-                    end
-                    seriestype := :scatter
-                    markersize := 0
-                    markeralpha := 0
-                end
-                !isnothing(edgelabel) && (annotation := edge_label_array)
-            end
+        if _3d
+            seriestype := :scatter3d
+            linewidth := 0
+            linealpha := 0
+            markercolor := nodecolor
+            series_annotations --> map(string,names)
+            markersize --> (10 .+ (100 .* node_weights) ./ sum(node_weights))
         else
-            @assert !_3d  # TODO: make this work in 3D
-            for (i, vec_xy) in enumerate(node_vec_vec_xy)
-                @series begin
-                    if !_3d
-                        seriestype := :shape
-                        tmp = nodecolor isa AbstractArray ? nodecolor[i] : nodecolor
-                        fillcolor --> tmp
-                        linewidth := 0
-                        linealpha := 0
-                        ([xy[1] for xy in vec_xy], [xy[2] for xy in vec_xy])
-                    else  # TODO make 3d work.
-                        seriestype := :volume
-                        ([[xyz[1] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
-                         [[xyz[2] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
-                         [[xyz[3] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz])
-                    end
+            @series begin
+                seriestype := :shape
+
+                colorbar_entry --> true
+                fill_z --> node_z
+                fillcolor --> nodecolor
+                fillalpha --> nodealpha
+                linewidth := nodestrokewidth
+                linealpha := nodestrokealpha
+                linecolor := nodestrokecolor
+                linestyle := nodestrokestyle
+
+                nodeperimeters = (T[], T[])
+                for (i, vec_xy) in enumerate(node_vec_vec_xy)
+                        append!(nodeperimeters[1], [xy[1] for xy in vec_xy])
+                        push!(nodeperimeters[1], NaN)
+
+                        append!(nodeperimeters[2], [xy[2] for xy in vec_xy])
+                        push!(nodeperimeters[2], NaN)
                 end
+                nodeperimeters
+
+                # if _3d
+                #     seriestype := :volume
+                #     ([[xyz[1] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
+                #      [[xyz[2] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
+                #      [[xyz[3] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz])
+                # end
             end
-            seriestype := :scatter
-            markersize := 0
-            markeralpha := 0
-            annotations := [edge_label_array ; [(x[i], y[i],
-                                                names[ifelse(i % length(names) == 0,
-                                                              length(names),
-                                                              i % length(names))],
-                                                fontsize) for i in 1:length(x)]]
+
+            if isempty(names)
+                seriestype := :scatter
+
+                colorbar_entry --> false
+                markersize --> 0
+                markeralpha --> 0
+                !isnothing(edgelabel) && (annotation --> edge_label_array)
+            else
+                seriestype := :scatter
+
+                colorbar_entry --> false
+                markersize --> 0
+                markeralpha --> 0
+                annotations --> [edge_label_array ; [(x[i], y[i],
+                                                    names[ifelse(i % length(names) == 0,
+                                                                  length(names),
+                                                                  i % length(names))],
+                                                    fontsize) for i in 1:length(x)]]
+            end
         end
     end
     xyz
