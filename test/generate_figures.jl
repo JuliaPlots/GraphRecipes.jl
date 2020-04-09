@@ -7,8 +7,12 @@ using LightGraphs
 using AbstractTrees
 
 cd(@__DIR__)
+include("parse_readme.jl")
 include("functions.jl")
 cd("../assets")
+
+julia_logo_pun()
+savefig("readme_julia_logo_pun.png")
 
 random_labelled_graph()[1]
 savefig("random_labelled_graph.png")

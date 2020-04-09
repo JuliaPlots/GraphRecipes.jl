@@ -262,7 +262,6 @@ nodecolor = 1
 nodestrokealpha = 1
 nodealpha = 1
 nodestrokewidth = 1
-nodestrokealpha = 0.5
 nodestrokecolor = :black
 nodestrokestyle = :solid
 x = nothing
@@ -302,7 +301,6 @@ more details.
                    nodestrokealpha = 1,
                    nodealpha = 1,
                    nodestrokewidth = 1,
-                   nodestrokealpha = 0.5,
                    nodestrokecolor = :black,
                    nodestrokestyle = :solid,
                    x = nothing,

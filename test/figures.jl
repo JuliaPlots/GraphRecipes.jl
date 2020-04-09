@@ -8,6 +8,7 @@ using AbstractTrees
 
 cd(@__DIR__)
 include("functions.jl")
+include("parse_readme.jl")
 
 istravis = "TRAVIS" ∈ keys(ENV)
 
@@ -20,9 +21,9 @@ cd("../assets")
 
     @plottest random_3d_graph() "random_3d_graph.png" popup=!istravis tol=0.02
 
-    @plottest light_graphs "light_graphs.png" popup=!istravis tol=0.02
+    @plottest light_graphs() "light_graphs.png" popup=!istravis tol=0.02
 
-    @plottest directed "directed.png" popup=!istravis tol=0.02
+    @plottest directed() "directed.png" popup=!istravis tol=0.02
 
     @plottest marker_properties() "marker_properties.png" popup=!istravis tol=0.02
 
@@ -40,4 +41,8 @@ cd("../assets")
 
     @plottest julia_dict_tree() "julia_dict_tree.png" popup=!istravis tol=0.2
 
+end
+
+@testset "README" begin
+    @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup=!istravis tol=0.2
 end
