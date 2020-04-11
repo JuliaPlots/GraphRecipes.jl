@@ -258,7 +258,7 @@ fontsize = 7
 nodeshape = :hexagon
 nodesize = 0.1
 node_z = nothing
-nodecolor = 1
+nodecolor = "#cc6ea0"
 nodestrokealpha = 1
 nodealpha = 1
 nodestrokewidth = 1
@@ -297,7 +297,7 @@ more details.
                    nodeshape = :hexagon,
                    nodesize = 0.1,
                    node_z = nothing,
-                   nodecolor = 1,
+                   nodecolor = "#cc6ea0",
                    nodestrokealpha = 1,
                    nodealpha = 1,
                    nodestrokewidth = 1,
