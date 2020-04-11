@@ -265,14 +265,29 @@ function islabel(item)
     !in(item, (nothing, false, ""))
 end
 
-function replace_kwarg!(name, sym, plotattributes, graph_aliases)
+function replacement_kwarg(sym, name, plotattributes, graph_aliases)
+    replacement = name
     for alias in graph_aliases[sym]
         if haskey(plotattributes, alias)
-            name = get(plotattributes, alias, name)
+            replacement = plotattributes[alias]
+        end
+    end
+    replacement
+end
+
+macro process_aliases(plotattributes, graph_aliases)
+    ex = Expr(:block)
+    attributes = getfield(__module__, graph_aliases) |> keys
+    ex.args = [Expr(:(=), esc(sym), :($(esc(replacement_kwarg))($(QuoteNode(sym)), $(esc(sym)), $(esc(plotattributes)), $(esc(graph_aliases))))) for sym in attributes]
+    ex
+end
+
+function remove_aliases!(sym, plotattributes, graph_aliases)
+    for alias in graph_aliases[sym]
+        if haskey(plotattributes, alias)
             delete!(plotattributes, alias)
         end
     end
-    name
 end
 
 # From Plots/src/utils.jl

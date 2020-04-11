@@ -2,7 +2,7 @@ using GraphRecipes
 using Plots
 using Test
 
-include("readme.jl")
+include("figures.jl")
 
 @testset "utils.jl" begin
 
