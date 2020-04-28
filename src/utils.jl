@@ -114,6 +114,18 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
     xs, ys, ret[1], ret[2]
 end
 
+function nearest_intersection(xs, ys, xd, yd, vec_xy_d::GeometryTypes.Circle)
+    if xs == xd && ys == yd
+        return xs, ys, xd, yd
+    end
+
+    α = atan(ys - yd, xs - xd)
+    xd = xd + vec_xy_d.r*cos(α)
+    yd = yd + vec_xy_d.r*sin(α)
+
+    xs, ys, xd, yd
+end
+
 function nearest_intersection(xs, ys, zs, xd, yd, zd, vec_xyz_d)
     # TODO make 3d work.
 end
@@ -188,6 +200,11 @@ theta will have maximum distance from the points [x[i],y[i]]
 """
 function unoccupied_angle(x1, y1, x, y)
     @assert length(x) == length(y)
+
+    if length(x) == 1
+        return atan(y[1] - y1, x[1] - x1) + pi
+    end
+
     max_range = zeros(2)
     # Calculate all angles between the point [x1,y1] and all points [x[i],y[i]], make sure
     # that all of the angles are between 0 and 2pi
@@ -209,6 +226,23 @@ function unoccupied_angle(x1, y1, x, y)
     # Return the angle that is in the middle of the two angles subtending the largest
     # empty angle.
     clockwise_mean(max_range)
+end
+
+function process_edge_attribute(attr, source, destiny, weights)
+    if isnothing(attr) || (attr isa Symbol)
+        return attr
+    elseif attr isa LightGraphs.AbstractGraph
+        mat = incidence_matrix(attr)
+        attr = [mat[si, di] for (si, di) in zip(source, destiny)][:] |> permutedims
+    elseif attr isa Function
+        attr = [attr(si, di, wi) for (i, (si, di, wi)) in
+                enumerate(zip(source, destiny, weights))][:] |> permutedims
+    elseif attr isa Dict
+        attr = [attr[(si, di)] for (si, di) in zip(source, destiny)][:] |> permutedims
+    elseif all(size(attr) .!= 1)
+        attr = [attr[si, di] for (si, di) in zip(source, destiny)][:] |> permutedims
+    end
+    attr
 end
 # Function from Plots/src/components.jl
 "get an array of tuples of points on a circle with radius `r`"

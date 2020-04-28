@@ -41,6 +41,7 @@ cd("../assets")
 
     @plottest julia_dict_tree() "julia_dict_tree.png" popup=!istravis tol=0.2
 
+    @plottest funky_edge_and_marker_args() "funky_edge_and_marker_args.png" popup=!istravis tol=0.2
 end
 
 @testset "README" begin
