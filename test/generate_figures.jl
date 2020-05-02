@@ -49,3 +49,6 @@ savefig("julia_type_tree.png")
 
 julia_dict_tree()
 savefig("julia_dict_tree.png")
+
+funky_edge_and_marker_args()
+savefig("funky_edge_and_marker_args.png")

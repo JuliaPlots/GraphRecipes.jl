@@ -85,6 +85,7 @@ function arc_chord_diagrams()
          graphplot(adjmat,
                    method=:arcdiagram,
                    markersize=0.5,
+                   markershape=:circle,
                    linecolor=:black,
                    markercolor=:black)
     )
@@ -138,4 +139,49 @@ function julia_dict_tree()
     d = Dict(:a => 2,:d => Dict(:b => 4,:c => "Hello"),:e => 5.0)
 
     plot(TreePlot(d), method=:tree, fontsize=10, nodeshape=:ellipse, size=(1000, 1000))
+end
+
+function funky_edge_and_marker_args()
+    n = 5
+    g = SimpleDiGraph(n)
+
+    add_edge!(g, 1, 2)
+    add_edge!(g, 2, 3)
+    add_edge!(g, 3, 4)
+    add_edge!(g, 4, 4)
+    add_edge!(g, 4, 5)
+
+    curviness_matrix = zeros(n,n)
+    edgewidth_matrix = zeros(n,n)
+    edgestyle_dict = Dict()
+    for e in edges(g)
+        curviness_matrix[e.src,e.dst] = 0.5sin(e.src)
+        edgewidth_matrix[e.src,e.dst] = 0.8e.dst
+        edgestyle_dict[(e.src,e.dst)] = e.src < 2.0 ? :solid :
+                                        e.src > 3.0 ? :dash : :dot
+    end
+    edge_z_function = (s,d,w) -> curviness_matrix[s,d]
+
+    graphplot(g, names=[" I "," am "," a ","funky","graph"],
+        x=[1,2,3,4,5],
+        y=[5,4,3,2,1],
+        nodesize=0.3,
+        size=(1000,1000),
+        axis_buffer=0.6,
+        fontsize=16,
+        self_edge_size=1.3,
+        curvature_scalar=curviness_matrix,
+        edgestyle=edgestyle_dict,
+        edgewidth=edgewidth_matrix,
+        edge_z=edge_z_function,
+        nodeshape=:circle,
+        node_z=[1,2,3,4,5],
+        nodestroke_z=[5,4,3,2,1],
+        edgecolor=:viridis,
+        markercolor=:viridis,
+        nodestrokestyle=[:dash,:solid,:dot],
+        nodestrokewidth=6,
+        linewidth=2,
+        colorbar=true,
+    )
 end
