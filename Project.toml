@@ -26,7 +26,6 @@ NetworkLayout = "0.2.0"
 PlotUtils = "0.6.2, 1"
 RecipesBase = "0.7, 0.8, 1"
 julia = "^1"
-ImageIO = "0.1.0, 0.1.1"
 
 [extras]
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
@@ -37,7 +36,6 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
-ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
 
 [targets]
-test = ["VisualRegressionTests", "LinearAlgebra", "Plots", "ImageMagick", "Random", "SparseArrays", "Test", "Markdown", "ImageIO"]
+test = ["VisualRegressionTests", "LinearAlgebra", "Plots", "ImageMagick", "Random", "SparseArrays", "Test", "Markdown"]
