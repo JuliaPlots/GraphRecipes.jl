@@ -25,7 +25,7 @@ cd("../assets")
 
     @plottest directed() "directed.png" popup=!istravis tol=0.02
 
-    @plottest marker_properties() "marker_properties.png" popup=!istravis tol=0.02
+    @plottest marker_properties() "marker_properties.png" popup=!istravis tol=0.04
 
     @plottest edgelabel() "edgelabel.png" popup=!istravis tol=0.1
 
