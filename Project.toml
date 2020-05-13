@@ -1,6 +1,6 @@
 name = "GraphRecipes"
 uuid = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
-version = "0.5.3"
+version = "0.5.4"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
@@ -36,7 +36,6 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
-ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
 
 [targets]
 test = ["VisualRegressionTests", "LinearAlgebra", "Plots", "ImageMagick", "Random", "SparseArrays", "Test", "Markdown"]
