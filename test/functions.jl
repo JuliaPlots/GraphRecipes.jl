@@ -142,6 +142,7 @@ function julia_dict_tree()
 end
 
 function funky_edge_and_marker_args()
+    Random.seed!(6)
     n = 5
     g = SimpleDiGraph(n)
 
