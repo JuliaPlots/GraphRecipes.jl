@@ -359,7 +359,7 @@ more details.
     _3d = dim == 3
     adj_mat = get_adjacency_matrix(g.args...)
     isdirected = (g.args[1] isa DiGraph || !issymmetric(adj_mat)) &&
-                 !in(method, (:tree, :buchheim)) && !(get(plotattributes, :arrow, false) == false)
+                 !in(method, (:tree, :buchheim)) && !(get(plotattributes, :arrow, true) == false)
     if isdirected && (g.args[1] isa Matrix)
         g = GraphPlot((adjacency_matrix(DiGraph(g.args[1])),))
     end
