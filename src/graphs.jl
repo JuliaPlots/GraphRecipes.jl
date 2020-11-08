@@ -487,6 +487,9 @@ more details.
                 nodeheight = (yextent[2] - yextent[1])
                 push!(node_vec_vec_xy, partialellipse(0, 2π, [x[i], y[i]],
                                                       80, nodewidth/2, nodeheight/2))
+            elseif applicable(nodeshape[node_number], x[i], y[i], 0., 0.)
+                nodeheight = (yextent[2] - yextent[1])
+                push!(node_vec_vec_xy, nodeshape[node_number](x[i], y[i], nodewidth/2, nodeheight/2))
             else
                 error("Unknown nodeshape: $(nodeshape[node_number]). Choose from :circle, ellipse, :hexagon, :rect or :rectangle.")
             end
