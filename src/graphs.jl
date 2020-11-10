@@ -355,6 +355,11 @@ more details.
         plotattributes[markerproperty] = nodeproperty
     end
 
+    # Remove the markershapes from the dictionary to allow for nodeshapes not 
+    # compatible with the shapes of plotting ( Custom nodeshape functions don't
+    # work without this line)
+    plotattributes[:markershape] = :none
+
     @assert dim in (2, 3)
     _3d = dim == 3
     adj_mat = get_adjacency_matrix(g.args...)
@@ -489,9 +494,11 @@ more details.
                                                       80, nodewidth/2, nodeheight/2))
             elseif applicable(nodeshape[node_number], x[i], y[i], 0., 0.)
                 nodeheight = (yextent[2] - yextent[1])
-                push!(node_vec_vec_xy, nodeshape[node_number](x[i], y[i], nodewidth/2, nodeheight/2))
+                push!(node_vec_vec_xy, nodeshape[node_number](x[i], y[i], nodewidth, nodeheight))
+            elseif applicable(nodeshape[node_number], x[i], y[i], 0.)
+                push!(node_vec_vec_xy, nodeshape[node_number](x[i], y[i], nodewidth))
             else
-                error("Unknown nodeshape: $(nodeshape[node_number]). Choose from :circle, ellipse, :hexagon, :rect or :rectangle.")
+                error("Unknown nodeshape: $(nodeshape[node_number]). Choose from :circle, ellipse, :hexagon, :rect or :rectangle or write a function providing custom shapes.")
             end
         end
     else

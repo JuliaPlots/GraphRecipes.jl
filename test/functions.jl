@@ -141,6 +141,38 @@ function julia_dict_tree()
     plot(TreePlot(d), method=:tree, fontsize=10, nodeshape=:ellipse, size=(1000, 1000))
 end
 
+function custom_nodeshapes()
+    function shapy(x_i,y_i, s)
+        out = Tuple{Float64, Float64}[(-0.5,0),(0,-0.5),(0.5,0),(0,0.5)]
+	map(out) do t
+            x = t[1]* s 
+            y = t[2]* s
+            (
+             x + x_i, 
+             y + y_i 
+            )
+	end
+    end
+    function shapy_wh(x_i,y_i, h, w)
+        out = Tuple{Float64, Float64}[(-0.5,0),(0,-0.5),(0.5,0),(0,0.5)]
+	map(out) do t
+            x = t[1]* h 
+            y = t[2]* w
+            (
+             x + x_i, 
+             y + y_i 
+            )
+	end
+    end
+    Random.seed!(6)
+    g = rand(5,5)
+    g[g .> 0.5] .= 0
+    for i in 1:5
+        g[i,i] = 0
+    end
+    graphplot(g, nodeshape=[:circle, shapy, shapy_wh, :hexagon, shapy])
+end
+
 function funky_edge_and_marker_args()
     Random.seed!(6)
     n = 5
