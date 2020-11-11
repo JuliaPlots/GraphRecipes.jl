@@ -358,7 +358,7 @@ more details.
     # Remove the markershapes from the dictionary to allow for nodeshapes not 
     # compatible with the shapes of plotting ( Custom nodeshape functions don't
     # work without this line)
-    plotattributes[:markershape] = :none
+    plotattributes[:markershape] = :circle
 
     @assert dim in (2, 3)
     _3d = dim == 3
