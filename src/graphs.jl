@@ -501,7 +501,7 @@ more details.
             elseif applicable(nodeshape[node_number], x[i], y[i], 0.)
                 push!(node_vec_vec_xy, nodeshape[node_number](x[i], y[i], nodewidth))
             else
-                error("Unknown nodeshape: $(nodeshape[node_number]). Choose from :circle, ellipse, :hexagon, :rect or :rectangle or write a function providing custom shapes.")
+                error("Unknown nodeshape: $(nodeshape[node_number]). Choose from :circle, ellipse, :hexagon, :rect or :rectangle or or a custom shape. Custom shapes can be passed as a function customshape such that customshape(x, y, nodeheight, nodewidth) -> nodeperimeter/ customshape(x, y, nodescale) -> nodeperimeter. nodeperimeter must be an array of 2-tuples, where each tuple is a corner of your custom shape, centered at (x, y) and with height nodeheight, width nodewidth or only a nodescale for symmetrically scaling shapes.")
             end
         end
     else
