@@ -142,15 +142,7 @@ function julia_dict_tree()
 end
 
 function diamond_nodeshape(x_i, y_i, s)
-    out = Tuple{Float64, Float64}[(-0.5,0),(0,-0.5),(0.5,0),(0,0.5)]
-    map(out) do t
-        x = t[1]* s 
-        y = t[2]* s
-        (
-         x + x_i, 
-         y + y_i 
-        )
-    end
+    [(x_i + 0.5s*dx, y_i + 0.5s*dy) for (dx, dy) in [(1,1),(-1,1),(-1,-1),(1,-1)]]
 end
 function diamond_nodeshape_wh(x_i, y_i, h, w)
     out = Tuple{Float64, Float64}[(-0.5,0),(0,-0.5),(0.5,0),(0,0.5)]
