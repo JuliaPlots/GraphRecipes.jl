@@ -355,10 +355,13 @@ more details.
         plotattributes[markerproperty] = nodeproperty
     end
 
-    # Remove the markershapes from the dictionary to allow for nodeshapes not 
-    # compatible with the shapes of plotting ( Custom nodeshape functions don't
-    # work without this line)
-    plotattributes[:markershape] = :circle
+    # If we pass a value of plotattributes[:markershape] that the backend does not
+    # recognize, then the backend will throw an error. The error is thrown despite the
+    # fact that we override the default behavior. Custom nodehapes are incompatible
+    # with the backend's markershapes and thus replaced.
+    if nodeshape isa Function || nodeshape isa Array && any([s isa Function for s in nodeshape])
+        plotattributes[:markershape] = :circle
+    end
 
     @assert dim in (2, 3)
     _3d = dim == 3

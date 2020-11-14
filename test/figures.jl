@@ -43,7 +43,9 @@ cd("../assets")
 
     @plottest funky_edge_and_marker_args() "funky_edge_and_marker_args.png" popup=!istravis tol=0.2
 
-    @plottest custom_nodeshapes() "custom_nodeshapes.png" popup=!istravis tol=0.2
+    @plottest custom_nodeshapes_single() "custom_nodeshapes_single.png" popup=!istravis tol=0.2
+
+    @plottest custom_nodeshapes_various() "custom_nodeshapes_various.png" popup=!istravis tol=0.2
 end
 
 @testset "README" begin

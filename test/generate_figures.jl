@@ -53,5 +53,8 @@ savefig("julia_dict_tree.png")
 funky_edge_and_marker_args()
 savefig("funky_edge_and_marker_args.png")
 
-custom_nodeshapes()
-savefig("custom_nodeshapes.png")
+custom_nodeshapes_single()
+savefig("custom_nodeshapes_single.png")
+
+custom_nodeshapes_various()
+savefig("custom_nodeshapes_various.png")
