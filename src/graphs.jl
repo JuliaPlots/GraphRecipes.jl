@@ -355,6 +355,14 @@ more details.
         plotattributes[markerproperty] = nodeproperty
     end
 
+    # If we pass a value of plotattributes[:markershape] that the backend does not
+    # recognize, then the backend will throw an error. The error is thrown despite the
+    # fact that we override the default behavior. Custom nodehapes are incompatible
+    # with the backend's markershapes and thus replaced.
+    if nodeshape isa Function || nodeshape isa Array && any([s isa Function for s in nodeshape])
+        plotattributes[:markershape] = :circle
+    end
+
     @assert dim in (2, 3)
     _3d = dim == 3
     adj_mat = get_adjacency_matrix(g.args...)
@@ -487,8 +495,13 @@ more details.
                 nodeheight = (yextent[2] - yextent[1])
                 push!(node_vec_vec_xy, partialellipse(0, 2π, [x[i], y[i]],
                                                       80, nodewidth/2, nodeheight/2))
+            elseif applicable(nodeshape[node_number], x[i], y[i], 0., 0.)
+                nodeheight = (yextent[2] - yextent[1])
+                push!(node_vec_vec_xy, nodeshape[node_number](x[i], y[i], nodewidth, nodeheight))
+            elseif applicable(nodeshape[node_number], x[i], y[i], 0.)
+                push!(node_vec_vec_xy, nodeshape[node_number](x[i], y[i], nodewidth))
             else
-                error("Unknown nodeshape: $(nodeshape[node_number]). Choose from :circle, ellipse, :hexagon, :rect or :rectangle.")
+                error("Unknown nodeshape: $(nodeshape[node_number]). Choose from :circle, ellipse, :hexagon, :rect or :rectangle or or a custom shape. Custom shapes can be passed as a function customshape such that customshape(x, y, nodeheight, nodewidth) -> nodeperimeter/ customshape(x, y, nodescale) -> nodeperimeter. nodeperimeter must be an array of 2-tuples, where each tuple is a corner of your custom shape, centered at (x, y) and with height nodeheight, width nodewidth or only a nodescale for symmetrically scaling shapes.")
             end
         end
     else
