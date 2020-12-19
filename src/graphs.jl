@@ -86,7 +86,7 @@ function get_source_destiny_weight(source::AbstractVector, destiny::AbstractVect
     source, destiny, weights
 end
 
-function get_source_destiny_weight(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
+function get_source_destiny_weight(adjlist::AbstractVector{V}) where V<:AbstractVector{T} where T<:Any
     source = Int[]
     destiny = Int[]
     for (i,l) in enumerate(adjlist)
@@ -109,7 +109,7 @@ function get_adjacency_matrix(source::AbstractVector{Int}, destiny::AbstractVect
     Matrix(sparse(source, destiny, weights, n, n))
 end
 
-function get_adjacency_matrix(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
+function get_adjacency_matrix(adjlist::AbstractVector{V}) where V<:AbstractVector{T} where T<:Any
     s,d,w = get_source_destiny_weight(adjlist)
     get_adjacency_matrix(s, d, w)
 end
@@ -556,7 +556,7 @@ more details.
         edge_has_been_seen[edge] = 0
     end
     if length(curvature_scalar) == 1
-        curvature_scalar = fill(curvature_scalar, size(g.args[1])[1], size(g.args[1])[1])
+        curvature_scalar = fill(curvature_scalar, size(adj_mat,1), size(adj_mat,1))
     end
 
     edges_list = (T[], T[], T[], T[])
