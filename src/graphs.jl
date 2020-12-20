@@ -647,15 +647,16 @@ more details.
                                       ysi, y[di],
                                       (edgelabel_offset
                                       + edge_has_been_seen[(si, di)]*curvature_scalar[si, di])*sign(si - di))
-                    push!(edge_label_array,
-                          (q...,
-                           string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
-                    edge_label_box_vertices = (
-                    annotation_extent(plotattributes,
-                                      (q[1], q[2],
-                                      edgelabel[(si, di, edge_has_been_seen[(si, di)])],
-                                      0.05fontsize)))
+
                     if !any(isnan.(q))
+                        push!(edge_label_array,
+                              (q...,
+                               string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
+                        edge_label_box_vertices = (
+                        annotation_extent(plotattributes,
+                                          (q[1], q[2],
+                                          edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                          0.05fontsize)))
                         push!(edge_label_box_vertices_array, edge_label_box_vertices)
                     end
                 end
@@ -676,15 +677,16 @@ more details.
             _3d && push!(zseg, z[si], z[di])
             if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                 q = [(xsi + xdi)/2, (ysi + ydi)/2]
-                push!(edge_label_array,
-                      (q...,
-                       string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
-                edge_label_box_vertices = (
-                annotation_extent(plotattributes,
-                                  (q[1], q[2],
-                                  edgelabel[(si, di, edge_has_been_seen[(si, di)])],
-                                  0.05fontsize)))
+
                 if !any(isnan.(q))
+                    push!(edge_label_array,
+                          (q...,
+                           string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
+                    edge_label_box_vertices = (
+                    annotation_extent(plotattributes,
+                                      (q[1], q[2],
+                                      edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                      0.05fontsize)))
                     push!(edge_label_box_vertices_array, edge_label_box_vertices)
                 end
             end
