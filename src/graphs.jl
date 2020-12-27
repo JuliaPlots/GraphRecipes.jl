@@ -86,7 +86,7 @@ function get_source_destiny_weight(source::AbstractVector, destiny::AbstractVect
     source, destiny, weights
 end
 
-function get_source_destiny_weight(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
+function get_source_destiny_weight(adjlist::AbstractVector{V}) where V<:AbstractVector{T} where T<:Any
     source = Int[]
     destiny = Int[]
     for (i,l) in enumerate(adjlist)
@@ -109,7 +109,7 @@ function get_adjacency_matrix(source::AbstractVector{Int}, destiny::AbstractVect
     Matrix(sparse(source, destiny, weights, n, n))
 end
 
-function get_adjacency_matrix(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
+function get_adjacency_matrix(adjlist::AbstractVector{V}) where V<:AbstractVector{T} where T<:Any
     s,d,w = get_source_destiny_weight(adjlist)
     get_adjacency_matrix(s, d, w)
 end
@@ -556,7 +556,7 @@ more details.
         edge_has_been_seen[edge] = 0
     end
     if length(curvature_scalar) == 1
-        curvature_scalar = fill(curvature_scalar, size(g.args[1])[1], size(g.args[1])[1])
+        curvature_scalar = fill(curvature_scalar, size(adj_mat,1), size(adj_mat,1))
     end
 
     edges_list = (T[], T[], T[], T[])
@@ -647,15 +647,16 @@ more details.
                                       ysi, y[di],
                                       (edgelabel_offset
                                       + edge_has_been_seen[(si, di)]*curvature_scalar[si, di])*sign(si - di))
-                    push!(edge_label_array,
-                          (q...,
-                           string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
-                    edge_label_box_vertices = (
-                    annotation_extent(plotattributes,
-                                      (q[1], q[2],
-                                      edgelabel[(si, di, edge_has_been_seen[(si, di)])],
-                                      0.05fontsize)))
+
                     if !any(isnan.(q))
+                        push!(edge_label_array,
+                              (q...,
+                               string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
+                        edge_label_box_vertices = (
+                        annotation_extent(plotattributes,
+                                          (q[1], q[2],
+                                          edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                          0.05fontsize)))
                         push!(edge_label_box_vertices_array, edge_label_box_vertices)
                     end
                 end
@@ -676,15 +677,16 @@ more details.
             _3d && push!(zseg, z[si], z[di])
             if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                 q = [(xsi + xdi)/2, (ysi + ydi)/2]
-                push!(edge_label_array,
-                      (q...,
-                       string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
-                edge_label_box_vertices = (
-                annotation_extent(plotattributes,
-                                  (q[1], q[2],
-                                  edgelabel[(si, di, edge_has_been_seen[(si, di)])],
-                                  0.05fontsize)))
+
                 if !any(isnan.(q))
+                    push!(edge_label_array,
+                          (q...,
+                           string(edgelabel[(si, di, edge_has_been_seen[(si, di)])]), fontsize))
+                    edge_label_box_vertices = (
+                    annotation_extent(plotattributes,
+                                      (q[1], q[2],
+                                      edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                      0.05fontsize)))
                     push!(edge_label_box_vertices_array, edge_label_box_vertices)
                 end
             end
