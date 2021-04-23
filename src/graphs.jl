@@ -342,7 +342,7 @@ more details.
         remove_aliases!(arg, plotattributes, graph_aliases)
     end
     # The above process will remove all marker properties from the plotattributes
-    # dictionary. To enusre consistency between markers and nodes, we replace all marker
+    # dictionary. To ensure consistency between markers and nodes, we replace all marker
     # properties with the corresponding node property.
     marker_node_collection = zip([:markershape,:markersize,:markercolor,
                                   :marker_z,:markerstrokealpha,:markeralpha,
@@ -352,8 +352,22 @@ more details.
                                   nodealpha,nodestrokewidth,nodestrokealpha,
                                   nodestrokecolor,nodestrokestyle])
     for (markerproperty, nodeproperty) in marker_node_collection
+        # Make sure that the node properties are row vectors.
+        nodeproperty isa Array && (nodeproperty = permutedims(vec(nodeproperty)))
         plotattributes[markerproperty] = nodeproperty
     end
+
+    # Make sure that the node properties are row vectors.
+    nodeshape isa Array && (nodeshape = permutedims(vec(nodeshape)))
+    nodesize isa Array && (nodesize = permutedims(vec(nodesize)))
+    nodecolor isa Array && (nodecolor = permutedims(vec(nodecolor)))
+    node_z isa Array && (node_z = permutedims(vec(node_z)))
+    nodestrokealpha isa Array && (nodestrokealpha = permutedims(vec(nodestrokealpha)))
+    nodealpha isa Array && (nodealpha = permutedims(vec(nodealpha)))
+    nodestrokewidth isa Array && (nodestrokewidth = permutedims(vec(nodestrokewidth)))
+    nodestrokealpha isa Array && (nodestrokealpha = permutedims(vec(nodestrokealpha)))
+    nodestrokecolor isa Array && (nodestrokecolor = permutedims(vec(nodestrokecolor)))
+    nodestrokestyle isa Array && (nodestrokestyle = permutedims(vec(nodestrokestyle)))
 
     # If we pass a value of plotattributes[:markershape] that the backend does not
     # recognize, then the backend will throw an error. The error is thrown despite the
@@ -427,7 +441,7 @@ more details.
         xl, yl = arcdiagram_limits(x, source, destiny)
         xlims --> xl
         ylims --> yl
-        ratio --> :equal
+        aspect_ratio --> :equal
     elseif all(axis_buffer .< 0) # equal axes
         ahw = 1.2 * 0.5 * maximum(v -> maximum(v)-minimum(v), xyz)
         xcenter = mean(extrema(x))
@@ -774,6 +788,9 @@ more details.
                               round(Int, length(edges_list[1])/nsegments)),
                       reshape(edges_list[2], nsegments,
                               round(Int, length(edges_list[2])/nsegments)))
+        edges_list = ([edges_list[1][:, j] for j in 1:size(edges_list[1], 2)],
+                      [edges_list[2][:, j] for j in 1:size(edges_list[2], 2)]
+        )
     else
         edges_list = (reshape(edges_list[1], 3,
                               round(Int, length(edges_list[1])/3)),
@@ -858,7 +875,7 @@ more details.
         seriestype := :scatter
         markersize := 0
         markeralpha := 0
-        ratio --> :equal
+        aspect_ratio --> :equal
         if length(names) == length(x)
             annotations := [(x[i], y[i], names[i]) for i in 1:length(x)]
         end
@@ -879,12 +896,12 @@ more details.
         end
     else
         if _3d
-            # seriestype := :scatter3d
-            # linewidth := 0
-            # linealpha := 0
-            # markercolor := nodecolor
-            # series_annotations --> map(string,names)
-            # markersize --> (10 .+ (100 .* node_weights) ./ sum(node_weights))
+            seriestype := :scatter3d
+            linewidth := 0
+            linealpha := 0
+            markercolor := nodecolor
+            series_annotations --> map(string,names)
+            markersize --> (10 .+ (100 .* node_weights) ./ sum(node_weights))
         else
             @series begin
                 seriestype := :shape
@@ -902,14 +919,12 @@ more details.
                 linestyle := nodestrokestyle
                 line_z := nodestroke_z
 
-                nodeperimeters = (T[], T[])
+                nodeperimeters = (Any[], Any[])
                 for (i, vec_xy) in enumerate(node_vec_vec_xy)
-                        append!(nodeperimeters[1], [xy[1] for xy in vec_xy])
-                        push!(nodeperimeters[1], NaN)
-
-                        append!(nodeperimeters[2], [xy[2] for xy in vec_xy])
-                        push!(nodeperimeters[2], NaN)
+                    push!(nodeperimeters[1], [xy[1] for xy in vec_xy])
+                    push!(nodeperimeters[2], [xy[2] for xy in vec_xy])
                 end
+
                 nodeperimeters
 
                 # if _3d
@@ -926,7 +941,7 @@ more details.
                 colorbar_entry --> false
                 markersize --> 0
                 markeralpha --> 0
-                !isnothing(edgelabel) && (annotation --> edge_label_array)
+                !isnothing(edgelabel) && (annotations --> edge_label_array)
             else
                 seriestype := :scatter
 
