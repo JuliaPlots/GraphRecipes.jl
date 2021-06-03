@@ -25,7 +25,7 @@ NaNMath = "0.3.3"
 NetworkLayout = "0.2, 0.3"
 PlotUtils = "0.6.2, 1"
 RecipesBase = "0.7, 0.8, 1"
-julia = "^1"
+julia = "^1.6"
 
 [extras]
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
