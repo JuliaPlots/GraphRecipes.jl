@@ -53,7 +53,7 @@ end
     add_children!(nodes, source, destiny, root, 1)
 
     # set up the graphplot
-    names := map(namefunc, nodes)
+    names --> map(namefunc, nodes)
     method --> :buchheim
     root --> :top
     GraphPlot((source, destiny))
