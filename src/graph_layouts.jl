@@ -6,7 +6,7 @@
 # also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
 
 function spectral_graph(adjmat::AbstractMatrix; node_weights::AbstractVector = ones(size(adjmat,1)), kw...)
-    positions = NetworkLayout.spectral(adjmat; node_weights=convert(Vector{Float64}, node_weights))
+    positions = NetworkLayout.Spectral.layout(adjmat; node_weights=convert(Vector{Float64}, node_weights))
 
     ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
 end
@@ -31,7 +31,7 @@ function spring_graph(adjmat::AbstractMatrix;
         [Point(T(x[i]), T(y[i]), T(z[i])) for i in 1:length(x)]
     end
 
-    positions = NetworkLayout.spring(adjmat, GeometryTypes.Point{dim, Float32};
+    positions = NetworkLayout.Spring.layout(adjmat, GeometryTypes.Point{dim, Float32};
                                             iterations = maxiter, initialtemp = initialtemp,
                                             C = C, startpositions = startpostions)
     if dim == 2
@@ -61,7 +61,7 @@ function sfdp_graph(adjmat::AbstractMatrix;
         [Point(T(x[i]), T(y[i]), T(z[i])) for i in 1:length(x)]
     end
 
-    positions = NetworkLayout.sfdp(adjmat, dim,
+    positions = NetworkLayout.SFDP.layout(adjmat, dim,
                                           iterations = maxiter, tol = tol, C = C, K = K)
     if dim == 2
         ([p[1] for p in positions], [p[2] for p in positions], nothing)
@@ -83,7 +83,7 @@ function circular_graph(adjmat::AbstractMatrix;
                         )
     @assert dim == 2
 
-    positions = NetworkLayout.circular(adjmat)
+    positions = NetworkLayout.Circular.layout(adjmat)
 
     ([p[1] for p in positions], [p[2] for p in positions], nothing)
 end
@@ -100,7 +100,7 @@ function shell_graph(adjmat::AbstractMatrix;
                      nlist = nothing, kw...
                      )
     @assert dim == 2
-    positions = NetworkLayout.shell(adjmat, nlist=nlist)
+    positions = NetworkLayout.Shell.layout(adjmat, nlist=nlist)
 
     ([p[1] for p in positions], [p[2] for p in positions], nothing)
 end
@@ -232,7 +232,7 @@ function buchheim_graph(adjlist::AbstractVector;
                     dim = 2,
                     kw...)
     # @show adjlist typeof(adjlist)
-    positions = NetworkLayout.buchheim(adjlist, nodesize = convert(Vector{Float64}, node_weights))
+    positions = NetworkLayout.Buchheim.layout(adjlist, nodesize = convert(Vector{Float64}, node_weights))
     Float64[p[1] for p in positions], Float64[p[2] for p in positions], nothing
 end
 
