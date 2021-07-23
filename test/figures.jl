@@ -1,4 +1,4 @@
-using Random
+using StableRNGs
 using VisualRegressionTests
 using LinearAlgebra
 using SparseArrays

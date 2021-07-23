@@ -1,14 +1,14 @@
 function random_labelled_graph()
     n = 15
-    Random.seed!(1)
-    A = Float64[ rand() < 0.5 ? 0 : rand() for i=1:n, j=1:n]
+    rng = StableRNG(1)
+    A = Float64[ rand(rng) < 0.5 ? 0 : rand(rng) for i=1:n, j=1:n]
     for i=1:n
         A[i, 1:i-1] = A[1:i-1, i]
         A[i, i] = 0
     end
-    x = rand(n)
-    y = rand(n)
-    z = rand(n)
+    x = rand(rng,n)
+    y = rand(rng,n)
+    z = rand(rng,n)
     p = graphplot(A,
               nodesize = 0.2,
               node_weights = 1:n,
@@ -74,7 +74,8 @@ function multigraphs()
 end
 
 function arc_chord_diagrams()
-    adjmat = Symmetric(sparse(rand(0:1,8,8)))
+    rng = StableRNG(2)
+    adjmat = Symmetric(sparse(rand(rng,0:1,8,8)))
     plot(
          graphplot(adjmat,
                    method=:chorddiagram,
@@ -93,15 +94,16 @@ end
 
 function marker_properties()
     N = 8
-    g = barabasi_albert(N, 1; seed = 42)
+    seed = 42
+    g = barabasi_albert(N, 1; seed=seed)
     weights = [length(neighbors(g, i)) for i in 1:nv(g)]
-    Random.seed!(42)
+    rng = StableRNG(seed)
     graphplot(g, curvature_scalar=0,
               node_weights=weights, nodesize=0.25,
               linecolor=:gray,
               linewidth=2.5,
               nodeshape=:circle,
-              node_z=rand(N), markercolor=:viridis,
+              node_z=rand(rng,N), markercolor=:viridis,
               nodestrokewidth=1.5,
               markerstrokestyle=:solid,
               markerstrokealpha=1.0,
@@ -157,8 +159,8 @@ function diamond_nodeshape_wh(x_i, y_i, h, w)
 end
 
 function custom_nodeshapes_single()
-    Random.seed!(6)
-    g = rand(5,5)
+    rng = StableRNG(6)
+    g = rand(rng,5,5)
     g[g .> 0.5] .= 0
     for i in 1:5
         g[i,i] = 0
@@ -167,8 +169,8 @@ function custom_nodeshapes_single()
 end
 
 function custom_nodeshapes_various()
-    Random.seed!(6)
-    g = rand(5,5)
+    rng = StableRNG(6)
+    g = rand(rng,5,5)
     g[g .> 0.5] .= 0
     for i in 1:5
         g[i,i] = 0
@@ -177,7 +179,6 @@ function custom_nodeshapes_various()
 end
 
 function funky_edge_and_marker_args()
-    Random.seed!(6)
     n = 5
     g = SimpleDiGraph(n)
 
