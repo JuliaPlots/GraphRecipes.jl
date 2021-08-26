@@ -360,7 +360,7 @@ more details.
     # Make sure that the node properties are row vectors.
     nodeshape isa Array && (nodeshape = permutedims(vec(nodeshape)))
     nodesize isa Array && (nodesize = permutedims(vec(nodesize)))
-    nodecolor isa Array && (nodecolor = permutedims(vec(nodecolor)))
+    nodecolor isa Array && (nodecolor = permutedims(vec(circshift(nodecolor, -1))))
     node_z isa Array && (node_z = permutedims(vec(node_z)))
     nodestrokealpha isa Array && (nodestrokealpha = permutedims(vec(nodestrokealpha)))
     nodealpha isa Array && (nodealpha = permutedims(vec(nodealpha)))
