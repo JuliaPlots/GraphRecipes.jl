@@ -1,4 +1,4 @@
-
+Graphs
 """
 This function builds a BezierCurve which leaves point p vertically upwards and
 arrives point q vertically upwards. It may create a loop if necessary.

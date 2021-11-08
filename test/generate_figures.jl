@@ -1,4 +1,4 @@
-using StableRNGs
+Graphsusing StableRNGs
 using LinearAlgebra
 using SparseArrays
 using GraphRecipes

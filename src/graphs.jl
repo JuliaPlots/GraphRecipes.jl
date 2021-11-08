@@ -1,4 +1,4 @@
-const _graph_funcs = Dict{Symbol,Any}(
+Graphsconst _graph_funcs = Dict{Symbol,Any}(
     :spectral => spectral_graph,
     :sfdp => sfdp_graph,
     :circular => circular_graph,

@@ -1,4 +1,4 @@
-using StableRNGs
+Graphsusing StableRNGs
 using VisualRegressionTests
 using LinearAlgebra
 using SparseArrays
