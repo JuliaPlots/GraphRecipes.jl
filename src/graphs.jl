@@ -1,4 +1,4 @@
-Graphsconst _graph_funcs = Dict{Symbol,Any}(
+const _graph_funcs = Dict{Symbol,Any}(
     :spectral => spectral_graph,
     :sfdp => sfdp_graph,
     :circular => circular_graph,
@@ -162,14 +162,14 @@ function compute_laplacian(adjmat::AbstractMatrix, node_weights::AbstractVector)
     L, D
 end
 
-import LightGraphs
+import Graphs
 
 # TODO: so much wasteful conversion... do better
 function estimate_distance(adjmat::AbstractMatrix)
     source, destiny, weights = get_source_destiny_weight(sparse(adjmat))
 
-    g = LightGraphs.Graph(adjmat)
-    dists = convert(Matrix{Float64}, hcat(map(i->LightGraphs.dijkstra_shortest_paths(g, i).dists, LightGraphs.vertices(g))...))
+    g = Graphs.Graph(adjmat)
+    dists = convert(Matrix{Float64}, hcat(map(i->Graphs.dijkstra_shortest_paths(g, i).dists, Graphs.vertices(g))...))
     tot = 0.0; cnt = 0
     for (i,d) in enumerate(dists)
         if d < 1e10
@@ -186,19 +186,19 @@ function estimate_distance(adjmat::AbstractMatrix)
     dists
 end
 
-function get_source_destiny_weight(g::LightGraphs.AbstractGraph)
+function get_source_destiny_weight(g::Graphs.AbstractGraph)
     source = Vector{Int}()
     destiny =  Vector{Int}()
-    sizehint!(source, LightGraphs.nv(g))
-    sizehint!(destiny, LightGraphs.nv(g))
-    for e in LightGraphs.edges(g)
-      push!(source, LightGraphs.src(e))
-      push!(destiny, LightGraphs.dst(e))
+    sizehint!(source, Graphs.nv(g))
+    sizehint!(destiny, Graphs.nv(g))
+    for e in Graphs.edges(g)
+      push!(source, Graphs.src(e))
+      push!(destiny, Graphs.dst(e))
     end
     get_source_destiny_weight(source, destiny)
 end
 
-function get_adjacency_matrix(g::LightGraphs.AbstractGraph)
+function get_adjacency_matrix(g::Graphs.AbstractGraph)
     adjacency_matrix(g)
 end
 
@@ -206,7 +206,7 @@ function get_adjacency_matrix(source::AbstractVector{Int}, destiny::AbstractVect
     get_adjacency_matrix(source, destiny, ones(length(source)))
 end
 
-function get_adjacency_list(g::LightGraphs.AbstractGraph)
+function get_adjacency_list(g::Graphs.AbstractGraph)
     g.fadjlist
 end
 
@@ -243,7 +243,7 @@ const graph_aliases = Dict(:curvature_scalar => [:curvaturescalar,:curvature],
     graphplot(g; kwargs...)
 
 Visualize the graph `g`, where `g` represents a graph via a matrix or a
-`LightGraphs.graph`.
+`Graphs.graph`.
 ## Keyword arguments
 ```
 dim = 2
@@ -325,12 +325,12 @@ more details.
                    edgecolor = :black,
                    edgestyle = :solid,
                   )
-    # Process the args so that they are a LightGraphs.Graph.
-    if length(g.args) <= 1 && !(eltype(g.args[1]) <: AbstractArray) && !(g.args[1] isa LightGraphs.AbstractGraph) && method != :chorddiagram && method != :arcdiagram
+    # Process the args so that they are a Graphs.Graph.
+    if length(g.args) <= 1 && !(eltype(g.args[1]) <: AbstractArray) && !(g.args[1] isa Graphs.AbstractGraph) && method != :chorddiagram && method != :arcdiagram
         if !LinearAlgebra.issymmetric(g.args[1]) || any(diag(g.args[1]) .!= zeros(length(diag(g.args[1]))))
-            g.args = (LightGraphs.DiGraph(g.args[1]),)
+            g.args = (Graphs.DiGraph(g.args[1]),)
         elseif LinearAlgebra.issymmetric(g.args[1])
-            g.args = (LightGraphs.Graph(g.args[1]),)
+            g.args = (Graphs.Graph(g.args[1]),)
         end
     end
 

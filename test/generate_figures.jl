@@ -1,9 +1,9 @@
-Graphsusing StableRNGs
+GraphsGraphsusing StableRNGs
 using LinearAlgebra
 using SparseArrays
 using GraphRecipes
 using Plots
-using LightGraphs
+using Graphs
 using AbstractTrees
 
 cd(@__DIR__)

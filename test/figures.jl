@@ -1,9 +1,9 @@
-Graphsusing StableRNGs
+using StableRNGs
 using VisualRegressionTests
 using LinearAlgebra
 using SparseArrays
 using ImageMagick
-using LightGraphs
+using Graphs
 using AbstractTrees
 
 cd(@__DIR__)

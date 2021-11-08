@@ -1,4 +1,3 @@
-Graphs
 """
 This function builds a BezierCurve which leaves point p vertically upwards and
 arrives point q vertically upwards. It may create a loop if necessary.
@@ -231,7 +230,7 @@ end
 function process_edge_attribute(attr, source, destiny, weights)
     if isnothing(attr) || (attr isa Symbol)
         return attr
-    elseif attr isa LightGraphs.AbstractGraph
+    elseif attr isa Graphs.AbstractGraph
         mat = incidence_matrix(attr)
         attr = [mat[si, di] for (si, di) in zip(source, destiny)][:] |> permutedims
     elseif attr isa Function

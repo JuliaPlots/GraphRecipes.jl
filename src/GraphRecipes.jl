@@ -1,7 +1,6 @@
-Graphs
 module GraphRecipes
 
-using LightGraphs
+using Graphs
 import NetworkLayout
 using PlotUtils         # ColorGradient
 using RecipesBase
