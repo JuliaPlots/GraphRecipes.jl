@@ -325,8 +325,9 @@ more details.
                    edgecolor = :black,
                    edgestyle = :solid,
                   )
-    # Process the args so that they are a Graphs.Graph.
-    if length(g.args) <= 1 && !(eltype(g.args[1]) <: AbstractArray) && !(g.args[1] isa Graphs.AbstractGraph) && method != :chorddiagram && method != :arcdiagram
+    # Process the args so that they are a LightGraphs.Graph.
+    @show nodecolor
+    if length(g.args) <= 1 && !(eltype(g.args[1]) <: AbstractArray) && !(g.args[1] isa LightGraphs.AbstractGraph) && method != :chorddiagram && method != :arcdiagram
         if !LinearAlgebra.issymmetric(g.args[1]) || any(diag(g.args[1]) .!= zeros(length(diag(g.args[1]))))
             g.args = (Graphs.DiGraph(g.args[1]),)
         elseif LinearAlgebra.issymmetric(g.args[1])
@@ -357,6 +358,7 @@ more details.
         plotattributes[markerproperty] = nodeproperty
     end
 
+    @show nodecolor
     # Make sure that the node properties are row vectors.
     nodeshape isa Array && (nodeshape = permutedims(vec(nodeshape)))
     nodesize isa Array && (nodesize = permutedims(vec(nodesize)))
@@ -368,6 +370,8 @@ more details.
     nodestrokealpha isa Array && (nodestrokealpha = permutedims(vec(nodestrokealpha)))
     nodestrokecolor isa Array && (nodestrokecolor = permutedims(vec(nodestrokecolor)))
     nodestrokestyle isa Array && (nodestrokestyle = permutedims(vec(nodestrokestyle)))
+    @show nodealpha
+    @show nodecolor
 
     # If we pass a value of plotattributes[:markershape] that the backend does not
     # recognize, then the backend will throw an error. The error is thrown despite the
@@ -912,7 +916,6 @@ more details.
                 fillcolor := nodecolor
                 markersize := 0
                 markeralpha := 0
-                fillalpha := 1
                 linewidth := nodestrokewidth
                 linealpha := nodestrokealpha
                 linecolor := nodestrokecolor
