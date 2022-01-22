@@ -1,6 +1,6 @@
 name = "GraphRecipes"
 uuid = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
-version = "0.5.8"
+version = "0.5.9"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
