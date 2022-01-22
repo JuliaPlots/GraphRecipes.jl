@@ -209,6 +209,9 @@ function get_adjacency_list(g::Graphs.AbstractGraph)
     g.fadjlist
 end
 
+function format_nodeproperty(prop, n_edges, edge_boxes = 0)
+    prop isa Array ? permutedims(vcat(fill(nothing, edge_boxes + n_edges), vec(prop), nothing)) : prop
+end
 # -----------------------------------------------------
 
 # a graphplot takes in either an (N x N) adjacency matrix
@@ -356,17 +359,6 @@ more details.
         plotattributes[markerproperty] = nodeproperty
     end
 
-    # Make sure that the node properties are row vectors.
-    nodeshape isa Array && (nodeshape = permutedims(vec(nodeshape)))
-    nodesize isa Array && (nodesize = permutedims(vec(nodesize)))
-    nodecolor isa Array && (nodecolor = permutedims(vec(nodecolor)))
-    node_z isa Array && (node_z = permutedims(vec(node_z)))
-    nodestrokealpha isa Array && (nodestrokealpha = permutedims(vec(nodestrokealpha)))
-    nodealpha isa Array && (nodealpha = permutedims(vec(nodealpha)))
-    nodestrokewidth isa Array && (nodestrokewidth = permutedims(vec(nodestrokewidth)))
-    nodestrokealpha isa Array && (nodestrokealpha = permutedims(vec(nodestrokealpha)))
-    nodestrokecolor isa Array && (nodestrokecolor = permutedims(vec(nodestrokecolor)))
-    nodestrokestyle isa Array && (nodestrokestyle = permutedims(vec(nodestrokestyle)))
 
     # If we pass a value of plotattributes[:markershape] that the backend does not
     # recognize, then the backend will throw an error. The error is thrown despite the
@@ -392,6 +384,7 @@ more details.
         destiny = Int[findfirst(names, di) for di in destiny]
     end
     n = max(maximum(source), maximum(destiny))
+    n_edges = length(source)
 
     if isnothing(node_weights)
         node_weights = ones(n)
@@ -842,8 +835,8 @@ more details.
     for edge in zip(source, destiny)
         edge_has_been_seen[edge] = 0
     end
+    index = 0
     if edge_label_box && !isnothing(edgelabel)
-        index = 0
         for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
             edge_has_been_seen[(si, di)] += 1
             if haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
@@ -870,6 +863,19 @@ more details.
     framestyle := :none
     axis := nothing
     legend --> false
+
+    # Make sure that the node properties are row vectors.
+    nodeshape = format_nodeproperty(nodeshape, n_edges, index)
+    nodesize = format_nodeproperty(nodesize, n_edges, index)
+    nodecolor = format_nodeproperty(nodecolor, n_edges, index)
+    node_z = format_nodeproperty(node_z, n_edges, index)
+    nodestrokealpha = format_nodeproperty(nodestrokealpha, n_edges, index)
+    nodealpha = format_nodeproperty(nodealpha, n_edges, index)
+    nodestrokewidth = format_nodeproperty(nodestrokewidth, n_edges, index)
+    nodestrokealpha = format_nodeproperty(nodestrokealpha, n_edges, index)
+    nodestrokecolor = format_nodeproperty(nodestrokecolor, n_edges, index)
+    nodestrokestyle = format_nodeproperty(nodestrokestyle, n_edges, index)
+
     if method == :chorddiagram
         seriestype := :scatter
         markersize := 0
