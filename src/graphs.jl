@@ -209,8 +209,8 @@ function get_adjacency_list(g::Graphs.AbstractGraph)
     g.fadjlist
 end
 
-function format_nodeproperty(prop, n_edges, edge_boxes = 0)
-    prop isa Array ? permutedims(vcat(fill(nothing, edge_boxes + n_edges), vec(prop), nothing)) : prop
+function format_nodeproperty(prop, n_edges, edge_boxes = 0; fill_value = nothing)
+    prop isa Array ? permutedims(vcat(fill(fill_value, edge_boxes + n_edges), vec(prop), fill_value)) : prop
 end
 # -----------------------------------------------------
 
@@ -874,7 +874,7 @@ more details.
     nodestrokewidth = format_nodeproperty(nodestrokewidth, n_edges, index)
     nodestrokealpha = format_nodeproperty(nodestrokealpha, n_edges, index)
     nodestrokecolor = format_nodeproperty(nodestrokecolor, n_edges, index)
-    nodestrokestyle = format_nodeproperty(nodestrokestyle, n_edges, index)
+    nodestrokestyle = format_nodeproperty(nodestrokestyle, n_edges, index, fill_value = :solid)
 
     if method == :chorddiagram
         seriestype := :scatter
