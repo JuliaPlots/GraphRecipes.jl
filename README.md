@@ -1,7 +1,10 @@
+[gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
+[gh-ci-url]: https://github.com/JuliaPlots/GraphRecipes.jl/actions?query=workflow%3Aci
+
 # GraphRecipes
 The repository formerly known as PlotRecipes
 
-[![Build Status](https://travis-ci.org/JuliaPlots/GraphRecipes.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/GraphRecipes.jl)
+[![Build Status][gh-ci-img]][gh-ci-url]
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](http://docs.juliaplots.org/stable/graphrecipes/introduction/)
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 
