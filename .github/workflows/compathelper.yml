@@ -7,6 +7,6 @@ jobs:
   CompatHelper:
     runs-on: ubuntu-latest
     steps:
-      - uses: JuliaRegistries/compathelper-action@v1
+      - uses: JuliaRegistries/compathelper-action@v999.0.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
