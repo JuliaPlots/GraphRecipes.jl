@@ -1,6 +1,6 @@
 function random_labelled_graph()
     n = 15
-    rng = StableRNG(1)
+    rng = getRNG(1)
     A = Float64[ rand(rng) < 0.5 ? 0 : rand(rng) for i=1:n, j=1:n]
     for i=1:n
         A[i, 1:i-1] = A[1:i-1, i]
@@ -74,7 +74,7 @@ function multigraphs()
 end
 
 function arc_chord_diagrams()
-    rng = StableRNG(2)
+    rng = getRNG(2)
     adjmat = Symmetric(sparse(rand(rng,0:1,8,8)))
     plot(
          graphplot(adjmat,
@@ -95,9 +95,9 @@ end
 function marker_properties()
     N = 8
     seed = 42
+    rng = getRNG(seed)
     g = barabasi_albert(N, 1; seed=seed)
     weights = [length(neighbors(g, i)) for i in 1:nv(g)]
-    rng = StableRNG(seed)
     graphplot(g, curvature_scalar=0,
               node_weights=weights, nodesize=0.25,
               linecolor=:gray,
@@ -159,7 +159,7 @@ function diamond_nodeshape_wh(x_i, y_i, h, w)
 end
 
 function custom_nodeshapes_single()
-    rng = StableRNG(6)
+    rng = getRNG(6)
     g = rand(rng,5,5)
     g[g .> 0.5] .= 0
     for i in 1:5
@@ -169,7 +169,7 @@ function custom_nodeshapes_single()
 end
 
 function custom_nodeshapes_various()
-    rng = StableRNG(6)
+    rng = getRNG(6)
     g = rand(rng,5,5)
     g[g .> 0.5] .= 0
     for i in 1:5

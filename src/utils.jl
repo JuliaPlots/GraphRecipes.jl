@@ -42,7 +42,7 @@ function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol =
             append!(x, [x1 + sgn * x_offset, x2 - sgn * x_offset])
         else
             # add curve points which will create a loop
-            x_offset = 0.3 * (maxx - minx) * (rand(Bool) ? 1 : -1)
+            x_offset = 0.3 * (maxx - minx) * (rand(getRNG(), Bool) ? 1 : -1)
             append!(x, [x1 + x_offset, x2 + x_offset])
         end
         append!(y, [y1 + y_offset, y2 - y_offset])
@@ -143,7 +143,7 @@ function random_control_point(xi, xj, yi, yj, curvature_scalar)
 
     # calc random shift relative to dist between x and y
     dist = sqrt((xj-xi)^2 + (yj-yi)^2)
-    dist_from_mid = curvature_scalar * (rand()-0.5) * dist
+    dist_from_mid = curvature_scalar * (rand(getRNG())-0.5) * dist
 
     # now we have polar coords, we can compute the position, adding to the midpoint
     (xmid + dist_from_mid * cos(theta),
