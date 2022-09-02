@@ -13,7 +13,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
       GKS_ENCODING: "utf8"
-      GKSwstype: "100"
+      GKSwstype: "nul"
 
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -32,15 +32,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
-
       - uses: julia-actions/cache@v1
-
       - uses: julia-actions/julia-buildpkg@latest
-
       - uses: julia-actions/julia-runtest@latest
         with:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
