@@ -13,7 +13,7 @@ using GeometryTypes
 using Interpolations
 
 import NetworkLayout
-import Graphs: getRNG
+import Graphs: rng_from_rng_or_seed
 
 include("utils.jl")
 include("graph_layouts.jl")

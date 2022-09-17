@@ -100,9 +100,7 @@ end
 
 # -----------------------------------------------------
 
-function get_adjacency_matrix(mat::AbstractMatrix)
-    mat
-end
+get_adjacency_matrix(mat::AbstractMatrix) = mat
 
 function get_adjacency_matrix(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector)
     n = max(maximum(source), maximum(destiny))
@@ -116,9 +114,7 @@ end
 
 # -----------------------------------------------------
 
-function get_adjacency_list(mat::AbstractMatrix)
-    get_adjacency_list(get_source_destiny_weight(mat))
-end
+get_adjacency_list(mat::AbstractMatrix) = get_adjacency_list(get_source_destiny_weight(mat))
 
 function get_adjacency_list(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector)
     n = max(maximum(source), maximum(destiny))
@@ -129,9 +125,7 @@ function get_adjacency_list(source::AbstractVector{Int}, destiny::AbstractVector
     adjlist
 end
 
-function get_adjacency_list(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
-    adjlist
-end
+get_adjacency_list(adjlist::AbstractVector{<:AbstractVector{Int}}) = adjlist
 
 # -----------------------------------------------------
 
@@ -267,6 +261,7 @@ nodestrokewidth = 1
 nodestrokecolor = :black
 nodestrokestyle = :solid
 nodestroke_z = nothing
+rng = nothing
 x = nothing
 y = nothing
 z = nothing
@@ -310,6 +305,7 @@ more details.
                    nodestrokecolor = :black,
                    nodestrokestyle = :solid,
                    nodestroke_z = nothing,
+                   rng = nothing,
                    x = nothing,
                    y = nothing,
                    z = nothing,
@@ -406,6 +402,7 @@ more details.
             dim = dim,
             free_dims = free_dims,
             root = root,
+            rng = rng,
             layout_kw...
         )
     end
@@ -613,8 +610,13 @@ more details.
                 ishoriz = root in (:left,:right)
                 xsi, xdi = (ishoriz ? (x[si]+dist,x[di]-dist) : (x[si],x[di]))
                 ysi, ydi = (ishoriz ? (y[si],y[di]) : (y[si]+dist,y[di]-dist))
-                xpts, ypts = directed_curve(xsi, xdi, ysi, ydi,
-                            xview=get(plotattributes, :xlims, (0,1)), yview=get(plotattributes, :ylims, (0,1)), root=root)
+                xpts, ypts = directed_curve(
+                    xsi, xdi, ysi, ydi,
+                    xview=get(plotattributes, :xlims, (0,1)),
+                    yview=get(plotattributes, :ylims, (0,1)),
+                    root=root,
+                    rng=rng,
+                )
                 append!(xseg, xpts)
                 append!(yseg, ypts)
                 append!(l_wg, [ wi for i in 1:length(xpts) ] )

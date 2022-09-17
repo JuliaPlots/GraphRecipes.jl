@@ -4,7 +4,7 @@ arrives point q vertically upwards. It may create a loop if necessary.
 It assumes the view is [0,1]. That can be modified using the `xview` and
 `yview` keyword arguments (default: `0:1`).
 """
-function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol = :bottom)
+function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol = :bottom, rng = nothing)
     if root in (:left, :right)
         # flip x/y to simplify
         x1, x2, y1, y2, xview, yview = y1, y2, x1, x2, yview, xview
@@ -42,7 +42,7 @@ function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol =
             append!(x, [x1 + sgn * x_offset, x2 - sgn * x_offset])
         else
             # add curve points which will create a loop
-            x_offset = 0.3 * (maxx - minx) * (rand(getRNG(), Bool) ? 1 : -1)
+            x_offset = 0.3 * (maxx - minx) * (rand(rng_from_rng_or_seed(rng, nothing), Bool) ? 1 : -1)
             append!(x, [x1 + x_offset, x2 + x_offset])
         end
         append!(y, [y1 + y_offset, y2 - y_offset])
@@ -134,7 +134,7 @@ Randomly pick a point to be the center control point of a bezier curve,
 which is both equidistant between the endpoints and normally distributed
 around the midpoint.
 """
-function random_control_point(xi, xj, yi, yj, curvature_scalar)
+function random_control_point(xi, xj, yi, yj, curvature_scalar; rng = rng_from_rng_or_seed(rng, nothing))
     xmid = 0.5 * (xi+xj)
     ymid = 0.5 * (yi+yj)
 
@@ -143,7 +143,7 @@ function random_control_point(xi, xj, yi, yj, curvature_scalar)
 
     # calc random shift relative to dist between x and y
     dist = sqrt((xj-xi)^2 + (yj-yi)^2)
-    dist_from_mid = curvature_scalar * (rand(getRNG())-0.5) * dist
+    dist_from_mid = curvature_scalar * (rand(rng)-0.5) * dist
 
     # now we have polar coords, we can compute the position, adding to the midpoint
     (xmid + dist_from_mid * cos(theta),
