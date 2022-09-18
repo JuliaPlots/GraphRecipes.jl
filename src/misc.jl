@@ -3,14 +3,14 @@
 # AST trees
 
 function add_ast(adjlist, names, depthdict, depthlists, nodetypes, ex::Expr, parent_idx)
-    idx = length(names)+1
+    idx = length(names) + 1
     iscall = ex.head == :call
     push!(names, iscall ? string(ex.args[1]) : string(ex.head))
     push!(nodetypes, iscall ? :call : :expr)
     l = Int[]
     push!(adjlist, l)
 
-    depth = parent_idx==0 ? 1 : depthdict[parent_idx] + 1
+    depth = parent_idx == 0 ? 1 : depthdict[parent_idx] + 1
     depthdict[idx] = depth
     while length(depthlists) < depth
         push!(depthlists, Int[])
@@ -32,7 +32,7 @@ function add_ast(adjlist, names, depthdict, depthlists, nodetypes, x, parent_idx
     push!(adjlist, Int[])
     idx = length(names)
 
-    depth = parent_idx==0 ? 1 : depthdict[parent_idx] + 1
+    depth = parent_idx == 0 ? 1 : depthdict[parent_idx] + 1
     depthdict[idx] = depth
     while length(depthlists) < depth
         push!(depthlists, Int[])
@@ -75,11 +75,10 @@ end
     GraphPlot(get_source_destiny_weight(adjlist))
 end
 
-
 # -------------------------------------------------------------------
 # Type trees
 
-function add_subs!(nodes, source, destiny, ::Type{T}, supidx) where T
+function add_subs!(nodes, source, destiny, ::Type{T}, supidx) where {T}
     for sub in subtypes(T)
         push!(nodes, sub)
         subidx = length(nodes)
@@ -90,19 +89,22 @@ function add_subs!(nodes, source, destiny, ::Type{T}, supidx) where T
 end
 
 # recursively build a graph of subtypes of T
-@recipe function f(::Type{T}; namefunc = node-> isa(node, UnionAll) ? split(string(node), '.')[end] : node.name.name) where T
+@recipe function f(
+    ::Type{T};
+    namefunc = node -> isa(node, UnionAll) ? split(string(node), '.')[end] : node.name.name,
+) where {T}
     # get the supertypes
     sups = Any[T]
     sup = T
     while sup != Any
         sup = supertype(sup)
-        pushfirst!(sups,sup)
+        pushfirst!(sups, sup)
     end
 
     # add the subtypes
     n = length(sups)
     nodes = copy(sups)
-    source, destiny = collect(1:n-1), collect(2:n)
+    source, destiny = collect(1:(n - 1)), collect(2:n)
     add_subs!(nodes, source, destiny, T, n)
 
     # set up the graphplot

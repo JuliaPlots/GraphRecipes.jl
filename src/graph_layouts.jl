@@ -5,24 +5,38 @@ infer_size_from(args...) = maximum(maximum.(args))
 # see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
 # also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
 
-function spectral_graph(adjmat::AbstractMatrix; node_weights::AbstractVector = ones(size(adjmat,1)), kw...)
-    positions = NetworkLayout.spectral(adjmat; nodeweights=convert(Vector{Float64}, node_weights))
+function spectral_graph(
+    adjmat::AbstractMatrix;
+    node_weights::AbstractVector = ones(size(adjmat, 1)),
+    kw...,
+)
+    positions =
+        NetworkLayout.spectral(adjmat; nodeweights = convert(Vector{Float64}, node_weights))
 
     ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
 end
 
-function spectral_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+function spectral_graph(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector;
+    kw...,
+)
     spectral_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
-function spring_graph(adjmat::AbstractMatrix;
-                      dim = 2,
-                      rng = nothing,
-                      x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                      y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                      z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                      maxiter = 100, initialtemp = 2.0, C = 2.0, kw...
-                      )
+function spring_graph(
+    adjmat::AbstractMatrix;
+    dim = 2,
+    rng = nothing,
+    x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    maxiter = 100,
+    initialtemp = 2.0,
+    C = 2.0,
+    kw...,
+)
     @assert dim == 2 || dim == 3
     T = Float64
     adjmat = make_symmetric(adjmat)
@@ -32,9 +46,15 @@ function spring_graph(adjmat::AbstractMatrix;
         [Point(T(x[i]), T(y[i]), T(z[i])) for i in 1:length(x)]
     end
 
-    positions = NetworkLayout.spring(adjmat; dim, Ptype = T,
-                                     iterations = maxiter, initialtemp = initialtemp,
-                                     C = C, initialpos = startpostions)
+    positions = NetworkLayout.spring(
+        adjmat;
+        dim,
+        Ptype = T,
+        iterations = maxiter,
+        initialtemp = initialtemp,
+        C = C,
+        initialpos = startpostions,
+    )
     if dim == 2
         ([p[1] for p in positions], [p[2] for p in positions], nothing)
     else
@@ -42,18 +62,28 @@ function spring_graph(adjmat::AbstractMatrix;
     end
 end
 
-function spring_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+function spring_graph(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector;
+    kw...,
+)
     spring_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
-function sfdp_graph(adjmat::AbstractMatrix;
-                    dim = 2,
-                    rng = nothing,
-                    x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                    y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                    z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                    maxiter = 100, tol = 1e-10, C = 1.0, K = 1.0, kw...
-                    )
+function sfdp_graph(
+    adjmat::AbstractMatrix;
+    dim = 2,
+    rng = nothing,
+    x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    maxiter = 100,
+    tol = 1e-10,
+    C = 1.0,
+    K = 1.0,
+    kw...,
+)
     @assert dim == 2 || dim == 3
     adjmat = make_symmetric(adjmat)
     T = Float64
@@ -63,9 +93,16 @@ function sfdp_graph(adjmat::AbstractMatrix;
         [Point(T(x[i]), T(y[i]), T(z[i])) for i in 1:length(x)]
     end
 
-    positions = NetworkLayout.sfdp(adjmat; dim, Ptype = T,
-                                   iterations = maxiter, tol = tol, C = C, K = K,
-                                   initialpos = startpostions)
+    positions = NetworkLayout.sfdp(
+        adjmat;
+        dim,
+        Ptype = T,
+        iterations = maxiter,
+        tol = tol,
+        C = C,
+        K = K,
+        initialpos = startpostions,
+    )
     if dim == 2
         ([p[1] for p in positions], [p[2] for p in positions], nothing)
     else
@@ -73,27 +110,39 @@ function sfdp_graph(adjmat::AbstractMatrix;
     end
 end
 
-function sfdp_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+function sfdp_graph(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector;
+    kw...,
+)
     sfpd_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
 circular_graph(args...; kwargs...) = shell_graph(args...; kwargs...)
 
-function shell_graph(adjmat::AbstractMatrix;
-                     dim = 2,
-                     rng = nothing,
-                     x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                     y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                     z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
-                     nlist = Vector{Int}[], kw...
-                     )
+function shell_graph(
+    adjmat::AbstractMatrix;
+    dim = 2,
+    rng = nothing,
+    x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+    nlist = Vector{Int}[],
+    kw...,
+)
     @assert dim == 2
-    positions = NetworkLayout.shell(adjmat; nlist=nlist)
+    positions = NetworkLayout.shell(adjmat; nlist = nlist)
 
     ([p[1] for p in positions], [p[2] for p in positions], nothing)
 end
 
-function shell_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+function shell_graph(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector;
+    kw...,
+)
     shell_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
@@ -101,7 +150,6 @@ end
 
 # Axis-by-Axis Stress Minimization -- Yehuda Koren and David Harel
 # See: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.437.3177&rep=rep1&type=pdf
-
 
 # # NOTES:
 # #   - dᵢⱼ = the "graph-theoretical distance between nodes i and j"
@@ -145,28 +193,30 @@ end
 #     x, y, z
 # end
 
-norm_ij(X, i, j) = sqrt(sum(Float64[(v[i]-v[j])^2 for v in X]))
-stress(X, dist, w, i, j) = w[i,j] * (norm_ij(X, i, j) - dist[i,j])^2
+norm_ij(X, i, j) = sqrt(sum(Float64[(v[i] - v[j])^2 for v in X]))
+stress(X, dist, w, i, j) = w[i, j] * (norm_ij(X, i, j) - dist[i, j])^2
 function stress(X, dist, w)
     tot = 0.0
-    for i=1:size(X,1), j=1:i-1
+    for i in 1:size(X, 1), j in 1:(i - 1)
         tot += stress(X, dist, w, i, j)
     end
     tot
 end
 
-
 # follows section 2.3 from http://link.springer.com/chapter/10.1007%2F978-3-540-31843-9_25#page-1
 # Localized optimization, updates: x
-function by_axis_local_stress_graph(adjmat::AbstractMatrix;
-                              node_weights::AbstractVector = ones(size(adjmat,1)),
-                              dim = 2, free_dims = 1:dim,
-                              rng = nothing,
-                              x = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
-                              y = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
-                              z = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
-                              maxiter = 1000,
-                              kw...)
+function by_axis_local_stress_graph(
+    adjmat::AbstractMatrix;
+    node_weights::AbstractVector = ones(size(adjmat, 1)),
+    dim = 2,
+    free_dims = 1:dim,
+    rng = nothing,
+    x = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
+    y = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
+    z = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
+    maxiter = 1000,
+    kw...,
+)
     adjmat = make_symmetric(adjmat)
     n = length(node_weights)
 
@@ -183,12 +233,14 @@ function by_axis_local_stress_graph(adjmat::AbstractMatrix;
     laststress = stress(X, dist, w)
     for k in 1:maxiter
         for p in free_dims
-            for i=1:n
+            for i in 1:n
                 numer, denom = 0.0, 0.0
-                for j=1:n
-                    i==j && continue
-                    numer += w[i,j] * (X[p][j] + dist[i,j] * (X[p][i] - X[p][j]) / norm_ij(X, i, j))
-                    denom += w[i,j]
+                for j in 1:n
+                    i == j && continue
+                    numer +=
+                        w[i, j] *
+                        (X[p][j] + dist[i, j] * (X[p][i] - X[p][j]) / norm_ij(X, i, j))
+                    denom += w[i, j]
                 end
                 if denom != 0
                     X[p][i] = numer / denom
@@ -208,21 +260,29 @@ function by_axis_local_stress_graph(adjmat::AbstractMatrix;
     dim == 2 ? (X..., nothing) : X
 end
 
-function by_axis_local_stress_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector; kw...)
+function by_axis_local_stress_graph(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector;
+    kw...,
+)
     by_axis_local_stress_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 end
 
 # -----------------------------------------------------
 
-function buchheim_graph(adjlist::AbstractVector;
-                    node_weights::AbstractVector = ones(length(adjlist)),
-                    root::Symbol = :top,  # flow of tree: left, right, top, bottom
-                    layers_scalar = 1.0,
-                    layers = nothing,
-                    dim = 2,
-                    kw...)
+function buchheim_graph(
+    adjlist::AbstractVector;
+    node_weights::AbstractVector = ones(length(adjlist)),
+    root::Symbol = :top,  # flow of tree: left, right, top, bottom
+    layers_scalar = 1.0,
+    layers = nothing,
+    dim = 2,
+    kw...,
+)
     # @show adjlist typeof(adjlist)
-    positions = NetworkLayout.buchheim(adjlist; nodesize = convert(Vector{Float64}, node_weights))
+    positions =
+        NetworkLayout.buchheim(adjlist; nodesize = convert(Vector{Float64}, node_weights))
     Float64[p[1] for p in positions], Float64[p[2] for p in positions], nothing
 end
 
@@ -231,16 +291,20 @@ end
 tree_graph(adjmat::AbstractMatrix; kw...) =
     tree_graph(get_source_destiny_weight(adjmat)...; kw...)
 
-function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector;
-                    node_weights::AbstractVector = ones(infer_size_from(source, destiny)),
-                    root::Symbol = :top,  # flow of tree: left, right, top, bottom
-                    layers_scalar = 1.0,
-                    layers = nothing,
-                    positions = nothing,
-                    dim = 2,
-                    rng = nothing,
-                    add_noise = true,
-                    kw...)
+function tree_graph(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector;
+    node_weights::AbstractVector = ones(infer_size_from(source, destiny)),
+    root::Symbol = :top,  # flow of tree: left, right, top, bottom
+    layers_scalar = 1.0,
+    layers = nothing,
+    positions = nothing,
+    dim = 2,
+    rng = nothing,
+    add_noise = true,
+    kw...,
+)
     extrakw = Dict{Symbol,Any}(kw)
     # @show root layers positions dim add_noise extrakw
     n = length(node_weights)
@@ -289,19 +353,20 @@ function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, w
     end
 
     # now that we've fixed one dimension, let the stress algo solve for the other(s)
-    by_axis_local_stress_graph(get_adjacency_matrix(source, destiny, weights);
-                               node_weights=node_weights,
-                               rng=rng,
-                               dim=dim,
-                               extrakw...)
+    by_axis_local_stress_graph(
+        get_adjacency_matrix(source, destiny, weights);
+        node_weights = node_weights,
+        rng = rng,
+        dim = dim,
+        extrakw...,
+    )
 end
-
 
 function adjlist_and_degrees(source, destiny, n)
     # build a list of children (adjacency list)
-    alist = Vector{Int}[Int[] for i=1:n]
+    alist = Vector{Int}[Int[] for i in 1:n]
     indeg, outdeg = zeros(Int, n), zeros(Int, n)
-    for (si,di) in zip(source, destiny)
+    for (si, di) in zip(source, destiny)
         push!(alist[si], di)
         indeg[di] += 1
         outdeg[si] += 1
@@ -314,13 +379,13 @@ function compute_tree_layers(source, destiny, n)
 
     # choose root to be the node with lots going out, but few coming in
     netdeg = outdeg - 50indeg
-    idxs = sortperm(netdeg, rev=true)
+    idxs = sortperm(netdeg, rev = true)
     # rootidx = findmax(netdeg)
     # @show outdeg indeg netdeg idxs alist
     placed = Int[]
 
     layers = zeros(n)
-    for i=1:n
+    for i in 1:n
         idx = shift!(idxs)
 
         # first, place this after its parents
@@ -347,12 +412,12 @@ end
 # and push the children below their parents
 function compute_tree_layers2(source, destiny, n)
     alist, indeg, outdeg = adjlist_and_degrees(source, destiny, n)
-    roots = filter(i->indeg[i]==0, 1:n)
+    roots = filter(i -> indeg[i] == 0, 1:n)
     if isempty(roots)
         roots = [1]
     end
 
-    layers = zeros(Int,n)
+    layers = zeros(Int, n)
     for i in roots
         shift_children!(layers, alist, Int[], i)
     end
@@ -360,7 +425,7 @@ function compute_tree_layers2(source, destiny, n)
     # now that we've shifted children out, move parents closer to their closest children
     while true
         shifted = false
-        for parent=1:n
+        for parent in 1:n
             if !(isempty(alist[parent]))
                 minidx = minimum(layers[child] for child in alist[parent])
                 if layers[parent] < minidx - 1
@@ -389,17 +454,18 @@ function shift_children!(layers, alist, placed, parent)
     end
 end
 
-
 # -----------------------------------------------------
 
 # TODO: maybe also implement Catmull-Rom Splines? http://www.mvps.org/directx/articles/catmull/
 
 # -----------------------------------------------------
 
-function arc_diagram(source::AbstractVector{Int},
-                     destiny::AbstractVector{Int},
-                     weights::AbstractVector;
-                     kw...)
+function arc_diagram(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector;
+    kw...,
+)
     N = infer_size_from(source, destiny)
     X = collect(1:N)
     O = zero(X)
@@ -408,10 +474,12 @@ end
 
 # -----------------------------------------------------
 
-function chord_diagram( source::AbstractVector{Int},
-                        destiny::AbstractVector{Int},
-                        weights::AbstractVector;
-                        kw... )
+function chord_diagram(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector;
+    kw...,
+)
     N = infer_size_from(source, destiny)
     nodes = collect(1:N)
     δ = 2pi / N
