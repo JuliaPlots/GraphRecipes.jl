@@ -45,7 +45,7 @@ function string_from_node(node)
 end
 
 # recursively build a graph of children of `tree_wrapper.root`
-@recipe function f(tree_wrapper::TreePlot; namefunc = string_from_node )
+@recipe function f(tree_wrapper::TreePlot; namefunc = string_from_node)
     root = tree_wrapper.root
     # recursively add children
     nodes = Any[root]
