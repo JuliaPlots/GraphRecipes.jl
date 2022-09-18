@@ -1,6 +1,6 @@
 
 # -----------------------------------------------------
-# -----------------------------------------------------
+infer_size_from(args...) = maximum(maximum.(args))
 
 # see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
 # also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
@@ -17,9 +17,10 @@ end
 
 function spring_graph(adjmat::AbstractMatrix;
                       dim = 2,
-                      x = rand(size(adjmat)[1]),
-                      y = rand(size(adjmat)[1]),
-                      z = rand(size(adjmat)[1]),
+                      rng = nothing,
+                      x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+                      y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+                      z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
                       maxiter = 100, initialtemp = 2.0, C = 2.0, kw...
                       )
     @assert dim == 2 || dim == 3
@@ -47,9 +48,10 @@ end
 
 function sfdp_graph(adjmat::AbstractMatrix;
                     dim = 2,
-                    x = rand(size(adjmat)[1]),
-                    y = rand(size(adjmat)[1]),
-                    z = rand(size(adjmat)[1]),
+                    rng = nothing,
+                    x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+                    y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+                    z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
                     maxiter = 100, tol = 1e-10, C = 1.0, K = 1.0, kw...
                     )
     @assert dim == 2 || dim == 3
@@ -79,9 +81,10 @@ circular_graph(args...; kwargs...) = shell_graph(args...; kwargs...)
 
 function shell_graph(adjmat::AbstractMatrix;
                      dim = 2,
-                     x = rand(size(adjmat)[1]),
-                     y = rand(size(adjmat)[1]),
-                     z = rand(size(adjmat)[1]),
+                     rng = nothing,
+                     x = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+                     y = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
+                     z = rand(rng_from_rng_or_seed(rng, nothing), size(adjmat)[1]),
                      nlist = Vector{Int}[], kw...
                      )
     @assert dim == 2
@@ -111,9 +114,10 @@ end
 # # dims is 2 (2D) or 3 (3D).  free_dims is a vector of the dimensions to update (for example if you fix y and solve for x)
 # function by_axis_stress_graph(adjmat::AbstractMatrix, node_weights::AbstractVector = ones(size(adjmat,1));
 #                               dims = 2, free_dims = 1:dims,
-#                               x = rand(length(node_weights)),
-#                               y = rand(length(node_weights)),
-#                               z = rand(length(node_weights)))
+#                               rng = nothing,
+#                               x = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
+#                               y = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
+#                               z = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)))
 #     adjmat = make_symmetric(adjmat)
 #     L, D = compute_laplacian(adjmat, node_weights)
 
@@ -157,9 +161,10 @@ end
 function by_axis_local_stress_graph(adjmat::AbstractMatrix;
                               node_weights::AbstractVector = ones(size(adjmat,1)),
                               dim = 2, free_dims = 1:dim,
-                              x = rand(length(node_weights)),
-                              y = rand(length(node_weights)),
-                              z = rand(length(node_weights)),
+                              rng = nothing,
+                              x = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
+                              y = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
+                              z = rand(rng_from_rng_or_seed(rng, nothing), length(node_weights)),
                               maxiter = 1000,
                               kw...)
     adjmat = make_symmetric(adjmat)
@@ -223,28 +228,26 @@ end
 
 # -----------------------------------------------------
 
-function tree_graph(adjmat::AbstractMatrix; kw...)
+tree_graph(adjmat::AbstractMatrix; kw...) =
     tree_graph(get_source_destiny_weight(adjmat)...; kw...)
-end
 
 function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector;
-                    node_weights::AbstractVector = ones(max(maximum(source), maximum(destiny))),
+                    node_weights::AbstractVector = ones(infer_size_from(source, destiny)),
                     root::Symbol = :top,  # flow of tree: left, right, top, bottom
                     layers_scalar = 1.0,
                     layers = nothing,
                     positions = nothing,
                     dim = 2,
+                    rng = nothing,
                     add_noise = true,
                     kw...)
     extrakw = Dict{Symbol,Any}(kw)
     # @show root layers positions dim add_noise extrakw
     n = length(node_weights)
 
-    # @show root
-
     # TODO: compute layers, which get bigger as you go away from the root
     if layers == nothing
-        # layers = rand(1:4, n)
+        # layers = rand(rng_from_rng_or_seed(rng, nothing), 1:4, n)
         layers = compute_tree_layers2(source, destiny, n)
     end
 
@@ -255,7 +258,7 @@ function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, w
 
     # add noise
     if add_noise
-        layers = layers + 0.6rand(size(layers)...)
+        layers = layers + 0.6rand(rng_from_rng_or_seed(rng, nothing), size(layers)...)
     end
 
     # TODO: normalize layers somehow so it's in line with distances
@@ -288,6 +291,7 @@ function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, w
     # now that we've fixed one dimension, let the stress algo solve for the other(s)
     by_axis_local_stress_graph(get_adjacency_matrix(source, destiny, weights);
                                node_weights=node_weights,
+                               rng=rng,
                                dim=dim,
                                extrakw...)
 end
@@ -396,8 +400,9 @@ function arc_diagram(source::AbstractVector{Int},
                      destiny::AbstractVector{Int},
                      weights::AbstractVector;
                      kw...)
-    X = unique(vcat(source, destiny))
-    O = zeros(Int,length(X))
+    N = infer_size_from(source, destiny)
+    X = collect(1:N)
+    O = zero(X)
     X, O, O
 end
 
@@ -407,16 +412,17 @@ function chord_diagram( source::AbstractVector{Int},
                         destiny::AbstractVector{Int},
                         weights::AbstractVector;
                         kw... )
-    nodes = unique(vcat(source, destiny))
-    N = length(nodes)
+    N = infer_size_from(source, destiny)
+    nodes = collect(1:N)
     δ = 2pi / N
 
     x = Array{Float64}(undef, N)
     y = Array{Float64}(undef, N)
     for i in 1:N
-        x[i] = sin((i-1)*δ)
-        y[i] = cos((i-1)*δ)
+        v = (i - 1) * δ
+        x[i] = sin(v)
+        y[i] = cos(v)
     end
 
-    x, y, zeros(Int,length(x))
+    x, y, zero(x)
 end

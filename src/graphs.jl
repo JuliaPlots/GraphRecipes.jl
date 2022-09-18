@@ -24,13 +24,18 @@ const _graph_inputs = Dict{Symbol,Any}(
     :chorddiagram => :sourcedestiny
 )
 
-function prepare_graph_inputs(method::Symbol, inputs...)
+function prepare_graph_inputs(method::Symbol, inputs...; display_n=nothing)
     input_type = get(_graph_inputs, method, :sourcedestiny)
-    if input_type == :adjmat
-        (get_adjacency_matrix(inputs...),)
-    elseif input_type == :sourcedestiny
+    if input_type === :adjmat
+        mat = if display_n === nothing
+            get_adjacency_matrix(inputs...)
+        else
+            get_adjacency_matrix(inputs..., display_n)
+        end
+        (mat,)
+    elseif input_type === :sourcedestiny
         get_source_destiny_weight(inputs...)
-    elseif input_type == :adjlist
+    elseif input_type === :adjlist
         (get_adjacency_list(inputs...),)
     end
 end
@@ -39,6 +44,7 @@ end
 
 function get_source_destiny_weight(mat::AbstractArray{T,2}) where T
     nrow, ncol = size(mat)    # rows are sources and columns are destinies
+    @assert nrow == ncol
 
     nosymmetric = !issymmetric(mat) # plots only triu for symmetric matrices
     nosparse = !issparse(mat) # doesn't plot zeros from a sparse matrix
@@ -49,34 +55,32 @@ function get_source_destiny_weight(mat::AbstractArray{T,2}) where T
     destiny = Array{Int}(undef, L)
     weights  = Array{T}(undef, L)
 
-    idx = 1
+    idx = 0
     for i in 1:nrow, j in 1:ncol
         value = mat[i, j]
         if !isnan(value) && ( nosparse || value != zero(T) ) # TODO: deal with Nullable
-
             if i < j
+                idx += 1
                 source[idx]  = i
                 destiny[idx] = j
-                weights[idx]  = value
-                idx += 1
+                weights[idx] = value
             elseif nosymmetric && (i > j)
+                idx += 1
                 source[idx]  = i
                 destiny[idx] = j
-                weights[idx]  = value
-                idx += 1
+                weights[idx] = value
             end
 
         end
     end
-
-    resize!(source, idx-1), resize!(destiny, idx-1), resize!(weights, idx-1)
+    resize!(source, idx), resize!(destiny, idx), resize!(weights, idx)
 end
 
 function get_source_destiny_weight(source::AbstractVector, destiny::AbstractVector)
     if length(source) != length(destiny)
         throw(ArgumentError("Source and destiny must have the same length."))
     end
-    source, destiny, Float64[ 1.0 for i in source ]
+    source, destiny, ones(length(source))
 end
 
 function get_source_destiny_weight(source::AbstractVector, destiny::AbstractVector, weights::AbstractVector)
@@ -100,28 +104,24 @@ end
 
 # -----------------------------------------------------
 
-function get_adjacency_matrix(mat::AbstractMatrix)
-    mat
-end
+get_adjacency_matrix(mat::AbstractMatrix) = mat
 
-function get_adjacency_matrix(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector)
-    n = max(maximum(source), maximum(destiny))
-    Matrix(sparse(source, destiny, weights, n, n))
-end
+get_adjacency_matrix(
+    source::AbstractVector{Int},
+    destiny::AbstractVector{Int},
+    weights::AbstractVector,
+    n = infer_size_from(source, destiny)
+) = Matrix(sparse(source, destiny, weights, n, n))
 
-function get_adjacency_matrix(adjlist::AbstractVector{V}) where V<:AbstractVector{T} where T<:Any
-    s,d,w = get_source_destiny_weight(adjlist)
-    get_adjacency_matrix(s, d, w)
-end
+get_adjacency_matrix(adjlist::AbstractVector{V}) where V<:AbstractVector{T} where T<:Any =
+    get_adjacency_matrix(get_source_destiny_weight(adjlist)...)
 
 # -----------------------------------------------------
 
-function get_adjacency_list(mat::AbstractMatrix)
-    get_adjacency_list(get_source_destiny_weight(mat))
-end
+get_adjacency_list(mat::AbstractMatrix) = get_adjacency_list(get_source_destiny_weight(mat))
 
 function get_adjacency_list(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector)
-    n = max(maximum(source), maximum(destiny))
+    n = infer_size_from(source, destiny)
     adjlist = [Int[] for i=1:n]
     for (s,d) in zip(source,destiny)
         push!(adjlist[s], d)
@@ -129,9 +129,7 @@ function get_adjacency_list(source::AbstractVector{Int}, destiny::AbstractVector
     adjlist
 end
 
-function get_adjacency_list(adjlist::AbstractVector{V}) where V<:AbstractVector{Int}
-    adjlist
-end
+get_adjacency_list(adjlist::AbstractVector{<:AbstractVector{Int}}) = adjlist
 
 # -----------------------------------------------------
 
@@ -197,17 +195,12 @@ function get_source_destiny_weight(g::Graphs.AbstractGraph)
     get_source_destiny_weight(source, destiny)
 end
 
-function get_adjacency_matrix(g::Graphs.AbstractGraph)
-    adjacency_matrix(g)
-end
+get_adjacency_matrix(g::Graphs.AbstractGraph) = adjacency_matrix(g)
 
-function get_adjacency_matrix(source::AbstractVector{Int}, destiny::AbstractVector{Int})
-    get_adjacency_matrix(source, destiny, ones(length(source)))
-end
+get_adjacency_matrix(source::AbstractVector{Int}, destiny::AbstractVector{Int}, n = infer_size_from(source, destiny)) =
+    get_adjacency_matrix(source, destiny, ones(length(source)), n)
 
-function get_adjacency_list(g::Graphs.AbstractGraph)
-    g.fadjlist
-end
+get_adjacency_list(g::Graphs.AbstractGraph) = g.fadjlist
 
 function format_nodeproperty(prop, n_edges, edge_boxes = 0; fill_value = nothing)
     prop isa Array ? permutedims(vcat(fill(fill_value, edge_boxes + n_edges), vec(prop), fill_value)) : prop
@@ -267,6 +260,7 @@ nodestrokewidth = 1
 nodestrokecolor = :black
 nodestrokestyle = :solid
 nodestroke_z = nothing
+rng = nothing
 x = nothing
 y = nothing
 z = nothing
@@ -283,6 +277,7 @@ edge_label_box = true
 edge_z = nothing
 edgecolor = :black
 edgestyle = :solid
+trim = false
 ```
 
 See the [documentation]( http://docs.juliaplots.org/latest/graphrecipes/introduction/ ) for
@@ -310,6 +305,7 @@ more details.
                    nodestrokecolor = :black,
                    nodestrokestyle = :solid,
                    nodestroke_z = nothing,
+                   rng = nothing,
                    x = nothing,
                    y = nothing,
                    z = nothing,
@@ -326,6 +322,7 @@ more details.
                    edge_z = nothing,
                    edgecolor = :black,
                    edgestyle = :solid,
+                   trim = false,
                   )
     # Process the args so that they are a Graphs.Graph.
     if length(g.args) <= 1 && !(eltype(g.args[1]) <: AbstractArray) && !(g.args[1] isa Graphs.AbstractGraph) && method != :chorddiagram && method != :arcdiagram
@@ -369,8 +366,10 @@ more details.
     end
 
     @assert dim in (2, 3)
-    _3d = dim == 3
+    is3d = dim == 3
     adj_mat = get_adjacency_matrix(g.args...)
+    nr, nc = size(adj_mat)  # number of nodes == number of rows
+    @assert nr == nc
     isdirected = (g.args[1] isa DiGraph || !issymmetric(adj_mat)) &&
                  !in(method, (:tree, :buchheim)) && !(get(plotattributes, :arrow, true) == false)
     if isdirected && (g.args[1] isa Matrix)
@@ -383,29 +382,26 @@ more details.
         source = Int[findfirst(names, si) for si in source]
         destiny = Int[findfirst(names, di) for di in destiny]
     end
-    n = max(maximum(source), maximum(destiny))
+    n = infer_size_from(source, destiny)
+    display_n = trim ? n : nr  # number of displayed nodes
     n_edges = length(source)
 
-    if isnothing(node_weights)
-        node_weights = ones(n)
-    end
-    @assert length(node_weights) == n
+    isnothing(node_weights) && (node_weights = ones(display_n))
 
-    xyz = _3d ? (x,y,z) : (x,y)
+    xyz = is3d ? (x, y, z) : (x, y)
     numnothing = count(isnothing, xyz)
 
     # do we want to compute coordinates?
     if numnothing > 0
-        if isnothing(free_dims)
-            # compute free_dims
-            free_dims = findall(isnothing, xyz)
-        end
+        isnothing(free_dims) && (free_dims = findall(isnothing, xyz))  # compute free_dims
+        dat = prepare_graph_inputs(method, source, destiny, weights; display_n = display_n)
         x, y, z = func(
-            prepare_graph_inputs(method, source, destiny, weights)...;
+            dat...;
             node_weights = node_weights,
             dim = dim,
             free_dims = free_dims,
             root = root,
+            rng = rng,
             layout_kw...
         )
     end
@@ -440,7 +436,7 @@ more details.
         #xlims --> (xcenter-ahw, xcenter+ahw)
         ycenter = mean(extrema(y))
         #ylims --> (ycenter-ahw, ycenter+ahw)
-        if _3d
+        if is3d
             zcenter = mean(extrema(z))
             #zlims --> (zcenter-ahw, zcenter+ahw)
         end
@@ -455,7 +451,7 @@ more details.
         end
         xlims --> extrema_plus_buffer(x, axis_buffer[1])
         ylims --> extrema_plus_buffer(y, axis_buffer[2])
-        if _3d
+        if is3d
             if method != :chorddiagram && numnothing > 0
                 zlims = ignorenan_extrema(z)
                 z .-= mean(z)
@@ -464,7 +460,7 @@ more details.
             zlims --> extrema_plus_buffer(z, axis_buffer[3])
         end
     end
-    xyz = _3d ? (x,y,z) : (x,y)
+    xyz = is3d ? (x, y, z) : (x, y)
     # Get the coordinates for the edges of the nodes.
     node_vec_vec_xy = []
     nodewidth = 0.0
@@ -472,7 +468,7 @@ more details.
     if !(nodeshape isa Array)
         nodeshape = repeat([nodeshape], length(x))
     end
-    if !_3d
+    if !is3d
         for i in 1:length(x)
             node_number = i % length(nodeshape) == 0 ? length(nodeshape) : i % length(nodeshape)
             node_weight = isnothing(node_weights) ? 1 : (10 + 100node_weights[i]/sum(node_weights))/50
@@ -511,10 +507,10 @@ more details.
             end
         end
     else
-        @assert _3d # TODO Make 3d work.
+        @assert is3d # TODO Make 3d work.
     end
     # The node_perimter_info list contains the information needed to construct the
-    # information in node_vec_vec_xy. For example, if (nodeshape[i]==:circle && !_3d),
+    # information in node_vec_vec_xy. For example, if (nodeshape[i]==:circle && !is3d),
     # then all of the information in node_vec_vec_xy[i] can be summarised with three
     # numbers describing the center and the radius of the circle.
     node_perimeter_info = []
@@ -537,11 +533,9 @@ more details.
             matrix_size = round(Int, sqrt(length(edgelabel)))
             edgelabel = reshape(edgelabel, matrix_size, matrix_size)
         end
-        for i in 1:size(edgelabel)[1]
-            for j in 1:size(edgelabel)[2]
-                if islabel(edgelabel[i, j])
-                    tmp[(i, j)] = edgelabel[i, j]
-                end
+        for i in 1:size(edgelabel)[1], j in 1:size(edgelabel)[2]
+            if islabel(edgelabel[i, j])
+                tmp[(i, j)] = edgelabel[i, j]
             end
         end
         edgelabel = tmp
@@ -579,17 +573,17 @@ more details.
         2
     end
 
-    for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+    for (edge_num, (si, di, wi)) in enumerate(zip(source, destiny, weights))
         edge_has_been_seen[(si, di)] += 1
-        xseg = Vector{Float64}()
-        yseg = Vector{Float64}()
-        zseg = Vector{Float64}()
-        l_wg = Vector{Float64}()
+        xseg = Float64[]
+        yseg = Float64[]
+        zseg = Float64[]
+        l_wg = Float64[]
 
         # add a line segment
         xsi, ysi, xdi, ydi = shorten_segment(x[si], y[si], x[di], y[di], shorten)
         θ = (edge_has_been_seen[(si, di)] - 1)*pi/8
-        if isdirected && si != di && !_3d
+        if isdirected && si != di && !is3d
             xpt, ypt = if method != :chorddiagram
                 control_point(xsi, xdi,
                               ysi, ydi,
@@ -613,8 +607,13 @@ more details.
                 ishoriz = root in (:left,:right)
                 xsi, xdi = (ishoriz ? (x[si]+dist,x[di]-dist) : (x[si],x[di]))
                 ysi, ydi = (ishoriz ? (y[si],y[di]) : (y[si]+dist,y[di]-dist))
-                xpts, ypts = directed_curve(xsi, xdi, ysi, ydi,
-                            xview=get(plotattributes, :xlims, (0,1)), yview=get(plotattributes, :ylims, (0,1)), root=root)
+                xpts, ypts = directed_curve(
+                    xsi, xdi, ysi, ydi,
+                    xview=get(plotattributes, :xlims, (0,1)),
+                    yview=get(plotattributes, :ylims, (0,1)),
+                    root=root,
+                    rng=rng,
+                )
                 append!(xseg, xpts)
                 append!(yseg, ypts)
                 append!(l_wg, [ wi for i in 1:length(xpts) ] )
@@ -666,21 +665,21 @@ more details.
                         push!(edge_label_box_vertices_array, edge_label_box_vertices)
                     end
                 end
-                if method != :chorddiagram && !_3d
+                if method != :chorddiagram && !is3d
                     append!(xseg, xpts)
                     append!(yseg, ypts)
                     push!(l_wg, wi)
                 else
                     push!(xseg, xsi, xpt, xdi)
                     push!(yseg, ysi, ypt, ydi)
-                    _3d && push!(zseg, z[si], z[si], z[di])
+                    is3d && push!(zseg, z[si], z[si], z[di])
                     push!(l_wg, wi)
                 end
             end
         else
             push!(xseg, xsi, xdi)
             push!(yseg, ysi, ydi)
-            _3d && push!(zseg, z[si], z[di])
+            is3d && push!(zseg, z[si], z[di])
             if !isnothing(edgelabel) && haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                 q = [(xsi + xdi)/2, (ysi + ydi)/2]
 
@@ -697,7 +696,7 @@ more details.
                 end
             end
         end
-        if si == di && !_3d
+        if si == di && !is3d
             inds = 1:n .!= si
             self_edge_angle = pi/8 + (edge_has_been_seen[(si, di)] - 1)*pi/8
             θ1 = unoccupied_angle(xsi, ysi, x[inds], y[inds]) - self_edge_angle/2
@@ -771,32 +770,33 @@ more details.
         end
         append!(edges_list[1], xseg[.!isnan.(xseg)])
         append!(edges_list[2], yseg[.!isnan.(yseg)])
-        _3d && append!(edges_list[3], zseg[.!isnan.(zseg)])
+        is3d && append!(edges_list[3], zseg[.!isnan.(zseg)])
         append!(edges_list[4], l_wg[.!isnan.(l_wg)])
     end
 
-    if !_3d
-        edges_list = (reshape(edges_list[1], nsegments,
-                              round(Int, length(edges_list[1])/nsegments)),
-                      reshape(edges_list[2], nsegments,
-                              round(Int, length(edges_list[2])/nsegments)))
-        edges_list = ([edges_list[1][:, j] for j in 1:size(edges_list[1], 2)],
-                      [edges_list[2][:, j] for j in 1:size(edges_list[2], 2)]
-        )
-    else
+    if is3d
         edges_list = (reshape(edges_list[1], 3,
                               round(Int, length(edges_list[1])/3)),
                       reshape(edges_list[2], 3,
                               round(Int, length(edges_list[2])/3)),
                       reshape(edges_list[3], 3,
                               round(Int, length(edges_list[3])/3)))
+    else
+        edges_list = (reshape(edges_list[1], nsegments,
+                              round(Int, length(edges_list[1])/nsegments)),
+                      reshape(edges_list[2], nsegments,
+                              round(Int, length(edges_list[2])/nsegments)))
+        edges_list = ([edges_list[1][:, j] for j in 1:size(edges_list[1], 2)],
+                      [edges_list[2][:, j] for j in 1:size(edges_list[2], 2)])
     end
 
     @series begin
+        num_edges_nodes := (length(edges_list[1]), length(node_vec_vec_xy))  # for debugging / tests
+
         seriestype := if method in (:tree, :buchheim, :chorddiagram)
             :curves
         else
-            if _3d
+            if is3d
                 # TODO make curves work
                 if curves
                     :curves
@@ -827,7 +827,7 @@ more details.
         isdirected && (arrow --> :simple, :head, 0.3, 0.3)
         primary := false
 
-        _3d ? edges_list[1:3] : edges_list[1:2]
+        is3d ? edges_list[1:3] : edges_list[1:2]
     end
     # The boxes around edge labels are defined as another list of series that sits on top
     # of the series for the edges.
@@ -837,7 +837,7 @@ more details.
     end
     index = 0
     if edge_label_box && !isnothing(edgelabel)
-        for (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+        for (edge_num, (si, di, wi)) in enumerate(zip(source, destiny, weights))
             edge_has_been_seen[(si, di)] += 1
             if haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                 index += 1
@@ -896,11 +896,11 @@ more details.
                 end
             end
             δ = 0.4 * (angles[2] - angles[1])
-            vec_vec_xy = [ arcshape(Θ-δ,Θ+δ) for Θ in angles ] # Shape
-            [ [ xy[1] for xy in vec_xy ] for vec_xy in vec_vec_xy ], [ [ xy[2] for xy in vec_xy ] for vec_xy in vec_vec_xy ]
+            vec_vec_xy = [arcshape(Θ-δ,Θ+δ) for Θ in angles] # Shape
+            [[ xy[1] for xy in vec_xy ] for vec_xy in vec_vec_xy ], [ [ xy[2] for xy in vec_xy ] for vec_xy in vec_vec_xy]
         end
     else
-        if _3d
+        if is3d
             seriestype := :scatter3d
             linewidth := 0
             linealpha := 0
@@ -924,14 +924,14 @@ more details.
                 line_z := nodestroke_z
 
                 nodeperimeters = (Any[], Any[])
-                for (i, vec_xy) in enumerate(node_vec_vec_xy)
+                for vec_xy in node_vec_vec_xy
                     push!(nodeperimeters[1], [xy[1] for xy in vec_xy])
                     push!(nodeperimeters[2], [xy[2] for xy in vec_xy])
                 end
 
                 nodeperimeters
 
-                # if _3d
+                # if is3d
                 #     seriestype := :volume
                 #     ([[xyz[1] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
                 #      [[xyz[2] for xyz in vec_xyz] for vec_xyz in node_vec_vec_xyz],
@@ -952,11 +952,10 @@ more details.
                 colorbar_entry --> false
                 markersize --> 0
                 markeralpha --> 0
-                annotations --> [edge_label_array ; [(x[i], y[i],
-                                                    names[ifelse(i % length(names) == 0,
-                                                                  length(names),
-                                                                  i % length(names))],
-                                                    fontsize) for i in 1:length(x)]]
+                annotations --> [
+                    edge_label_array;
+                    [(x[i], y[i], names[ifelse(i % length(names) == 0, length(names), i % length(names))], fontsize) for i in 1:length(x)]
+                ]
             end
         end
     end
