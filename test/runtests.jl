@@ -10,12 +10,8 @@ using Plots
 using Test
 using Gtk  # for popup
 
-import Random: seed!
-
 isci() = get(ENV, "CI", "false") == "true"
 itol(tol = nothing) = something(tol, isci() ? 1e-3 : 1e-5)
-
-const RNG = StableRNG(1234)
 
 include("functions.jl")
 include("parse_readme.jl")
@@ -60,9 +56,51 @@ cd(joinpath(@__DIR__, "..", "assets")) do
     end
 end
 
+@testset "issues" begin
+    @testset "143" begin
+        g = SimpleGraph(7)
+
+        add_edge!(g, 2, 3)
+        add_edge!(g, 3, 4)
+        @test g.ne == 2
+        al = GraphRecipes.get_adjacency_list(g)
+        @test isempty(al[1])
+        @test al[2] == [3]
+        @test al[3] == [2, 4]
+        @test al[4] == [3]
+        @test isempty(al[5])
+        @test isempty(al[6])
+        @test isempty(al[7])
+        s, d, w = GraphRecipes.get_source_destiny_weight(al)
+        @test s == [2, 3, 3, 4]
+        @test d == [3, 2, 4, 3]
+        @test all(w .≈ 1)
+        pl = graphplot(g)
+        @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (2, 7)
+
+        add_edge!(g, 6, 7)
+        @test g.ne == 3
+        pl = graphplot(g)
+        @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (3, 7)
+
+        # old behavior, can be recovered using `trim=true`
+        g = SimpleGraph(7)
+        add_edge!(g, 2, 3)
+        add_edge!(g, 3, 4)
+        pl = graphplot(g; trim=true)
+        @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (2, 4)
+    end
+
+    @testset "180" begin
+        rng = StableRNG(1)
+        mat = Symmetric(sparse(rand(rng,0:1,8,8)))
+        graphplot(mat, method=:arcdiagram, rng=rng)
+    end
+end
+
 @testset "utils.jl" begin
-    @test GraphRecipes.directed_curve(0., 1., 0., 1., rng=RNG) == GraphRecipes.directed_curve(0, 1, 0, 1, rng=RNG)
-    seed!(RNG, 123)
+    rng = StableRNG(1)
+    @test GraphRecipes.directed_curve(0., 1., 0., 1., rng=rng) == GraphRecipes.directed_curve(0, 1, 0, 1, rng=rng)
 
     @test GraphRecipes.isnothing(nothing) == Plots.isnothing(nothing)
     @test GraphRecipes.isnothing(missing) == Plots.isnothing(missing)
@@ -72,7 +110,7 @@ end
     @test GraphRecipes.isnothing(0.0) == Plots.isnothing(0.0)
     @test GraphRecipes.isnothing(1.0) == Plots.isnothing(1.0)
 
-    for (s, e) in [(rand(RNG), rand(RNG)) for i in 1:100]
+    for (s, e) in [(rand(rng), rand(rng)) for i in 1:100]
         @test GraphRecipes.partialcircle(s, e) == Plots.partialcircle(s, e)
     end
 
@@ -102,12 +140,12 @@ end
     # checking that they don't error. Also, test all of the different aliases.
     @testset "Aliases" begin
         A = [1 0 1 0;0 0 1 1;1 1 1 1;0 0 1 1]
-        graphplot(A, markercolor=:red, markershape=:rect, markersize=0.5, rng=RNG)
-        graphplot(A, nodeweights=1:4, rng=RNG)
-        graphplot(A, curvaturescalar=0, rng=RNG)
-        graphplot(A, el=Dict((1,2)=>""), elb=true, rng=RNG)
-        graphplot(A, ew=(s,d,w)->3, rng=RNG)
-        graphplot(A, ses=0.5, rng=RNG)
+        graphplot(A, markercolor=:red, markershape=:rect, markersize=0.5, rng=rng)
+        graphplot(A, nodeweights=1:4, rng=rng)
+        graphplot(A, curvaturescalar=0, rng=rng)
+        graphplot(A, el=Dict((1,2)=>""), elb=true, rng=rng)
+        graphplot(A, ew=(s,d,w)->3, rng=rng)
+        graphplot(A, ses=0.5, rng=rng)
     end
 end
 

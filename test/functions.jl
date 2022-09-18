@@ -1,14 +1,14 @@
 function random_labelled_graph()
     n = 15
-    seed!(RNG, 1)
-    A = Float64[ rand(RNG) < 0.5 ? 0 : rand(RNG) for i=1:n, j=1:n]
+    rng = StableRNG(1)
+    A = Float64[rand(rng) < 0.5 ? 0 : rand(rng) for i=1:n, j=1:n]
     for i=1:n
         A[i, 1:i-1] = A[1:i-1, i]
         A[i, i] = 0
     end
-    x = rand(RNG,n)
-    y = rand(RNG,n)
-    z = rand(RNG,n)
+    x = rand(rng,n)
+    y = rand(rng,n)
+    z = rand(rng,n)
     p = graphplot(A,
               nodesize = 0.2,
               node_weights = 1:n,
@@ -17,13 +17,12 @@ function random_labelled_graph()
               fontsize = 10,
               linecolor = :darkgrey,
               layout_kw = Dict(:x => x, :y => y),
-              rng=RNG
+              rng=rng
               )
     p, n, A, x, y, z
 end
 
 function random_3d_graph()
-    seed!(RNG, 1)
     n, A, x, y, z = random_labelled_graph()[2:end]
     graphplot(A,
               node_weights = 1:n,
@@ -34,26 +33,23 @@ function random_3d_graph()
               linecolor = :darkgrey,
               linealpha = 0.5,
               layout_kw = Dict(:x => x, :y => y, :z => z),
-              rng=RNG,
+              rng=StableRNG(1),
               )
 end
 
 function light_graphs()
-    seed!(RNG, 1)
     g = wheel_graph(10)
-    graphplot(g, curves=false, rng=RNG)
+    graphplot(g, curves=false, rng=StableRNG(1))
 end
 
 function directed()
     g = [0 1 1;
          0 0 1;
          0 1 0]
-
-    graphplot(g, names=1:3, curvature_scalar=0.1, rng=RNG)
+    graphplot(g, names=1:3, curvature_scalar=0.1, rng=StableRNG(1))
 end
 
 function edgelabel()
-    seed!(RNG, 1)
     n = 8
     g = wheel_digraph(n)
     edgelabel_dict = Dict()
@@ -63,62 +59,57 @@ function edgelabel()
         end
     end
 
-    graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect, rng=RNG)
+    graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect, rng=StableRNG(1))
 end
 
 function selfedges()
-    seed!(RNG, 1)
     g = [1 1 1;
          0 0 1;
          0 0 1]
-
-    graphplot(DiGraph(g), self_edge_size=0.2, rng=RNG)
+    graphplot(DiGraph(g), self_edge_size=0.2, rng=StableRNG(1))
 end
 
-function multigraphs()
-    seed!(RNG, 1)
-    graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.25, rng=RNG)
-end
+multigraphs() =
+    graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.25, rng=StableRNG(1))
 
 function arc_chord_diagrams()
-    seed!(RNG, 2)
-    adjmat = Symmetric(sparse(rand(RNG,0:1,8,8)))
+    rng = StableRNG(1)
+    adjmat = Symmetric(sparse(rand(rng,0:1,8,8)))
     plot(
          graphplot(adjmat,
                    method=:chorddiagram,
                    names=[text(string(i), 8) for i in 1:8],
                    linecolor=:black,
                    fillcolor=:lightgray,
-                   rng=RNG),
-
+                   rng=rng),
          graphplot(adjmat,
                    method=:arcdiagram,
                    markersize=0.5,
                    markershape=:circle,
                    linecolor=:black,
                    markercolor=:black,
-                   rng=RNG)
+                   rng=rng)
     )
 end
 
 function marker_properties()
     N = 8
     seed = 42
-    seed!(RNG, seed)
-    g = barabasi_albert(N, 1; rng=RNG, seed=seed)
+    rng = StableRNG(seed)
+    g = barabasi_albert(N, 1; rng=rng)
     weights = [length(neighbors(g, i)) for i in 1:nv(g)]
     graphplot(g, curvature_scalar=0,
               node_weights=weights, nodesize=0.25,
               linecolor=:gray,
               linewidth=2.5,
               nodeshape=:circle,
-              node_z=rand(RNG,N), markercolor=:viridis,
+              node_z=rand(rng,N), markercolor=:viridis,
               nodestrokewidth=1.5,
               markerstrokestyle=:solid,
               markerstrokealpha=1.0,
               markerstrokecolor=:lightgray,
               colorbar=true,
-              rng=RNG,
+              rng=rng,
     )
 end
 
@@ -132,13 +123,11 @@ function ast_example()
         out
     end
     )
-
-    plot(code, fontsize=10, shorten=0.01, axis_buffer=0.15, nodeshape=:rect, size=(1000, 1000), rng=RNG)
+    plot(code, fontsize=10, shorten=0.01, axis_buffer=0.15, nodeshape=:rect, size=(1000, 1000), rng=StableRNG(1))
 end
 
-function julia_type_tree()
-    plot(AbstractFloat, method=:tree, fontsize=10, nodeshape=:ellipse, size=(1000, 1000), rng=RNG)
-end
+julia_type_tree() =
+    plot(AbstractFloat, method=:tree, fontsize=10, nodeshape=:ellipse, size=(1000, 1000), rng=StableRNG(1))
 
 AbstractTrees.children(d::Dict) = [p for p in d]
 AbstractTrees.children(p::Pair) = AbstractTrees.children(p[2])
@@ -149,43 +138,39 @@ end
 
 function julia_dict_tree()
     d = Dict(:a => 2,:d => Dict(:b => 4,:c => "Hello"),:e => 5.0)
-
-    plot(TreePlot(d), method=:tree, fontsize=10, nodeshape=:ellipse, size=(1000, 1000), rng=RNG)
+    plot(TreePlot(d), method=:tree, fontsize=10, nodeshape=:ellipse, size=(1000, 1000), rng=StableRNG(1))
 end
 
-function diamond_nodeshape(x_i, y_i, s)
+diamond_nodeshape(x_i, y_i, s) =
     [(x_i + 0.5s*dx, y_i + 0.5s*dy) for (dx, dy) in [(1,1),(-1,1),(-1,-1),(1,-1)]]
-end
+
 function diamond_nodeshape_wh(x_i, y_i, h, w)
     out = Tuple{Float64, Float64}[(-0.5,0),(0,-0.5),(0.5,0),(0,0.5)]
     map(out) do t
         x = t[1]* h 
         y = t[2]* w
-        (
-         x + x_i, 
-         y + y_i 
-        )
+        (x + x_i, y + y_i)
     end
 end
 
 function custom_nodeshapes_single()
-    seed!(RNG, 6)
-    g = rand(RNG,5,5)
+    rng = StableRNG(1)
+    g = rand(rng,5,5)
     g[g .> 0.5] .= 0
     for i in 1:5
         g[i,i] = 0
     end
-    graphplot(g, nodeshape=diamond_nodeshape, rng=RNG)
+    graphplot(g, nodeshape=diamond_nodeshape, rng=rng)
 end
 
 function custom_nodeshapes_various()
-    seed!(RNG, 6)
-    g = rand(RNG,5,5)
+    rng = StableRNG(1)
+    g = rand(rng,5,5)
     g[g .> 0.5] .= 0
     for i in 1:5
         g[i,i] = 0
     end
-    graphplot(g, nodeshape=[:circle, diamond_nodeshape, diamond_nodeshape_wh, :hexagon, diamond_nodeshape_wh], rng=RNG)
+    graphplot(g, nodeshape=[:circle, diamond_nodeshape, diamond_nodeshape_wh, :hexagon, diamond_nodeshape_wh], rng=rng)
 end
 
 function funky_edge_and_marker_args()
@@ -230,6 +215,6 @@ function funky_edge_and_marker_args()
         nodestrokewidth=6,
         linewidth=2,
         colorbar=true,
-        rng=RNG,
+        rng=StableRNG(1),
     )
 end

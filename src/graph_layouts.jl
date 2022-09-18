@@ -1,6 +1,6 @@
 
 # -----------------------------------------------------
-# -----------------------------------------------------
+infer_size_from(args...) = maximum(maximum.(args))
 
 # see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
 # also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
@@ -228,12 +228,11 @@ end
 
 # -----------------------------------------------------
 
-function tree_graph(adjmat::AbstractMatrix; kw...)
+tree_graph(adjmat::AbstractMatrix; kw...) =
     tree_graph(get_source_destiny_weight(adjmat)...; kw...)
-end
 
 function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, weights::AbstractVector;
-                    node_weights::AbstractVector = ones(max(maximum(source), maximum(destiny))),
+                    node_weights::AbstractVector = ones(infer_size_from(source, destiny)),
                     root::Symbol = :top,  # flow of tree: left, right, top, bottom
                     layers_scalar = 1.0,
                     layers = nothing,
@@ -245,8 +244,6 @@ function tree_graph(source::AbstractVector{Int}, destiny::AbstractVector{Int}, w
     extrakw = Dict{Symbol,Any}(kw)
     # @show root layers positions dim add_noise extrakw
     n = length(node_weights)
-
-    # @show root
 
     # TODO: compute layers, which get bigger as you go away from the root
     if layers == nothing
@@ -403,8 +400,9 @@ function arc_diagram(source::AbstractVector{Int},
                      destiny::AbstractVector{Int},
                      weights::AbstractVector;
                      kw...)
-    X = unique(vcat(source, destiny))
-    O = zeros(Int,length(X))
+    N = infer_size_from(source, destiny)
+    X = collect(1:N)
+    O = zero(X)
     X, O, O
 end
 
@@ -414,16 +412,17 @@ function chord_diagram( source::AbstractVector{Int},
                         destiny::AbstractVector{Int},
                         weights::AbstractVector;
                         kw... )
-    nodes = unique(vcat(source, destiny))
-    N = length(nodes)
+    N = infer_size_from(source, destiny)
+    nodes = collect(1:N)
     δ = 2pi / N
 
     x = Array{Float64}(undef, N)
     y = Array{Float64}(undef, N)
     for i in 1:N
-        x[i] = sin((i-1)*δ)
-        y[i] = cos((i-1)*δ)
+        v = (i - 1) * δ
+        x[i] = sin(v)
+        y[i] = cos(v)
     end
 
-    x, y, zeros(Int,length(x))
+    x, y, zero(x)
 end
