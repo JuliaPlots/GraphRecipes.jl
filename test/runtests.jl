@@ -11,7 +11,7 @@ using Test
 using Gtk  # for popup
 
 isci() = get(ENV, "CI", "false") == "true"
-itol(tol = nothing) = something(tol, isci() ? 1e-4 : 1e-5)
+itol(tol = nothing) = something(tol, isci() ? 1e-3 : 1e-5)
 
 include("functions.jl")
 include("parse_readme.jl")
