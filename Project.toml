@@ -25,6 +25,7 @@ NaNMath = "0.3.3, 1"
 NetworkLayout = "0.4"
 PlotUtils = "0.6.2, 1"
 RecipesBase = "0.7, 0.8, 1"
+Statistics = "1"
 julia = "1.6"
 
 [extras]
