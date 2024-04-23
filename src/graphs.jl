@@ -961,7 +961,6 @@ more details.
     end
 
     @series begin
-        num_edges_nodes := (length(edges_list[1]), length(node_vec_vec_xy))  # for debugging / tests
 
         seriestype := if method in (:tree, :buchheim, :chorddiagram)
             :curves
