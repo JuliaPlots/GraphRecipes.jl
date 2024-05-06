@@ -516,7 +516,7 @@ more details.
         nodeshape = repeat([nodeshape], length(x))
     end
     if !is3d
-        for i in 1:length(x)
+        for i in eachindex(x)
             node_number =
                 i % length(nodeshape) == 0 ? length(nodeshape) : i % length(nodeshape)
             node_weight =
@@ -591,7 +591,7 @@ more details.
     # then all of the information in node_vec_vec_xy[i] can be summarised with three
     # numbers describing the center and the radius of the circle.
     node_perimeter_info = []
-    for i in 1:length(node_vec_vec_xy)
+    for i in eachindex(node_vec_vec_xy)
         if nodeshape[i] == :circle
             push!(
                 node_perimeter_info,
@@ -1063,7 +1063,7 @@ more details.
         markeralpha := 0
         aspect_ratio --> :equal
         if length(names) == length(x)
-            annotations := [(x[i], y[i], names[i]) for i in 1:length(x)]
+            annotations := [(x[i], y[i], names[i]) for i in eachindex(x)]
         end
         @series begin
             seriestype := :shape
@@ -1122,18 +1122,22 @@ more details.
             end
 
             if isempty(names)
+                @info "Empty names"
                 seriestype := :scatter
 
                 colorbar_entry --> false
-                markersize --> 0
-                markeralpha --> 0
+                markersize := 0
+                markeralpha := 0
+                markerstrokesize := 0
                 !isnothing(edgelabel) && (annotations --> edge_label_array)
             else
+                @info "Full names"
                 seriestype := :scatter
 
                 colorbar_entry --> false
-                markersize --> 0
-                markeralpha --> 0
+                markersize := 0
+                markeralpha := 0
+                markerstrokesize := 0
                 annotations --> [
                     edge_label_array
                     [
@@ -1146,7 +1150,7 @@ more details.
                                 i % length(names),
                             )],
                             fontsize,
-                        ) for i in 1:length(x)
+                        ) for i in eachindex(x)
                     ]
                 ]
             end

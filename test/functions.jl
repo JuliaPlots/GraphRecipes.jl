@@ -1,3 +1,8 @@
+using Plots
+using StableRNGs
+using GraphRecipes
+using GraphRecipes.Colors
+using GraphRecipes.AbstractTrees
 function random_labelled_graph()
     n = 15
     rng = StableRNG(1)
