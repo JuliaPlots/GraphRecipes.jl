@@ -84,12 +84,12 @@ end
         with_logger(ConsoleLogger(stderr, Logging.Debug)) do
             pl = graphplot(g)
             @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (2, 7)
-    
+
             add_edge!(g, 6, 7)
             @test g.ne == 3
             pl = graphplot(g)
             @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (3, 7)
-    
+
             # old behavior (see issue), can be recovered using `trim=true`
             g = SimpleGraph(7)
             add_edge!(g, 2, 3)
