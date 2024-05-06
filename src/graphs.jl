@@ -1122,7 +1122,6 @@ more details.
             end
 
             if isempty(names)
-                @info "Empty names"
                 seriestype := :scatter
 
                 colorbar_entry --> false
@@ -1131,7 +1130,6 @@ more details.
                 markerstrokesize := 0
                 !isnothing(edgelabel) && (annotations --> edge_label_array)
             else
-                @info "Full names"
                 seriestype := :scatter
 
                 colorbar_entry --> false
