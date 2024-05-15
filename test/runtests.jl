@@ -1,6 +1,7 @@
 using VisualRegressionTests
 using AbstractTrees
 using LinearAlgebra
+using Logging
 using GraphRecipes
 using SparseArrays
 using ImageMagick
@@ -41,8 +42,9 @@ cd(joinpath(@__DIR__, "..", "assets")) do
 
         @plottest ast_example() "ast_example.png" popup = !isci() tol = itol()
 
-        @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol()
-
+        if !(v"1.6" < VERSION < v"1.7") # having Static.jl in the Manifest adds another type
+            @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol()
+        end
         @plottest julia_dict_tree() "julia_dict_tree.png" popup = !isci() tol = itol()
 
         @plottest funky_edge_and_marker_args() "funky_edge_and_marker_args.png" popup =
@@ -79,20 +81,23 @@ end
         @test s == [2, 3, 3, 4]
         @test d == [3, 2, 4, 3]
         @test all(w .≈ 1)
-        pl = graphplot(g)
-        @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (2, 7)
 
-        add_edge!(g, 6, 7)
-        @test g.ne == 3
-        pl = graphplot(g)
-        @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (3, 7)
+        with_logger(ConsoleLogger(stderr, Logging.Debug)) do
+            pl = graphplot(g)
+            @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (2, 7)
 
-        # old behavior (see issue), can be recovered using `trim=true`
-        g = SimpleGraph(7)
-        add_edge!(g, 2, 3)
-        add_edge!(g, 3, 4)
-        pl = graphplot(g; trim = true)
-        @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (2, 4)
+            add_edge!(g, 6, 7)
+            @test g.ne == 3
+            pl = graphplot(g)
+            @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (3, 7)
+
+            # old behavior (see issue), can be recovered using `trim=true`
+            g = SimpleGraph(7)
+            add_edge!(g, 2, 3)
+            add_edge!(g, 3, 4)
+            pl = graphplot(g; trim = true)
+            @test first(pl.series_list)[:extra_kwargs][:num_edges_nodes] == (2, 4)
+        end
     end
 
     @testset "180" begin
