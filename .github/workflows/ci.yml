@@ -45,6 +45,7 @@ jobs:
         run: |
           julia -e '
             using Pkg
+            # NOTE: remove on Plots v2 release
             Pkg.add([
               (; url="https://github.com/JuliaPlots/Plots.jl", subdir="RecipesBase", rev="v2"),
               (; url="https://github.com/JuliaPlots/Plots.jl", subdir="RecipesPipeline", rev="v2"),
@@ -61,6 +62,14 @@ jobs:
           fi
           echo ${cmd[@]}
           ${cmd[@]} -e 'using Pkg; Pkg.test("GraphRecipes"; coverage=true)'
+      - uses: julia-actions/julia-processcoverage@latest
+        if: startsWith(matrix.os, 'ubuntu')
+      - uses: codecov/codecov-action@v4
+        if: startsWith(matrix.os, 'ubuntu')
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+          file: lcov.info
 
   Skip:
     if: "contains(github.event.head_commit.message, '[skip ci]')"
