@@ -43,9 +43,9 @@ jobs:
           julia -e '
             using Pkg
             Pkg.add([
-              (; url="https://github.com/JuliaPlots/Plots.jl/RecipesBase", rev="v2"),
-              (; url="https://github.com/JuliaPlots/Plots.jl/RecipesPipeline", rev="v2"),
-              (; url="https://github.com/JuliaPlots/Plots.jl/PlotsBase", rev="v2"),
+              (; url="https://github.com/JuliaPlots/Plots.jl", subdir="RecipesBase", rev="v2"),
+              (; url="https://github.com/JuliaPlots/Plots.jl", subdir="RecipesPipeline", rev="v2"),
+              (; url="https://github.com/JuliaPlots/Plots.jl", subdir="PlotsBase", rev="v2"),
               (; url="https://github.com/JuliaPlots/Plots.jl", rev="v2"),
             ])
           '
