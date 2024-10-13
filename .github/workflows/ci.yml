@@ -36,6 +36,17 @@ jobs:
         with:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v2
+      - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
+        run: |
+          julia -e '
+            using Pkg
+            Pkg.develop(url="https://github.com/JuliaPlots/Plots.jl/RecipesBase", rev="v2")
+            Pkg.develop(url="https://github.com/JuliaPlots/Plots.jl/RecipesPipeline", rev="v2")
+            Pkg.develop(url="https://github.com/JuliaPlots/Plots.jl/PlotsBase", rev="v2")
+            Pkg.develop(url="https://github.com/JuliaPlots/Plots.jl", rev="v2")
+          '
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
         with:
