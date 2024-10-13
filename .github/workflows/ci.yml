@@ -42,10 +42,12 @@ jobs:
         run: |
           julia -e '
             using Pkg
-            Pkg.develop(url="https://github.com/JuliaPlots/Plots.jl/RecipesBase", rev="v2")
-            Pkg.develop(url="https://github.com/JuliaPlots/Plots.jl/RecipesPipeline", rev="v2")
-            Pkg.develop(url="https://github.com/JuliaPlots/Plots.jl/PlotsBase", rev="v2")
-            Pkg.develop(url="https://github.com/JuliaPlots/Plots.jl", rev="v2")
+            Pkg.add([
+              PackageSpec(url="https://github.com/JuliaPlots/Plots.jl/RecipesBase", rev="v2"),
+              PackageSpec(url="https://github.com/JuliaPlots/Plots.jl/RecipesPipeline", rev="v2"),
+              PackageSpec(url="https://github.com/JuliaPlots/Plots.jl/PlotsBase", rev="v2"),
+              PackageSpec(url="https://github.com/JuliaPlots/Plots.jl", rev="v2"),
+            ])
           '
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
