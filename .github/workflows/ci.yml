@@ -1,8 +1,14 @@
 name: ci
 
 on:
-  push:
+  workflow_dispatch:
   pull_request:
+  push:
+    branches: [master, v2]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 defaults:
   run:
@@ -22,13 +28,10 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6'  # lower declared julia compat in `Project.toml`
+          - '1.10'  # lower declared julia compat in `Project.toml`
           - '1'
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
-        include:
-          - os: ubuntu-latest
-            prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
 
     steps:
       - uses: actions/checkout@v4
@@ -36,10 +39,28 @@ jobs:
         with:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v2
-      - uses: julia-actions/julia-buildpkg@latest
-      - uses: julia-actions/julia-runtest@latest
-        with:
-          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
+      - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
+        run: |
+          julia -e '
+            using Pkg
+            Pkg.add([
+              (; url="https://github.com/JuliaPlots/Plots.jl", subdir="RecipesBase", rev="v2"),
+              (; url="https://github.com/JuliaPlots/Plots.jl", subdir="RecipesPipeline", rev="v2"),
+              (; url="https://github.com/JuliaPlots/Plots.jl", subdir="PlotsBase", rev="v2"),
+              (; url="https://github.com/JuliaPlots/Plots.jl", rev="v2"),
+            ])
+            Pkg.develop(; path=".")
+          '
+      - name: Test GraphRecipes
+        run: |
+          cmd=(julia --color=yes)
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            cmd=(xvfb-run ${cmd[@]})
+          fi
+          echo ${cmd[@]}
+          ${cmd[@]} -e 'using Pkg; Pkg.test("GraphRecipes"; coverage=true)'
 
   Skip:
     if: "contains(github.event.head_commit.message, '[skip ci]')"

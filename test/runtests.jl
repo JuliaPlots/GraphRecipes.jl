@@ -11,6 +11,8 @@ using Plots
 using Test
 using Gtk  # for popup
 
+import Plots: PlotsBase
+
 isci() = get(ENV, "CI", "false") == "true"
 itol(tol = nothing) = something(tol, isci() ? 1e-3 : 1e-5)
 
@@ -58,7 +60,7 @@ cd(joinpath(@__DIR__, "..", "assets")) do
     end
 
     @testset "README" begin
-        @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci tol = itol()
+        @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
     end
 end
 
@@ -112,16 +114,16 @@ end
     @test GraphRecipes.directed_curve(0.0, 1.0, 0.0, 1.0, rng = rng) ==
           GraphRecipes.directed_curve(0, 1, 0, 1, rng = rng)
 
-    @test GraphRecipes.isnothing(nothing) == Plots.isnothing(nothing)
-    @test GraphRecipes.isnothing(missing) == Plots.isnothing(missing)
-    @test GraphRecipes.isnothing(NaN) == Plots.isnothing(NaN)
-    @test GraphRecipes.isnothing(0) == Plots.isnothing(0)
-    @test GraphRecipes.isnothing(1) == Plots.isnothing(1)
-    @test GraphRecipes.isnothing(0.0) == Plots.isnothing(0.0)
-    @test GraphRecipes.isnothing(1.0) == Plots.isnothing(1.0)
+    @test GraphRecipes.isnothing(nothing) == PlotsBase.isnothing(nothing)
+    @test GraphRecipes.isnothing(missing) == PlotsBase.isnothing(missing)
+    @test GraphRecipes.isnothing(NaN) == PlotsBase.isnothing(NaN)
+    @test GraphRecipes.isnothing(0) == PlotsBase.isnothing(0)
+    @test GraphRecipes.isnothing(1) == PlotsBase.isnothing(1)
+    @test GraphRecipes.isnothing(0.0) == PlotsBase.isnothing(0.0)
+    @test GraphRecipes.isnothing(1.0) == PlotsBase.isnothing(1.0)
 
     for (s, e) in [(rand(rng), rand(rng)) for i in 1:100]
-        @test GraphRecipes.partialcircle(s, e) == Plots.partialcircle(s, e)
+        @test GraphRecipes.partialcircle(s, e) == PlotsBase.partialcircle(s, e)
     end
 
     @testset "nearest_intersection" begin

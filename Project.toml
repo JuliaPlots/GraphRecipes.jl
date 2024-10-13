@@ -1,6 +1,6 @@
 name = "GraphRecipes"
 uuid = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
-version = "0.5.13"
+version = "1.0"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
@@ -17,16 +17,16 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-AbstractTrees = "0.3.1, 0.4"
-GeometryTypes = "0.7.7, 0.8"
+AbstractTrees = "0.4"
+GeometryTypes = "0.8"
 Graphs = "1.7"
-Interpolations = "0.12.8, 0.13 - 0.14, 0.15"
-NaNMath = "0.3.3, 1"
+Interpolations = "0.13 - 0.15"
+NaNMath = "1"
 NetworkLayout = "0.4"
 PlotUtils = "0.6.2, 1"
-RecipesBase = "0.7, 0.8, 1"
+RecipesBase = "1"
 Statistics = "1"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
