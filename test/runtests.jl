@@ -6,7 +6,6 @@ using GraphRecipes
 using SparseArrays
 using ImageMagick
 using StableRNGs
-using PlotsBase
 using Graphs
 using Plots
 using Test
