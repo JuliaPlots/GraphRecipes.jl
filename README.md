@@ -1,3 +1,7 @@
+# WARNING
+
+https://github.com/JuliaPlots/GraphRecipes.jl is now integrated into https://github.com/JuliaPlots/Plots.jl for Plots v2, please make corresponding PRs there.
+
 [gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
 [gh-ci-url]: https://github.com/JuliaPlots/GraphRecipes.jl/actions?query=workflow%3Aci
 
