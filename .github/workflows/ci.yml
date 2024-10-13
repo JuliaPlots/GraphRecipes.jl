@@ -32,9 +32,6 @@ jobs:
           - '1'
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
-        include:
-          - os: ubuntu-latest
-            prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
 
     steps:
       - uses: actions/checkout@v4
@@ -54,11 +51,16 @@ jobs:
               (; url="https://github.com/JuliaPlots/Plots.jl", subdir="PlotsBase", rev="v2"),
               (; url="https://github.com/JuliaPlots/Plots.jl", rev="v2"),
             ])
+            Pkg.develop(; path=".")
           '
-      - uses: julia-actions/julia-buildpkg@latest
-      - uses: julia-actions/julia-runtest@latest
-        with:
-          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
+      - name: Test GraphRecipes
+        run: |
+          cmd=(julia --color=yes)
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            cmd=(xvfb-run ${cmd[@]})
+          fi
+          echo ${cmd[@]}
+          ${cmd[@]} -e 'using Pkg; Pkg.test("GraphRecipes"; coverage=true)'
 
   Skip:
     if: "contains(github.event.head_commit.message, '[skip ci]')"
