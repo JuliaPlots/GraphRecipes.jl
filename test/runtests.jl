@@ -11,6 +11,8 @@ using Plots
 using Test
 using Gtk  # for popup
 
+import Plots: PlotsBase
+
 isci() = get(ENV, "CI", "false") == "true"
 itol(tol = nothing) = something(tol, isci() ? 1e-3 : 1e-5)
 
