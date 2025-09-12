@@ -42,7 +42,7 @@ cd(joinpath(@__DIR__, "..", "assets")) do
 
         @plottest ast_example() "ast_example.png" popup = !isci() tol = itol()
 
-        if !(v"1.6" < VERSION < v"1.7") # having Static.jl in the Manifest adds another type
+        if !(VERSION >= v"1.11") # julia 1.11 introduced Core.BFloat16
             @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol()
         end
         @plottest julia_dict_tree() "julia_dict_tree.png" popup = !isci() tol = itol()
