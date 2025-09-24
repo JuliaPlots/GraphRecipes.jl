@@ -3,6 +3,14 @@ using StableRNGs
 using GraphRecipes
 using GraphRecipes.Colors
 using GraphRecipes.AbstractTrees
+
+abstract type AbstractTestType end
+abstract type OneBelow <: AbstractTestType end
+abstract type TwoBelow <: OneBelow end
+struct Bottom <: TwoBelow end
+struct Floor <: TwoBelow end
+struct Leaf <: TwoBelow end
+
 function random_labelled_graph()
     n = 15
     rng = StableRNG(1)
@@ -164,7 +172,7 @@ function ast_example()
 end
 
 julia_type_tree() = plot(
-    AbstractFloat,
+    AbstractTestType,
     method = :tree,
     fontsize = 10,
     nodeshape = :ellipse,
